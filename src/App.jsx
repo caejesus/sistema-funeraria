@@ -50,6 +50,17 @@ const DEFAULT_SETTINGS = {
   supports: [],
 };
 
+const SETTINGS_FIELDS = [
+  "hospitals",
+  "cemeteries",
+  "coffinColors",
+  "technicians",
+  "attendants",
+  "drivers",
+  "cars",
+  "supports",
+];
+
 const FUNERAL_UNITS = {
   "Unidade Cachoeirinha": [
     "Sala Orquídea",
@@ -217,7 +228,6 @@ function getInitialForm() {
     responsavelCelular2: "",
 
     velorioTipo: "funeraria",
-    velorioNomeLocal: "",
     velorioCep: "",
     velorioEndereco: "",
     velorioNumero: "",
@@ -279,99 +289,13 @@ function getInitialForm() {
   };
 }
 
-
-function getThemeVars(isDark) {
-  if (isDark) {
-    return {
-      "--page-bg": "linear-gradient(135deg, #0f172a, #111827)",
-      "--login-bg": "linear-gradient(135deg, #0f172a, #111827)",
-      "--text-main": "#e5e7eb",
-      "--text-soft": "#cbd5e1",
-      "--text-muted": "#94a3b8",
-      "--brand-text": "#e2e8f0",
-      "--brand-accent": "#7dd3fc",
-      "--card-bg": "#111827",
-      "--card-bg-soft": "#0f172a",
-      "--card-bg-alt": "#172033",
-      "--module-bg": "#111827",
-      "--input-bg": "#0f172a",
-      "--input-border": "#334155",
-      "--input-text": "#e5e7eb",
-      "--border-soft": "#334155",
-      "--header-bg": "rgba(15,23,42,0.86)",
-      "--header-box-bg": "rgba(30,41,59,0.82)",
-      "--tab-bg": "#0f172a",
-      "--tab-text": "#cbd5e1",
-      "--tab-border": "#334155",
-      "--tab-active-bg": "#0ea5e9",
-      "--tab-active-text": "#f8fafc",
-      "--primary-btn": "#0ea5e9",
-      "--primary-btn-text": "#f8fafc",
-      "--outline-bg": "#1e293b",
-      "--outline-text": "#e2e8f0",
-      "--outline-border": "#334155",
-      "--danger-text": "#fecaca",
-      "--danger-border": "#7f1d1d",
-      "--info-pill-bg": "#0f172a",
-      "--info-pill-text": "#7dd3fc",
-      "--status-bg": "#0f172a",
-      "--status-text": "#7dd3fc",
-      "--status-border": "#334155",
-      "--placeholder-bg": "#0f172a",
-      "--shadow-main": "0 12px 28px rgba(0,0,0,0.28)",
-    };
-  }
-
-  return {
-    "--page-bg": "linear-gradient(135deg, #d9edf2, #eef5f7)",
-    "--login-bg": "linear-gradient(135deg, #d9edf2, #eef5f7)",
-    "--text-main": "#17313A",
-    "--text-soft": "#31545F",
-    "--text-muted": "#5f7480",
-    "--brand-text": "#17313A",
-    "--brand-accent": "#0F7F99",
-    "--card-bg": "#f8fbfc",
-    "--card-bg-soft": "#ffffff",
-    "--card-bg-alt": "#eef4f7",
-    "--module-bg": "#eaf4f7",
-    "--input-bg": "#ffffff",
-    "--input-border": "#c9d8de",
-    "--input-text": "#17313A",
-    "--border-soft": "#d8e5ea",
-    "--header-bg": "rgba(255,255,255,0.75)",
-    "--header-box-bg": "rgba(255,255,255,0.92)",
-    "--tab-bg": "#ffffff",
-    "--tab-text": "#0F6F86",
-    "--tab-border": "#bfd7dd",
-    "--tab-active-bg": "#17A8C9",
-    "--tab-active-text": "#ffffff",
-    "--primary-btn": "#17A8C9",
-    "--primary-btn-text": "#ffffff",
-    "--outline-bg": "#ffffff",
-    "--outline-text": "#0F7F99",
-    "--outline-border": "#bcd2d9",
-    "--danger-text": "#B53B3B",
-    "--danger-border": "#E4B4B4",
-    "--info-pill-bg": "#eff8fb",
-    "--info-pill-text": "#0F6F86",
-    "--status-bg": "#eff8fb",
-    "--status-text": "#0F7F99",
-    "--status-border": "#cdebf1",
-    "--placeholder-bg": "#ffffff",
-    "--shadow-main": "0 12px 28px rgba(0,0,0,0.08)",
-  };
-}
-
 export default function App() {
-  const [users, setUsers] = useState(() =>
-    loadStorage(STORAGE_KEYS.users, DEFAULT_USERS)
-  );
-  const [settings, setSettings] = useState(() =>
-    loadStorage(STORAGE_KEYS.settings, DEFAULT_SETTINGS)
-  );
+  const [users, setUsers] = useState([]);
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [session, setSession] = useState(() =>
     loadStorage(STORAGE_KEYS.session, null)
   );
+  const [bootLoading, setBootLoading] = useState(true);
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
@@ -426,21 +350,6 @@ useEffect(() => {
     role: "OPERADOR",
   });
 
-  const [theme, setTheme] = useState(() =>
-    loadStorage("sf_theme_v1", "dark")
-  );
-
-  const isDark = theme === "dark";
-  const themeVars = getThemeVars(isDark);
-
-  useEffect(() => {
-    saveStorage(STORAGE_KEYS.users, users);
-  }, [users]);
-
-  useEffect(() => {
-    saveStorage(STORAGE_KEYS.settings, settings);
-  }, [settings]);
-
   useEffect(() => {
     if (session) {
       saveStorage(STORAGE_KEYS.session, session);
@@ -448,10 +357,6 @@ useEffect(() => {
       localStorage.removeItem(STORAGE_KEYS.session);
     }
   }, [session]);
-
-  useEffect(() => {
-    saveStorage("sf_theme_v1", theme);
-  }, [theme]);
 
   useEffect(() => {
   saveStorage(STORAGE_KEYS.attendances, atendimentos);
@@ -569,6 +474,112 @@ useEffect(() => {
     }
   }
 
+
+  useEffect(() => {
+    async function bootstrapAppData() {
+      setBootLoading(true);
+
+      const localUsers = loadStorage(STORAGE_KEYS.users, DEFAULT_USERS);
+      const localSettings = loadStorage(STORAGE_KEYS.settings, DEFAULT_SETTINGS);
+
+      try {
+        const { data: remoteUsers, error: usersError } = await supabase
+          .from("app_users")
+          .select("*")
+          .order("name", { ascending: true });
+
+        if (usersError) throw usersError;
+
+        let finalUsers = remoteUsers || [];
+
+        if (!finalUsers.length) {
+          const seedUsers = (localUsers && localUsers.length ? localUsers : DEFAULT_USERS).map(
+            (user) => ({
+              id: String(user.id || Date.now()),
+              name: user.name || "",
+              login: user.login || "",
+              password: user.password || "",
+              role: user.role || "OPERADOR",
+            })
+          );
+
+          const { error: seedUsersError } = await supabase
+            .from("app_users")
+            .upsert(seedUsers, { onConflict: "login" });
+
+          if (seedUsersError) throw seedUsersError;
+          finalUsers = seedUsers;
+        }
+
+        const { data: remoteSettingsRows, error: settingsError } = await supabase
+          .from("app_settings")
+          .select("*");
+
+        if (settingsError) throw settingsError;
+
+        let finalSettings = { ...DEFAULT_SETTINGS };
+
+        if (remoteSettingsRows && remoteSettingsRows.length) {
+          SETTINGS_FIELDS.forEach((key) => {
+            const row = remoteSettingsRows.find((item) => item.key === key);
+            finalSettings[key] = Array.isArray(row?.items)
+              ? row.items
+              : DEFAULT_SETTINGS[key] || [];
+          });
+        } else {
+          const seedSettings = SETTINGS_FIELDS.map((key) => ({
+            key,
+            items: Array.isArray(localSettings?.[key]) && localSettings[key].length
+              ? localSettings[key]
+              : DEFAULT_SETTINGS[key] || [],
+          }));
+
+          const { error: seedSettingsError } = await supabase
+            .from("app_settings")
+            .upsert(seedSettings, { onConflict: "key" });
+
+          if (seedSettingsError) throw seedSettingsError;
+
+          SETTINGS_FIELDS.forEach((key) => {
+            finalSettings[key] = seedSettings.find((item) => item.key === key)?.items || [];
+          });
+        }
+
+        setUsers(finalUsers);
+        setSettings(finalSettings);
+      } catch (error) {
+        console.error("Erro ao carregar usuários/configurações:", error);
+        setUsers(localUsers || DEFAULT_USERS);
+        setSettings(localSettings || DEFAULT_SETTINGS);
+        alert("Não foi possível sincronizar usuários e configurações com o banco. O sistema usará os dados locais deste navegador.");
+      } finally {
+        setBootLoading(false);
+      }
+    }
+
+    bootstrapAppData();
+  }, []);
+
+  async function saveSettingListToSupabase(key, list) {
+    const uniqueList = [...new Set((list || []).map((item) => String(item).trim()).filter(Boolean))];
+
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert([{ key, items: uniqueList }], { onConflict: "key" });
+
+    if (error) {
+      console.error(`Erro ao salvar configuração ${key}:`, error);
+      alert("Erro ao salvar configuração no banco.");
+      return false;
+    }
+
+    setSettings((prev) => ({
+      ...prev,
+      [key]: uniqueList,
+    }));
+    return true;
+  }
+
   function handleCepChange(value, tipo) {
     const formatted = formatCep(value);
 
@@ -594,6 +605,12 @@ useEffect(() => {
 
   function handleLogin(e) {
     e.preventDefault();
+
+    if (bootLoading) {
+      setLoginError("Aguarde o carregamento dos usuários.");
+      return;
+    }
+
     const user = users.find(
       (u) => u.login === login && u.password === password
     );
@@ -990,27 +1007,24 @@ useEffect(() => {
     }));
   }
 
-  function addSettingItem(key, value, setter) {
+  async function addSettingItem(key, value, setter) {
     const clean = value.trim();
     if (!clean) return;
     if ((settings[key] || []).includes(clean)) return;
 
-    setSettings((prev) => ({
-      ...prev,
-      [key]: [...(prev[key] || []), clean],
-    }));
-
-    setter("");
+    const nextList = [...(settings[key] || []), clean];
+    const saved = await saveSettingListToSupabase(key, nextList);
+    if (saved) {
+      setter("");
+    }
   }
 
-  function removeSettingItem(key, value) {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: (prev[key] || []).filter((item) => item !== value),
-    }));
+  async function removeSettingItem(key, value) {
+    const nextList = (settings[key] || []).filter((item) => item !== value);
+    await saveSettingListToSupabase(key, nextList);
   }
 
-  function addUser() {
+  async function addUser() {
     if (!newUser.name || !newUser.login || !newUser.password) {
       alert("Preencha nome, login e senha.");
       return;
@@ -1021,7 +1035,17 @@ useEffect(() => {
       return;
     }
 
-    setUsers((prev) => [...prev, { ...newUser, id: String(Date.now()) }]);
+    const userToSave = { ...newUser, id: String(Date.now()) };
+
+    const { error } = await supabase.from("app_users").insert([userToSave]);
+
+    if (error) {
+      console.error("Erro ao salvar usuário:", error);
+      alert("Erro ao salvar usuário no banco.");
+      return;
+    }
+
+    setUsers((prev) => [...prev, userToSave]);
 
     setNewUser({
       name: "",
@@ -1031,10 +1055,18 @@ useEffect(() => {
     });
   }
 
-  function removeUser(id) {
+  async function removeUser(id) {
     const user = users.find((u) => u.id === id);
     if (user?.login === "admin") {
       alert("O admin padrão não pode ser removido.");
+      return;
+    }
+
+    const { error } = await supabase.from("app_users").delete().eq("id", id);
+
+    if (error) {
+      console.error("Erro ao remover usuário:", error);
+      alert("Erro ao remover usuário do banco.");
       return;
     }
 
@@ -1301,12 +1333,7 @@ useEffect(() => {
     const velorioTexto =
       form.velorioTipo === "funeraria"
         ? [form.velorioUnidade, form.velorioSala].filter(Boolean).join(" - ")
-        : [
-            form.velorioNomeLocal,
-            form.velorioEndereco,
-            form.velorioNumero,
-            form.velorioBairro,
-          ]
+        : [form.velorioEndereco, form.velorioNumero, form.velorioBairro]
             .filter(Boolean)
             .join(", ");
 
@@ -1657,7 +1684,7 @@ useEffect(() => {
 
   if (finalizado) {
     return (
-      <div style={{ ...styles.page, ...themeVars }}>
+      <div style={styles.page}>
         <div style={{ marginBottom: 20 }}>
           <button
             style={styles.outlineDarkBtn}
@@ -1703,9 +1730,27 @@ useEffect(() => {
     );
   }
 
+  if (bootLoading) {
+    return (
+      <div style={styles.loginPage}>
+        <div style={styles.loginCard}>
+          <div style={styles.loginBrandWrap}>
+            <img
+              src="/logo.png"
+              alt="Logo Grupo São Francisco"
+              style={styles.loginLogo}
+            />
+            <h1 style={styles.loginTitle}>Sistema Funerário</h1>
+            <p style={styles.loginSub}>Carregando usuários e configurações...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!session) {
     return (
-      <div style={{ ...styles.loginPage, ...themeVars }}>
+      <div style={styles.loginPage}>
         <div style={styles.loginCard}>
           <div style={styles.loginBrandWrap}>
             <img
@@ -1749,7 +1794,7 @@ useEffect(() => {
   }
 
   return (
-    <div style={{ ...styles.page, ...themeVars }}>
+    <div style={styles.page}>
       <header style={styles.header}>
         <div style={styles.headerBrand}>
           <img
@@ -1768,12 +1813,6 @@ useEffect(() => {
             <div style={{ fontWeight: 700 }}>{session.name}</div>
             <div style={{ fontSize: 12, opacity: 0.9 }}>{session.role}</div>
           </div>
-          <button
-            style={styles.outlineBtn}
-            onClick={() => setTheme(isDark ? "light" : "dark")}
-          >
-            {isDark ? "☀️ Claro" : "🌙 Escuro"}
-          </button>
           <button style={styles.outlineBtn} onClick={handleLogout}>
             Sair
           </button>
@@ -1960,16 +1999,6 @@ useEffect(() => {
                       onClick={() => openAcompanhamento(item)}
                     >
                       Acompanhar
-                    </button>
-                    <button
-                      style={styles.outlineDarkBtn}
-                      onClick={() => {
-                        const link = `${window.location.origin}/acompanhamento/${item.id}`;
-                        navigator.clipboard.writeText(link);
-                        alert("Link da família copiado!");
-                      }}
-                    >
-                      📲 Copiar link da família
                     </button>
                     <button
                       style={styles.primaryBtn}
@@ -2440,20 +2469,11 @@ useEffect(() => {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Local do velório</label>
+                <label style={styles.label}>Funerária</label>
                 <select
                   style={styles.input}
                   value={form.velorioTipo}
-                  onChange={(e) => {
-                    updateForm("velorioTipo", e.target.value);
-                    if (e.target.value !== "funeraria") {
-                      updateForm("velorioUnidade", "");
-                      updateForm("velorioSala", "");
-                    }
-                    if (e.target.value !== "igreja") {
-                      updateForm("velorioNomeLocal", "");
-                    }
-                  }}
+                  onChange={(e) => updateForm("velorioTipo", e.target.value)}
                 >
                   <option value="funeraria">Funerária</option>
                   <option value="residencia">Residência</option>
@@ -2461,102 +2481,40 @@ useEffect(() => {
                 </select>
               </div>
 
-              {form.velorioTipo === "funeraria" && (
-                <>
-                  <div style={styles.field}>
-                    <label style={styles.label}>Unidade</label>
-                    <select
-                      style={styles.input}
-                      value={form.velorioUnidade}
-                      onChange={(e) => {
-                        updateForm("velorioUnidade", e.target.value);
-                        updateForm("velorioSala", "");
-                      }}
-                    >
-                      <option value="">Selecione</option>
-                      {Object.keys(FUNERAL_UNITS).map((u) => (
-                        <option key={u} value={u}>
-                          {u}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Unidade</label>
+                <select
+                  style={styles.input}
+                  value={form.velorioUnidade}
+                  onChange={(e) => {
+                    updateForm("velorioUnidade", e.target.value);
+                    updateForm("velorioSala", "");
+                  }}
+                >
+                  <option value="">Selecione</option>
+                  {Object.keys(FUNERAL_UNITS).map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                  <div style={styles.field}>
-                    <label style={styles.label}>Sala</label>
-                    <select
-                      style={styles.input}
-                      value={form.velorioSala}
-                      onChange={(e) => updateForm("velorioSala", e.target.value)}
-                    >
-                      <option value="">Selecione</option>
-                      {(FUNERAL_UNITS[form.velorioUnidade] || []).map((room) => (
-                        <option key={room} value={room}>
-                          {room}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {form.velorioTipo !== "funeraria" && (
-                <>
-                  {form.velorioTipo === "igreja" && (
-                    <div style={styles.fieldWide}>
-                      <label style={styles.label}>Nome do local</label>
-                      <input
-                        style={styles.input}
-                        value={form.velorioNomeLocal || ""}
-                        onChange={(e) => updateForm("velorioNomeLocal", e.target.value)}
-                      />
-                    </div>
-                  )}
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>CEP</label>
-                    <input
-                      style={styles.input}
-                      value={form.velorioCep}
-                      onChange={(e) => handleCepChange(e.target.value, "velorio")}
-                      placeholder="00000-000"
-                    />
-                    {cepStatus.velorio.loading ? (
-                      <span style={styles.helpText}>Consultando CEP...</span>
-                    ) : null}
-                    {cepStatus.velorio.error ? (
-                      <span style={styles.errorText}>{cepStatus.velorio.error}</span>
-                    ) : null}
-                  </div>
-
-                  <div style={styles.fieldWide}>
-                    <label style={styles.label}>Endereço</label>
-                    <input
-                      style={styles.input}
-                      value={form.velorioEndereco}
-                      onChange={(e) => updateForm("velorioEndereco", e.target.value)}
-                    />
-                  </div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>Número</label>
-                    <input
-                      style={styles.input}
-                      value={form.velorioNumero}
-                      onChange={(e) => updateForm("velorioNumero", e.target.value)}
-                    />
-                  </div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>Bairro</label>
-                    <input
-                      style={styles.input}
-                      value={form.velorioBairro}
-                      onChange={(e) => updateForm("velorioBairro", e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
+              <div style={styles.field}>
+                <label style={styles.label}>Sala</label>
+                <select
+                  style={styles.input}
+                  value={form.velorioSala}
+                  onChange={(e) => updateForm("velorioSala", e.target.value)}
+                >
+                  <option value="">Selecione</option>
+                  {(FUNERAL_UNITS[form.velorioUnidade] || []).map((room) => (
+                    <option key={room} value={room}>
+                      {room}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div style={styles.field}>
                 <label style={styles.label}>Data/Saída</label>
@@ -3687,27 +3645,27 @@ useEffect(() => {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "var(--page-bg)",
+    background: "linear-gradient(135deg, #17A8C9, #1BB8D6)",
     fontFamily: "Arial, sans-serif",
     padding: 20,
-    color: "var(--text-main)",
+    color: "#17313A",
   },
   loginPage: {
     minHeight: "100vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "var(--login-bg)",
+    background: "linear-gradient(135deg, #17A8C9, #1BB8D6)",
     padding: 20,
     fontFamily: "Arial, sans-serif",
   },
   loginCard: {
     width: "100%",
     maxWidth: 430,
-    background: "var(--card-bg-soft)",
+    background: "#fff",
     borderRadius: 18,
     padding: 30,
-    boxShadow: "var(--shadow-main)",
+    boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
   },
   loginBrandWrap: {
     textAlign: "center",
@@ -3723,25 +3681,25 @@ const styles = {
   loginTitle: {
     textAlign: "center",
     margin: 0,
-    color: "var(--brand-accent)",
+    color: "#0F7F99",
   },
   loginSub: {
     textAlign: "center",
     marginTop: 8,
-    color: "var(--text-muted)",
+    color: "#6E808B",
     marginBottom: 20,
   },
   header: {
-    background: "var(--header-bg)",
+    background: "rgba(255,255,255,0.18)",
     borderRadius: 18,
     padding: 22,
-    color: "var(--brand-text)",
+    color: "#fff",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     gap: 20,
     marginBottom: 16,
-    boxShadow: "var(--shadow-main)",
+    boxShadow: "0 14px 30px rgba(11, 88, 112, 0.14)",
   },
   headerBrand: {
     display: "flex",
@@ -3772,7 +3730,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 12,
-    background: "var(--header-box-bg)",
+    background: "rgba(255,255,255,0.22)",
     borderRadius: 14,
     padding: "10px 12px",
   },
@@ -3785,20 +3743,20 @@ const styles = {
   tab: {
     padding: "10px 16px",
     borderRadius: 12,
-    border: "1px solid var(--tab-border)",
-    background: "var(--card-bg-soft)",
+    border: "1px solid #BFD7DD",
+    background: "#fff",
     cursor: "pointer",
     fontWeight: 700,
-    color: "var(--info-pill-text)",
+    color: "#0F6F86",
   },
   tabActive: {
     padding: "10px 16px",
     borderRadius: 12,
-    border: "1px solid var(--tab-active-bg)",
-    background: "var(--primary-btn)",
+    border: "1px solid #17A8C9",
+    background: "#17A8C9",
     cursor: "pointer",
     fontWeight: 700,
-    color: "var(--brand-text)",
+    color: "#fff",
   },
   grid2: {
     display: "grid",
@@ -3817,16 +3775,16 @@ const styles = {
     gap: 12,
   },
   card: {
-    background: "var(--card-bg-soft)",
+    background: "#fff",
     borderRadius: 18,
     padding: 18,
-    boxShadow: "var(--shadow-main)",
-    border: "1px solid var(--border-soft)",
+    boxShadow: "0 10px 24px rgba(0,0,0,0.06)",
+    border: "1px solid #E0EDF1",
     marginBottom: 16,
   },
   cardTitle: {
     marginTop: 0,
-    color: "var(--brand-accent)",
+    color: "#0F7F99",
     marginBottom: 16,
   },
   field: {
@@ -3844,23 +3802,23 @@ const styles = {
   label: {
     fontSize: 13,
     fontWeight: 700,
-    color: "var(--text-soft)",
+    color: "#31545F",
   },
   input: {
-    border: "1px solid var(--input-border)",
+    border: "1px solid #CDE1E6",
     borderRadius: 10,
     padding: "10px 12px",
     fontSize: 14,
     outline: "none",
-    background: "var(--card-bg-soft)",
-    color: "var(--text-main)",
+    background: "#fff",
+    color: "#17313A",
     caretColor: "#17313A",
     width: "100%",
     boxSizing: "border-box",
   },
   primaryBtn: {
-    background: "var(--primary-btn)",
-    color: "var(--primary-btn-text)",
+    background: "#17A8C9",
+    color: "#fff",
     border: "none",
     padding: "11px 16px",
     borderRadius: 10,
@@ -3868,8 +3826,8 @@ const styles = {
     fontWeight: 700,
   },
   outlineBtn: {
-    background: "var(--outline-bg)",
-    color: "var(--brand-accent)",
+    background: "#FFFFFF",
+    color: "#0F7F99",
     border: "none",
     padding: "10px 14px",
     borderRadius: 10,
@@ -3877,8 +3835,8 @@ const styles = {
     fontWeight: 700,
   },
   outlineDarkBtn: {
-    background: "var(--outline-bg)",
-    color: "var(--brand-accent)",
+    background: "#FFFFFF",
+    color: "#0F7F99",
     border: "1px solid #0B7285",
     padding: "10px 14px",
     borderRadius: 10,
@@ -3889,7 +3847,7 @@ const styles = {
     marginBottom: 12,
     padding: 10,
     background: "#FFE7E7",
-    color: "var(--danger-text)",
+    color: "#B53B3B",
     borderRadius: 10,
   },
   separator: {
@@ -3900,10 +3858,10 @@ const styles = {
   previewBox: {
     maxHeight: 460,
     overflowY: "auto",
-    border: "1px solid var(--border-soft)",
+    border: "1px solid #DDE8EC",
     borderRadius: 14,
     padding: 10,
-    background: "var(--card-bg-alt)",
+    background: "#FAFCFD",
   },
   previewItem: {
     border: "1px solid",
@@ -3923,17 +3881,17 @@ const styles = {
     marginBottom: 14,
   },
   infoPill: {
-    background: "var(--info-pill-bg)",
-    border: "1px solid var(--border-soft)",
+    background: "#EAF8FA",
+    border: "1px solid #D3EFF4",
     borderRadius: 999,
     padding: "8px 12px",
     fontSize: 13,
     fontWeight: 700,
-    color: "var(--info-pill-text)",
+    color: "#0F6F86",
   },
   helpText: {
     fontSize: 12,
-    color: "var(--brand-accent)",
+    color: "#0F7F99",
   },
   errorText: {
     fontSize: 12,
@@ -3948,8 +3906,8 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     gap: 10,
-    border: "1px solid var(--border-soft)",
-    background: "var(--card-bg-soft)",
+    border: "1px solid #E0EDF1",
+    background: "#FBFDFD",
     borderRadius: 12,
     padding: 12,
     marginBottom: 10,
@@ -3963,14 +3921,14 @@ const styles = {
     gap: 18,
   },
   homeCard: {
-    background: "var(--outline-bg)",
+    background: "#FFFFFF",
     border: "none",
     borderRadius: 24,
     padding: "30px 26px",
     minHeight: 150,
     cursor: "pointer",
     textAlign: "left",
-    boxShadow: "var(--shadow-main)",
+    boxShadow: "0 14px 28px rgba(11, 88, 112, 0.14)",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
@@ -3978,12 +3936,12 @@ const styles = {
   homeCardTitle: {
     fontSize: 24,
     fontWeight: 700,
-    color: "var(--brand-accent)",
+    color: "#0F7F99",
     marginBottom: 10,
   },
   homeCardText: {
     fontSize: 16,
-    color: "var(--text-muted)",
+    color: "#5C7480",
   },
   homePanels: {
     display: "grid",
@@ -3995,16 +3953,16 @@ const styles = {
     background: "rgba(255,255,255,0.92)",
     borderRadius: 24,
     padding: 22,
-    boxShadow: "var(--shadow-main)",
+    boxShadow: "0 14px 28px rgba(11, 88, 112, 0.12)",
   },
   homePanelTitle: {
     marginTop: 0,
     marginBottom: 16,
-    color: "var(--brand-accent)",
+    color: "#0F7F99",
     fontSize: 24,
   },
   homeListItem: {
-    background: "var(--outline-bg)",
+    background: "#FFFFFF",
     borderRadius: 16,
     padding: "16px 18px",
     display: "flex",
@@ -4012,15 +3970,15 @@ const styles = {
     alignItems: "center",
     gap: 12,
     marginBottom: 12,
-    boxShadow: "0 8px 18px rgba(0,0,0,0.10)",
+    boxShadow: "0 8px 18px rgba(11, 88, 112, 0.08)",
   },
   homeListSub: {
     fontSize: 13,
-    color: "var(--text-muted)",
+    color: "#6E808B",
     marginTop: 4,
   },
   miniActionBtn: {
-    background: "var(--primary-btn)",
+    background: "#17A8C9",
     color: "#FFFFFF",
     border: "none",
     borderRadius: 12,
@@ -4029,7 +3987,7 @@ const styles = {
     cursor: "pointer",
   },
   progressRow: {
-    background: "var(--outline-bg)",
+    background: "#FFFFFF",
     borderRadius: 16,
     padding: "14px 16px",
     display: "flex",
@@ -4037,15 +3995,15 @@ const styles = {
     alignItems: "center",
     gap: 12,
     marginBottom: 10,
-    boxShadow: "0 8px 18px rgba(0,0,0,0.10)",
+    boxShadow: "0 8px 18px rgba(11, 88, 112, 0.08)",
   },
   progressName: {
     fontWeight: 700,
-    color: "var(--text-soft)",
+    color: "#31545F",
   },
   progressBadge: {
-    background: "var(--info-pill-bg)",
-    color: "var(--brand-accent)",
+    background: "#EAF8FA",
+    color: "#0F7F99",
     borderRadius: 999,
     padding: "8px 12px",
     fontSize: 12,
@@ -4053,16 +4011,16 @@ const styles = {
   },
   homeLinkRow: {
     marginTop: 12,
-    color: "var(--text-soft)",
+    color: "#31545F",
     fontSize: 14,
   },
 
 
   moduleCard: {
-    background: "var(--module-bg)",
+    background: "#EAF4F7",
     borderRadius: 28,
     padding: 28,
-    boxShadow: "var(--shadow-main)",
+    boxShadow: "0 12px 28px rgba(0,0,0,0.08)",
     marginBottom: 24,
   },
   moduleHeader: {
@@ -4081,11 +4039,11 @@ const styles = {
   },
   moduleSub: {
     margin: "6px 0 0",
-    color: "var(--text-soft)",
+    color: "#48626D",
     fontSize: 15,
   },
   modulePlaceholder: {
-    background: "var(--outline-bg)",
+    background: "#FFFFFF",
     borderRadius: 24,
     padding: 28,
     minHeight: 220,
@@ -4095,13 +4053,13 @@ const styles = {
     boxShadow: "inset 0 0 0 1px rgba(12,127,163,0.08)",
   },
   modulePlaceholderTitle: {
-    color: "var(--text-main)",
+    color: "#103E59",
     fontSize: 28,
     fontWeight: 800,
     marginBottom: 10,
   },
   modulePlaceholderText: {
-    color: "var(--text-muted)",
+    color: "#56707A",
     fontSize: 16,
     lineHeight: 1.6,
     maxWidth: 780,
@@ -4118,11 +4076,11 @@ const styles = {
     gap: 14,
   },
   recordCard: {
-    background: "var(--outline-bg)",
-    border: "1px solid var(--border-soft)",
+    background: "#FFFFFF",
+    border: "1px solid #DDE8EC",
     borderRadius: 18,
     padding: 18,
-    boxShadow: "0 10px 20px rgba(0,0,0,0.10)",
+    boxShadow: "0 10px 20px rgba(11, 88, 112, 0.08)",
   },
   recordTop: {
     display: "flex",
@@ -4135,13 +4093,13 @@ const styles = {
   recordNumber: {
     fontSize: 12,
     fontWeight: 700,
-    color: "var(--brand-accent)",
+    color: "#0F7F99",
     marginBottom: 4,
   },
   recordName: {
     fontSize: 20,
     fontWeight: 700,
-    color: "var(--text-main)",
+    color: "#21414A",
     marginBottom: 4,
   },
   recordMeta: {
@@ -4152,7 +4110,7 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: 10,
-    color: "var(--text-soft)",
+    color: "#31545F",
     fontSize: 14,
     marginBottom: 14,
   },
@@ -4162,8 +4120,8 @@ const styles = {
     flexWrap: "wrap",
   },
   statusBadge: {
-    background: "var(--info-pill-bg)",
-    color: "var(--brand-accent)",
+    background: "#EAF8FA",
+    color: "#0F7F99",
     border: "1px solid #CDEBF1",
     borderRadius: 999,
     padding: "8px 12px",
@@ -4171,9 +4129,9 @@ const styles = {
     fontWeight: 700,
   },
   outlineDangerBtn: {
-    background: "var(--outline-bg)",
-    color: "var(--danger-text)",
-    border: "1px solid var(--danger-border)",
+    background: "#FFFFFF",
+    color: "#B53B3B",
+    border: "1px solid #E4B4B4",
     padding: "10px 14px",
     borderRadius: 10,
     cursor: "pointer",
@@ -4181,11 +4139,11 @@ const styles = {
   },
 
   operationalCard: {
-    background: "var(--outline-bg)",
-    border: "1px solid var(--border-soft)",
+    background: "#FFFFFF",
+    border: "1px solid #DDE8EC",
     borderRadius: 18,
     padding: 18,
-    boxShadow: "0 10px 20px rgba(0,0,0,0.10)",
+    boxShadow: "0 10px 20px rgba(11, 88, 112, 0.08)",
   },
   operationalHeader: {
     display: "flex",
@@ -4200,8 +4158,8 @@ const styles = {
     gap: 12,
   },
   operationRow: {
-    background: "var(--card-bg-alt)",
-    border: "1px solid var(--border-soft)",
+    background: "#F7FBFC",
+    border: "1px solid #DDE8EC",
     borderRadius: 16,
     padding: 14,
     display: "grid",
@@ -4217,7 +4175,7 @@ const styles = {
     flexWrap: "wrap",
   },
   operationName: {
-    color: "var(--text-main)",
+    color: "#103E59",
     fontSize: 16,
     fontWeight: 800,
   },
@@ -4246,7 +4204,7 @@ const styles = {
   operationTimes: {
     display: "grid",
     gap: 4,
-    color: "var(--text-muted)",
+    color: "#56707A",
     fontSize: 13,
   },
   operationTransportGrid: {
@@ -4279,16 +4237,16 @@ const styles = {
     gap: 12,
     padding: 18,
     borderRadius: 18,
-    background: "var(--card-bg-alt)",
-    border: "1px solid var(--border-soft)",
+    background: "#F5FBFD",
+    border: "1px solid #D7EEF4",
     flexWrap: "wrap",
   },
   acompanhamentoInfoGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
     gap: 12,
-    background: "var(--card-bg-soft)",
-    border: "1px solid var(--border-soft)",
+    background: "#fff",
+    border: "1px solid #E2EDF2",
     borderRadius: 16,
     padding: 16,
   },
@@ -4298,8 +4256,8 @@ const styles = {
     gap: 14,
   },
   acompanhamentoStageCard: {
-    background: "var(--card-bg-soft)",
-    border: "1px solid var(--border-soft)",
+    background: "#fff",
+    border: "1px solid #E2EDF2",
     borderRadius: 16,
     padding: 16,
     display: "grid",
@@ -4308,13 +4266,13 @@ const styles = {
   acompanhamentoTimes: {
     display: "grid",
     gap: 4,
-    color: "var(--text-soft)",
+    color: "#48626D",
     fontSize: 14,
   },
   acompanhamentoExtra: {
     display: "grid",
     gap: 4,
-    color: "var(--text-main)",
+    color: "#23404A",
     fontSize: 14,
     paddingTop: 6,
     borderTop: "1px solid #E6F0F4",
@@ -4333,7 +4291,7 @@ const styles = {
     maxWidth: 1150,
     maxHeight: "90vh",
     overflowY: "auto",
-    background: "var(--card-bg-soft)",
+    background: "#fff",
     borderRadius: 18,
     padding: 18,
     boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
