@@ -897,8 +897,9 @@ alert("LENDO LINK DA FAMÍLIA");
     if (error) {
       console.error("Erro ao salvar no Supabase:", error);
       alert("Erro ao salvar no banco");
-      return;
-    }
+      } else {
+  alert("SALVO NO SUPABASE");
+}
     setAtendimentos((prev) => {
       const exists = prev.some((item) => item.id === recordId);
       if (exists) {
