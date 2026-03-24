@@ -228,6 +228,7 @@ function getInitialForm() {
     responsavelCelular2: "",
 
     velorioTipo: "funeraria",
+    velorioNomeLocal: "",
     velorioCep: "",
     velorioEndereco: "",
     velorioNumero: "",
@@ -286,6 +287,89 @@ function getInitialForm() {
     corUrna: "",
 
     observacaoTermo: "",
+  };
+}
+
+
+function getThemeVars(isDark) {
+  if (isDark) {
+    return {
+      "--page-bg": "linear-gradient(135deg, #0f172a, #111827)",
+      "--login-bg": "linear-gradient(135deg, #0f172a, #111827)",
+      "--text-main": "#e5e7eb",
+      "--text-soft": "#cbd5e1",
+      "--text-muted": "#94a3b8",
+      "--brand-text": "#e2e8f0",
+      "--brand-accent": "#7dd3fc",
+      "--card-bg": "#111827",
+      "--card-bg-soft": "#0f172a",
+      "--card-bg-alt": "#172033",
+      "--module-bg": "#111827",
+      "--input-bg": "#0f172a",
+      "--input-border": "#334155",
+      "--input-text": "#e5e7eb",
+      "--border-soft": "#334155",
+      "--header-bg": "rgba(15,23,42,0.86)",
+      "--header-box-bg": "rgba(30,41,59,0.82)",
+      "--tab-bg": "#0f172a",
+      "--tab-text": "#cbd5e1",
+      "--tab-border": "#334155",
+      "--tab-active-bg": "#0ea5e9",
+      "--tab-active-text": "#f8fafc",
+      "--primary-btn": "#0ea5e9",
+      "--primary-btn-text": "#f8fafc",
+      "--outline-bg": "#1e293b",
+      "--outline-text": "#e2e8f0",
+      "--outline-border": "#334155",
+      "--danger-text": "#fecaca",
+      "--danger-border": "#7f1d1d",
+      "--info-pill-bg": "#0f172a",
+      "--info-pill-text": "#7dd3fc",
+      "--status-bg": "#0f172a",
+      "--status-text": "#7dd3fc",
+      "--status-border": "#334155",
+      "--placeholder-bg": "#0f172a",
+      "--shadow-main": "0 12px 28px rgba(0,0,0,0.28)",
+    };
+  }
+
+  return {
+    "--page-bg": "linear-gradient(135deg, #d9edf2, #eef5f7)",
+    "--login-bg": "linear-gradient(135deg, #d9edf2, #eef5f7)",
+    "--text-main": "#17313A",
+    "--text-soft": "#31545F",
+    "--text-muted": "#5f7480",
+    "--brand-text": "#17313A",
+    "--brand-accent": "#0F7F99",
+    "--card-bg": "#f8fbfc",
+    "--card-bg-soft": "#ffffff",
+    "--card-bg-alt": "#eef4f7",
+    "--module-bg": "#eaf4f7",
+    "--input-bg": "#ffffff",
+    "--input-border": "#c9d8de",
+    "--input-text": "#17313A",
+    "--border-soft": "#d8e5ea",
+    "--header-bg": "rgba(255,255,255,0.75)",
+    "--header-box-bg": "rgba(255,255,255,0.92)",
+    "--tab-bg": "#ffffff",
+    "--tab-text": "#0F6F86",
+    "--tab-border": "#bfd7dd",
+    "--tab-active-bg": "#17A8C9",
+    "--tab-active-text": "#ffffff",
+    "--primary-btn": "#17A8C9",
+    "--primary-btn-text": "#ffffff",
+    "--outline-bg": "#ffffff",
+    "--outline-text": "#0F7F99",
+    "--outline-border": "#bcd2d9",
+    "--danger-text": "#B53B3B",
+    "--danger-border": "#E4B4B4",
+    "--info-pill-bg": "#eff8fb",
+    "--info-pill-text": "#0F6F86",
+    "--status-bg": "#eff8fb",
+    "--status-text": "#0F7F99",
+    "--status-border": "#cdebf1",
+    "--placeholder-bg": "#ffffff",
+    "--shadow-main": "0 12px 28px rgba(0,0,0,0.08)",
   };
 }
 
@@ -350,6 +434,13 @@ useEffect(() => {
     role: "OPERADOR",
   });
 
+  const [theme, setTheme] = useState(() =>
+    loadStorage("sf_theme_v1", "dark")
+  );
+
+  const isDark = theme === "dark";
+  const themeVars = getThemeVars(isDark);
+
   useEffect(() => {
     if (session) {
       saveStorage(STORAGE_KEYS.session, session);
@@ -357,6 +448,10 @@ useEffect(() => {
       localStorage.removeItem(STORAGE_KEYS.session);
     }
   }, [session]);
+
+  useEffect(() => {
+    saveStorage("sf_theme_v1", theme);
+  }, [theme]);
 
   useEffect(() => {
   saveStorage(STORAGE_KEYS.attendances, atendimentos);
@@ -969,42 +1064,38 @@ useEffect(() => {
     }));
   }
 
-  function addHospital() {
+  async function addHospital() {
     const value = newHospital.trim();
     if (!value) return;
     if (settings.hospitals.includes(value)) return;
 
-    setSettings((prev) => ({
-      ...prev,
-      hospitals: [...prev.hospitals, value],
-    }));
-    setNewHospital("");
+    const nextList = [...(settings.hospitals || []), value];
+    const saved = await saveSettingListToSupabase("hospitals", nextList);
+    if (saved) {
+      setNewHospital("");
+    }
   }
 
-  function removeHospital(value) {
-    setSettings((prev) => ({
-      ...prev,
-      hospitals: prev.hospitals.filter((item) => item !== value),
-    }));
+  async function removeHospital(value) {
+    const nextList = (settings.hospitals || []).filter((item) => item !== value);
+    await saveSettingListToSupabase("hospitals", nextList);
   }
 
-  function addCemetery() {
+  async function addCemetery() {
     const value = newCemetery.trim();
     if (!value) return;
     if (settings.cemeteries.includes(value)) return;
 
-    setSettings((prev) => ({
-      ...prev,
-      cemeteries: [...prev.cemeteries, value],
-    }));
-    setNewCemetery("");
+    const nextList = [...(settings.cemeteries || []), value];
+    const saved = await saveSettingListToSupabase("cemeteries", nextList);
+    if (saved) {
+      setNewCemetery("");
+    }
   }
 
-  function removeCemetery(value) {
-    setSettings((prev) => ({
-      ...prev,
-      cemeteries: prev.cemeteries.filter((item) => item !== value),
-    }));
+  async function removeCemetery(value) {
+    const nextList = (settings.cemeteries || []).filter((item) => item !== value);
+    await saveSettingListToSupabase("cemeteries", nextList);
   }
 
   async function addSettingItem(key, value, setter) {
@@ -1333,7 +1424,12 @@ useEffect(() => {
     const velorioTexto =
       form.velorioTipo === "funeraria"
         ? [form.velorioUnidade, form.velorioSala].filter(Boolean).join(" - ")
-        : [form.velorioEndereco, form.velorioNumero, form.velorioBairro]
+        : [
+            form.velorioNomeLocal,
+            form.velorioEndereco,
+            form.velorioNumero,
+            form.velorioBairro,
+          ]
             .filter(Boolean)
             .join(", ");
 
@@ -1684,7 +1780,7 @@ useEffect(() => {
 
   if (finalizado) {
     return (
-      <div style={styles.page}>
+      <div style={{ ...styles.page, ...themeVars }}>
         <div style={{ marginBottom: 20 }}>
           <button
             style={styles.outlineDarkBtn}
@@ -1732,7 +1828,7 @@ useEffect(() => {
 
   if (bootLoading) {
     return (
-      <div style={styles.loginPage}>
+      <div style={{ ...styles.loginPage, ...themeVars }}>
         <div style={styles.loginCard}>
           <div style={styles.loginBrandWrap}>
             <img
@@ -1750,7 +1846,7 @@ useEffect(() => {
 
   if (!session) {
     return (
-      <div style={styles.loginPage}>
+      <div style={{ ...styles.loginPage, ...themeVars }}>
         <div style={styles.loginCard}>
           <div style={styles.loginBrandWrap}>
             <img
@@ -1794,7 +1890,7 @@ useEffect(() => {
   }
 
   return (
-    <div style={styles.page}>
+    <div style={{ ...styles.page, ...themeVars }}>
       <header style={styles.header}>
         <div style={styles.headerBrand}>
           <img
@@ -1813,6 +1909,12 @@ useEffect(() => {
             <div style={{ fontWeight: 700 }}>{session.name}</div>
             <div style={{ fontSize: 12, opacity: 0.9 }}>{session.role}</div>
           </div>
+          <button
+            style={styles.outlineBtn}
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+          >
+            {isDark ? "☀️ Claro" : "🌙 Escuro"}
+          </button>
           <button style={styles.outlineBtn} onClick={handleLogout}>
             Sair
           </button>
@@ -1999,6 +2101,16 @@ useEffect(() => {
                       onClick={() => openAcompanhamento(item)}
                     >
                       Acompanhar
+                    </button>
+                    <button
+                      style={styles.outlineDarkBtn}
+                      onClick={() => {
+                        const link = `${window.location.origin}/acompanhamento/${item.id}`;
+                        navigator.clipboard.writeText(link);
+                        alert("Link da família copiado!");
+                      }}
+                    >
+                      📲 Copiar link da família
                     </button>
                     <button
                       style={styles.primaryBtn}
@@ -2469,11 +2581,20 @@ useEffect(() => {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Funerária</label>
+                <label style={styles.label}>Local do velório</label>
                 <select
                   style={styles.input}
                   value={form.velorioTipo}
-                  onChange={(e) => updateForm("velorioTipo", e.target.value)}
+                  onChange={(e) => {
+                    updateForm("velorioTipo", e.target.value);
+                    if (e.target.value !== "funeraria") {
+                      updateForm("velorioUnidade", "");
+                      updateForm("velorioSala", "");
+                    }
+                    if (e.target.value !== "igreja") {
+                      updateForm("velorioNomeLocal", "");
+                    }
+                  }}
                 >
                   <option value="funeraria">Funerária</option>
                   <option value="residencia">Residência</option>
@@ -2481,40 +2602,102 @@ useEffect(() => {
                 </select>
               </div>
 
-              <div style={styles.field}>
-                <label style={styles.label}>Unidade</label>
-                <select
-                  style={styles.input}
-                  value={form.velorioUnidade}
-                  onChange={(e) => {
-                    updateForm("velorioUnidade", e.target.value);
-                    updateForm("velorioSala", "");
-                  }}
-                >
-                  <option value="">Selecione</option>
-                  {Object.keys(FUNERAL_UNITS).map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {form.velorioTipo === "funeraria" && (
+                <>
+                  <div style={styles.field}>
+                    <label style={styles.label}>Unidade</label>
+                    <select
+                      style={styles.input}
+                      value={form.velorioUnidade}
+                      onChange={(e) => {
+                        updateForm("velorioUnidade", e.target.value);
+                        updateForm("velorioSala", "");
+                      }}
+                    >
+                      <option value="">Selecione</option>
+                      {Object.keys(FUNERAL_UNITS).map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div style={styles.field}>
-                <label style={styles.label}>Sala</label>
-                <select
-                  style={styles.input}
-                  value={form.velorioSala}
-                  onChange={(e) => updateForm("velorioSala", e.target.value)}
-                >
-                  <option value="">Selecione</option>
-                  {(FUNERAL_UNITS[form.velorioUnidade] || []).map((room) => (
-                    <option key={room} value={room}>
-                      {room}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <div style={styles.field}>
+                    <label style={styles.label}>Sala</label>
+                    <select
+                      style={styles.input}
+                      value={form.velorioSala}
+                      onChange={(e) => updateForm("velorioSala", e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {(FUNERAL_UNITS[form.velorioUnidade] || []).map((room) => (
+                        <option key={room} value={room}>
+                          {room}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {form.velorioTipo !== "funeraria" && (
+                <>
+                  {form.velorioTipo === "igreja" && (
+                    <div style={styles.fieldWide}>
+                      <label style={styles.label}>Nome do local</label>
+                      <input
+                        style={styles.input}
+                        value={form.velorioNomeLocal || ""}
+                        onChange={(e) => updateForm("velorioNomeLocal", e.target.value)}
+                      />
+                    </div>
+                  )}
+
+                  <div style={styles.field}>
+                    <label style={styles.label}>CEP</label>
+                    <input
+                      style={styles.input}
+                      value={form.velorioCep}
+                      onChange={(e) => handleCepChange(e.target.value, "velorio")}
+                      placeholder="00000-000"
+                    />
+                    {cepStatus.velorio.loading ? (
+                      <span style={styles.helpText}>Consultando CEP...</span>
+                    ) : null}
+                    {cepStatus.velorio.error ? (
+                      <span style={styles.errorText}>{cepStatus.velorio.error}</span>
+                    ) : null}
+                  </div>
+
+                  <div style={styles.fieldWide}>
+                    <label style={styles.label}>Endereço</label>
+                    <input
+                      style={styles.input}
+                      value={form.velorioEndereco}
+                      onChange={(e) => updateForm("velorioEndereco", e.target.value)}
+                    />
+                  </div>
+
+                  <div style={styles.field}>
+                    <label style={styles.label}>Número</label>
+                    <input
+                      style={styles.input}
+                      value={form.velorioNumero}
+                      onChange={(e) => updateForm("velorioNumero", e.target.value)}
+                    />
+                  </div>
+
+                  <div style={styles.field}>
+                    <label style={styles.label}>Bairro</label>
+                    <input
+                      style={styles.input}
+                      value={form.velorioBairro}
+                      onChange={(e) => updateForm("velorioBairro", e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
 
               <div style={styles.field}>
                 <label style={styles.label}>Data/Saída</label>
@@ -2651,27 +2834,7 @@ useEffect(() => {
               </button>
             </div>
 
-            <div style={styles.previewBox}>
-              {services.map((item) => (
-                <div
-                  key={item.name}
-                  style={{
-                    ...styles.previewItem,
-                    background: item.checked ? "#E6F7FA" : "#F4F7FA",
-                    borderColor: item.checked ? "#0EA5B7" : "#D8E1E8",
-                    color: item.checked ? "#0B7285" : "#5F7182",
-                  }}
-                >
-                  <span>
-                    {item.checked ? "☑" : "☐"} {item.name}
-                  </span>
-                  <span style={{ fontSize: 12 }}>
-                    {item.qty ? `Qtd: ${item.qty}` : ""}
-                    {item.value ? ` | R$ ${formatMoney(item.value)}` : ""}
-                  </span>
-                </div>
-              ))}
-            </div>
+
           </section>
 
           <section style={styles.card}>
@@ -3544,7 +3707,7 @@ useEffect(() => {
         <div style={styles.modalOverlay}>
           <div style={styles.modalBox}>
             <div style={styles.modalHead}>
-              <h2 style={{ margin: 0, color: "#0B7285" }}>
+              <h2 style={{ margin: 0, color: "var(--brand-accent)" }}>
                 Selecionar Serviços
               </h2>
               <button
@@ -3561,8 +3724,12 @@ useEffect(() => {
                   key={item.name}
                   style={{
                     ...styles.serviceCard,
-                    borderColor: item.checked ? "#0EA5B7" : "#D8E1E8",
-                    background: item.checked ? "#F0FBFD" : "#FFFFFF",
+                    borderColor: item.checked
+                      ? "var(--brand-accent)"
+                      : "var(--border-soft)",
+                    background: item.checked
+                      ? (isDark ? "#172033" : "#F0FBFD")
+                      : "var(--card-bg-soft)",
                   }}
                 >
                   <div style={styles.serviceTop}>
@@ -3587,7 +3754,12 @@ useEffect(() => {
                     <div style={styles.field}>
                       <label style={styles.label}>Quantidade</label>
                       <input
-                        style={styles.input}
+                        style={{
+                          ...styles.input,
+                          background: isDark ? "#0f172a" : "#ffffff",
+                          color: isDark ? "#e5e7eb" : "#17313A",
+                          borderColor: isDark ? "#334155" : "#cbd5e1",
+                        }}
                         value={item.qty}
                         onChange={(e) =>
                           updateService(index, "qty", e.target.value)
@@ -3598,7 +3770,12 @@ useEffect(() => {
                     <div style={styles.field}>
                       <label style={styles.label}>Valor</label>
                       <input
-                        style={styles.input}
+                        style={{
+                          ...styles.input,
+                          background: isDark ? "#0f172a" : "#ffffff",
+                          color: isDark ? "#e5e7eb" : "#17313A",
+                          borderColor: isDark ? "#334155" : "#cbd5e1",
+                        }}
                         value={item.value}
                         onChange={(e) =>
                           updateService(index, "value", e.target.value)
@@ -3611,7 +3788,12 @@ useEffect(() => {
                     <div style={styles.field}>
                       <label style={styles.label}>Frase</label>
                       <input
-                        style={styles.input}
+                        style={{
+                          ...styles.input,
+                          background: isDark ? "#0f172a" : "#ffffff",
+                          color: isDark ? "#e5e7eb" : "#17313A",
+                          borderColor: isDark ? "#334155" : "#cbd5e1",
+                        }}
                         value={item.note}
                         onChange={(e) =>
                           updateService(index, "note", e.target.value)
@@ -3624,7 +3806,12 @@ useEffect(() => {
                     <div style={styles.field}>
                       <label style={styles.label}>Descrição</label>
                       <input
-                        style={styles.input}
+                        style={{
+                          ...styles.input,
+                          background: isDark ? "#0f172a" : "#ffffff",
+                          color: isDark ? "#e5e7eb" : "#17313A",
+                          borderColor: isDark ? "#334155" : "#cbd5e1",
+                        }}
                         value={item.note}
                         onChange={(e) =>
                           updateService(index, "note", e.target.value)
@@ -3645,27 +3832,27 @@ useEffect(() => {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #17A8C9, #1BB8D6)",
+    background: "var(--page-bg)",
     fontFamily: "Arial, sans-serif",
     padding: 20,
-    color: "#17313A",
+    color: "var(--text-main)",
   },
   loginPage: {
     minHeight: "100vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "linear-gradient(135deg, #17A8C9, #1BB8D6)",
+    background: "var(--login-bg)",
     padding: 20,
     fontFamily: "Arial, sans-serif",
   },
   loginCard: {
     width: "100%",
     maxWidth: 430,
-    background: "#fff",
+    background: "var(--card-bg-soft)",
     borderRadius: 18,
     padding: 30,
-    boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
+    boxShadow: "var(--shadow-main)",
   },
   loginBrandWrap: {
     textAlign: "center",
@@ -3681,25 +3868,25 @@ const styles = {
   loginTitle: {
     textAlign: "center",
     margin: 0,
-    color: "#0F7F99",
+    color: "var(--brand-accent)",
   },
   loginSub: {
     textAlign: "center",
     marginTop: 8,
-    color: "#6E808B",
+    color: "var(--text-muted)",
     marginBottom: 20,
   },
   header: {
-    background: "rgba(255,255,255,0.18)",
+    background: "var(--header-bg)",
     borderRadius: 18,
     padding: 22,
-    color: "#fff",
+    color: "var(--brand-text)",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     gap: 20,
     marginBottom: 16,
-    boxShadow: "0 14px 30px rgba(11, 88, 112, 0.14)",
+    boxShadow: "var(--shadow-main)",
   },
   headerBrand: {
     display: "flex",
@@ -3730,7 +3917,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 12,
-    background: "rgba(255,255,255,0.22)",
+    background: "var(--header-box-bg)",
     borderRadius: 14,
     padding: "10px 12px",
   },
@@ -3743,20 +3930,20 @@ const styles = {
   tab: {
     padding: "10px 16px",
     borderRadius: 12,
-    border: "1px solid #BFD7DD",
-    background: "#fff",
+    border: "1px solid var(--tab-border)",
+    background: "var(--card-bg-soft)",
     cursor: "pointer",
     fontWeight: 700,
-    color: "#0F6F86",
+    color: "var(--info-pill-text)",
   },
   tabActive: {
     padding: "10px 16px",
     borderRadius: 12,
-    border: "1px solid #17A8C9",
-    background: "#17A8C9",
+    border: "1px solid var(--tab-active-bg)",
+    background: "var(--primary-btn)",
     cursor: "pointer",
     fontWeight: 700,
-    color: "#fff",
+    color: "var(--brand-text)",
   },
   grid2: {
     display: "grid",
@@ -3775,16 +3962,16 @@ const styles = {
     gap: 12,
   },
   card: {
-    background: "#fff",
+    background: "var(--card-bg-soft)",
     borderRadius: 18,
     padding: 18,
-    boxShadow: "0 10px 24px rgba(0,0,0,0.06)",
-    border: "1px solid #E0EDF1",
+    boxShadow: "var(--shadow-main)",
+    border: "1px solid var(--border-soft)",
     marginBottom: 16,
   },
   cardTitle: {
     marginTop: 0,
-    color: "#0F7F99",
+    color: "var(--brand-accent)",
     marginBottom: 16,
   },
   field: {
@@ -3802,23 +3989,23 @@ const styles = {
   label: {
     fontSize: 13,
     fontWeight: 700,
-    color: "#31545F",
+    color: "var(--text-soft)",
   },
   input: {
-    border: "1px solid #CDE1E6",
+    border: "1px solid var(--input-border)",
     borderRadius: 10,
     padding: "10px 12px",
     fontSize: 14,
     outline: "none",
-    background: "#fff",
-    color: "#17313A",
+    background: "var(--card-bg-soft)",
+    color: "var(--text-main)",
     caretColor: "#17313A",
     width: "100%",
     boxSizing: "border-box",
   },
   primaryBtn: {
-    background: "#17A8C9",
-    color: "#fff",
+    background: "var(--primary-btn)",
+    color: "var(--primary-btn-text)",
     border: "none",
     padding: "11px 16px",
     borderRadius: 10,
@@ -3826,8 +4013,8 @@ const styles = {
     fontWeight: 700,
   },
   outlineBtn: {
-    background: "#FFFFFF",
-    color: "#0F7F99",
+    background: "var(--outline-bg)",
+    color: "var(--brand-accent)",
     border: "none",
     padding: "10px 14px",
     borderRadius: 10,
@@ -3835,8 +4022,8 @@ const styles = {
     fontWeight: 700,
   },
   outlineDarkBtn: {
-    background: "#FFFFFF",
-    color: "#0F7F99",
+    background: "var(--outline-bg)",
+    color: "var(--brand-accent)",
     border: "1px solid #0B7285",
     padding: "10px 14px",
     borderRadius: 10,
@@ -3847,7 +4034,7 @@ const styles = {
     marginBottom: 12,
     padding: 10,
     background: "#FFE7E7",
-    color: "#B53B3B",
+    color: "var(--danger-text)",
     borderRadius: 10,
   },
   separator: {
@@ -3858,10 +4045,10 @@ const styles = {
   previewBox: {
     maxHeight: 460,
     overflowY: "auto",
-    border: "1px solid #DDE8EC",
+    border: "1px solid var(--border-soft)",
     borderRadius: 14,
     padding: 10,
-    background: "#FAFCFD",
+    background: "var(--card-bg-alt)",
   },
   previewItem: {
     border: "1px solid",
@@ -3881,17 +4068,17 @@ const styles = {
     marginBottom: 14,
   },
   infoPill: {
-    background: "#EAF8FA",
-    border: "1px solid #D3EFF4",
+    background: "var(--info-pill-bg)",
+    border: "1px solid var(--border-soft)",
     borderRadius: 999,
     padding: "8px 12px",
     fontSize: 13,
     fontWeight: 700,
-    color: "#0F6F86",
+    color: "var(--info-pill-text)",
   },
   helpText: {
     fontSize: 12,
-    color: "#0F7F99",
+    color: "var(--brand-accent)",
   },
   errorText: {
     fontSize: 12,
@@ -3906,8 +4093,8 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     gap: 10,
-    border: "1px solid #E0EDF1",
-    background: "#FBFDFD",
+    border: "1px solid var(--border-soft)",
+    background: "var(--card-bg-soft)",
     borderRadius: 12,
     padding: 12,
     marginBottom: 10,
@@ -3921,14 +4108,14 @@ const styles = {
     gap: 18,
   },
   homeCard: {
-    background: "#FFFFFF",
+    background: "var(--outline-bg)",
     border: "none",
     borderRadius: 24,
     padding: "30px 26px",
     minHeight: 150,
     cursor: "pointer",
     textAlign: "left",
-    boxShadow: "0 14px 28px rgba(11, 88, 112, 0.14)",
+    boxShadow: "var(--shadow-main)",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
@@ -3936,12 +4123,12 @@ const styles = {
   homeCardTitle: {
     fontSize: 24,
     fontWeight: 700,
-    color: "#0F7F99",
+    color: "var(--brand-accent)",
     marginBottom: 10,
   },
   homeCardText: {
     fontSize: 16,
-    color: "#5C7480",
+    color: "var(--text-muted)",
   },
   homePanels: {
     display: "grid",
@@ -3953,16 +4140,16 @@ const styles = {
     background: "rgba(255,255,255,0.92)",
     borderRadius: 24,
     padding: 22,
-    boxShadow: "0 14px 28px rgba(11, 88, 112, 0.12)",
+    boxShadow: "var(--shadow-main)",
   },
   homePanelTitle: {
     marginTop: 0,
     marginBottom: 16,
-    color: "#0F7F99",
+    color: "var(--brand-accent)",
     fontSize: 24,
   },
   homeListItem: {
-    background: "#FFFFFF",
+    background: "var(--outline-bg)",
     borderRadius: 16,
     padding: "16px 18px",
     display: "flex",
@@ -3970,15 +4157,15 @@ const styles = {
     alignItems: "center",
     gap: 12,
     marginBottom: 12,
-    boxShadow: "0 8px 18px rgba(11, 88, 112, 0.08)",
+    boxShadow: "0 8px 18px rgba(0,0,0,0.10)",
   },
   homeListSub: {
     fontSize: 13,
-    color: "#6E808B",
+    color: "var(--text-muted)",
     marginTop: 4,
   },
   miniActionBtn: {
-    background: "#17A8C9",
+    background: "var(--primary-btn)",
     color: "#FFFFFF",
     border: "none",
     borderRadius: 12,
@@ -3987,7 +4174,7 @@ const styles = {
     cursor: "pointer",
   },
   progressRow: {
-    background: "#FFFFFF",
+    background: "var(--outline-bg)",
     borderRadius: 16,
     padding: "14px 16px",
     display: "flex",
@@ -3995,15 +4182,15 @@ const styles = {
     alignItems: "center",
     gap: 12,
     marginBottom: 10,
-    boxShadow: "0 8px 18px rgba(11, 88, 112, 0.08)",
+    boxShadow: "0 8px 18px rgba(0,0,0,0.10)",
   },
   progressName: {
     fontWeight: 700,
-    color: "#31545F",
+    color: "var(--text-soft)",
   },
   progressBadge: {
-    background: "#EAF8FA",
-    color: "#0F7F99",
+    background: "var(--info-pill-bg)",
+    color: "var(--brand-accent)",
     borderRadius: 999,
     padding: "8px 12px",
     fontSize: 12,
@@ -4011,16 +4198,16 @@ const styles = {
   },
   homeLinkRow: {
     marginTop: 12,
-    color: "#31545F",
+    color: "var(--text-soft)",
     fontSize: 14,
   },
 
 
   moduleCard: {
-    background: "#EAF4F7",
+    background: "var(--module-bg)",
     borderRadius: 28,
     padding: 28,
-    boxShadow: "0 12px 28px rgba(0,0,0,0.08)",
+    boxShadow: "var(--shadow-main)",
     marginBottom: 24,
   },
   moduleHeader: {
@@ -4039,11 +4226,11 @@ const styles = {
   },
   moduleSub: {
     margin: "6px 0 0",
-    color: "#48626D",
+    color: "var(--text-soft)",
     fontSize: 15,
   },
   modulePlaceholder: {
-    background: "#FFFFFF",
+    background: "var(--outline-bg)",
     borderRadius: 24,
     padding: 28,
     minHeight: 220,
@@ -4053,13 +4240,13 @@ const styles = {
     boxShadow: "inset 0 0 0 1px rgba(12,127,163,0.08)",
   },
   modulePlaceholderTitle: {
-    color: "#103E59",
+    color: "var(--text-main)",
     fontSize: 28,
     fontWeight: 800,
     marginBottom: 10,
   },
   modulePlaceholderText: {
-    color: "#56707A",
+    color: "var(--text-muted)",
     fontSize: 16,
     lineHeight: 1.6,
     maxWidth: 780,
@@ -4076,11 +4263,11 @@ const styles = {
     gap: 14,
   },
   recordCard: {
-    background: "#FFFFFF",
-    border: "1px solid #DDE8EC",
+    background: "var(--outline-bg)",
+    border: "1px solid var(--border-soft)",
     borderRadius: 18,
     padding: 18,
-    boxShadow: "0 10px 20px rgba(11, 88, 112, 0.08)",
+    boxShadow: "0 10px 20px rgba(0,0,0,0.10)",
   },
   recordTop: {
     display: "flex",
@@ -4093,13 +4280,13 @@ const styles = {
   recordNumber: {
     fontSize: 12,
     fontWeight: 700,
-    color: "#0F7F99",
+    color: "var(--brand-accent)",
     marginBottom: 4,
   },
   recordName: {
     fontSize: 20,
     fontWeight: 700,
-    color: "#21414A",
+    color: "var(--text-main)",
     marginBottom: 4,
   },
   recordMeta: {
@@ -4110,7 +4297,7 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: 10,
-    color: "#31545F",
+    color: "var(--text-soft)",
     fontSize: 14,
     marginBottom: 14,
   },
@@ -4120,8 +4307,8 @@ const styles = {
     flexWrap: "wrap",
   },
   statusBadge: {
-    background: "#EAF8FA",
-    color: "#0F7F99",
+    background: "var(--info-pill-bg)",
+    color: "var(--brand-accent)",
     border: "1px solid #CDEBF1",
     borderRadius: 999,
     padding: "8px 12px",
@@ -4129,9 +4316,9 @@ const styles = {
     fontWeight: 700,
   },
   outlineDangerBtn: {
-    background: "#FFFFFF",
-    color: "#B53B3B",
-    border: "1px solid #E4B4B4",
+    background: "var(--outline-bg)",
+    color: "var(--danger-text)",
+    border: "1px solid var(--danger-border)",
     padding: "10px 14px",
     borderRadius: 10,
     cursor: "pointer",
@@ -4139,11 +4326,11 @@ const styles = {
   },
 
   operationalCard: {
-    background: "#FFFFFF",
-    border: "1px solid #DDE8EC",
+    background: "var(--outline-bg)",
+    border: "1px solid var(--border-soft)",
     borderRadius: 18,
     padding: 18,
-    boxShadow: "0 10px 20px rgba(11, 88, 112, 0.08)",
+    boxShadow: "0 10px 20px rgba(0,0,0,0.10)",
   },
   operationalHeader: {
     display: "flex",
@@ -4158,8 +4345,8 @@ const styles = {
     gap: 12,
   },
   operationRow: {
-    background: "#F7FBFC",
-    border: "1px solid #DDE8EC",
+    background: "var(--card-bg-alt)",
+    border: "1px solid var(--border-soft)",
     borderRadius: 16,
     padding: 14,
     display: "grid",
@@ -4175,7 +4362,7 @@ const styles = {
     flexWrap: "wrap",
   },
   operationName: {
-    color: "#103E59",
+    color: "var(--text-main)",
     fontSize: 16,
     fontWeight: 800,
   },
@@ -4204,7 +4391,7 @@ const styles = {
   operationTimes: {
     display: "grid",
     gap: 4,
-    color: "#56707A",
+    color: "var(--text-muted)",
     fontSize: 13,
   },
   operationTransportGrid: {
@@ -4237,16 +4424,16 @@ const styles = {
     gap: 12,
     padding: 18,
     borderRadius: 18,
-    background: "#F5FBFD",
-    border: "1px solid #D7EEF4",
+    background: "var(--card-bg-alt)",
+    border: "1px solid var(--border-soft)",
     flexWrap: "wrap",
   },
   acompanhamentoInfoGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
     gap: 12,
-    background: "#fff",
-    border: "1px solid #E2EDF2",
+    background: "var(--card-bg-soft)",
+    border: "1px solid var(--border-soft)",
     borderRadius: 16,
     padding: 16,
   },
@@ -4256,8 +4443,8 @@ const styles = {
     gap: 14,
   },
   acompanhamentoStageCard: {
-    background: "#fff",
-    border: "1px solid #E2EDF2",
+    background: "var(--card-bg-soft)",
+    border: "1px solid var(--border-soft)",
     borderRadius: 16,
     padding: 16,
     display: "grid",
@@ -4266,13 +4453,13 @@ const styles = {
   acompanhamentoTimes: {
     display: "grid",
     gap: 4,
-    color: "#48626D",
+    color: "var(--text-soft)",
     fontSize: 14,
   },
   acompanhamentoExtra: {
     display: "grid",
     gap: 4,
-    color: "#23404A",
+    color: "var(--text-main)",
     fontSize: 14,
     paddingTop: 6,
     borderTop: "1px solid #E6F0F4",
@@ -4291,7 +4478,7 @@ const styles = {
     maxWidth: 1150,
     maxHeight: "90vh",
     overflowY: "auto",
-    background: "#fff",
+    background: "var(--card-bg-soft)",
     borderRadius: 18,
     padding: 18,
     boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
