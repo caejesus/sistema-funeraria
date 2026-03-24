@@ -376,9 +376,7 @@ function getThemeVars(isDark) {
 export default function App() {
   const [users, setUsers] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [session, setSession] = useState(() =>
-    loadStorage(STORAGE_KEYS.session, null)
-  );
+  const [session, setSession] = useState(null);
   const [bootLoading, setBootLoading] = useState(true);
 
   const [login, setLogin] = useState("");
@@ -437,17 +435,15 @@ useEffect(() => {
   const [theme, setTheme] = useState(() =>
     loadStorage("sf_theme_v1", "dark")
   );
+  const [pdfPreview, setPdfPreview] = useState({
+    open: false,
+    title: "",
+    url: "",
+    filename: "",
+  });
 
   const isDark = theme === "dark";
   const themeVars = getThemeVars(isDark);
-
-  useEffect(() => {
-    if (session) {
-      saveStorage(STORAGE_KEYS.session, session);
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.session);
-    }
-  }, [session]);
 
   useEffect(() => {
     saveStorage("sf_theme_v1", theme);
@@ -1489,11 +1485,11 @@ useEffect(() => {
     doc.text("Responsável:", 45, assinaturaY + 0.5);
     doc.line(70, assinaturaY, 145, assinaturaY);
 
-    doc.save(
-      `ficha-${(form.falecido || "atendimento")
-        .replace(/\s+/g, "-")
-        .toLowerCase()}.pdf`
-    );
+    const filename = `ficha-${(form.falecido || "atendimento")
+      .replace(/\s+/g, "-")
+      .toLowerCase()}.pdf`;
+
+    openPdfPreview(doc, filename, "Pré-visualização da Ficha");
   }
 
   function gerarTermoPDF() {
@@ -1771,11 +1767,68 @@ useEffect(() => {
     doc.setFont("times", "bold");
     doc.text("autorização", 95, y);
 
-    doc.save(
-      `termo-${(form.falecido || "atendimento")
-        .replace(/\s+/g, "-")
-        .toLowerCase()}.pdf`
-    );
+    const filename = `termo-${(form.falecido || "atendimento")
+      .replace(/\s+/g, "-")
+      .toLowerCase()}.pdf`;
+
+    openPdfPreview(doc, filename, "Pré-visualização do Termo");
+  }
+
+  function openPdfPreview(doc, filename, title) {
+    const blob = doc.output("blob");
+    const url = URL.createObjectURL(blob);
+
+    setPdfPreview((prev) => {
+      if (prev.url) {
+        URL.revokeObjectURL(prev.url);
+      }
+
+      return {
+        open: true,
+        title,
+        url,
+        filename,
+      };
+    });
+  }
+
+  function closePdfPreview() {
+    setPdfPreview((prev) => {
+      if (prev.url) {
+        URL.revokeObjectURL(prev.url);
+      }
+
+      return {
+        open: false,
+        title: "",
+        url: "",
+        filename: "",
+      };
+    });
+  }
+
+  function downloadPreviewPdf() {
+    if (!pdfPreview.url) return;
+
+    const a = document.createElement("a");
+    a.href = pdfPreview.url;
+    a.download = pdfPreview.filename || "documento.pdf";
+    a.click();
+  }
+
+  function printPreviewPdf() {
+    if (!pdfPreview.url) return;
+
+    const printWindow = window.open(pdfPreview.url, "_blank");
+    if (!printWindow) {
+      alert("Não foi possível abrir a janela de impressão.");
+      return;
+    }
+
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+    };
   }
 
   if (finalizado) {
@@ -1814,14 +1867,42 @@ useEffect(() => {
             </button>
 
             <button style={styles.primaryBtn} onClick={gerarFichaPDF}>
-              🧾 Gerar Ficha PDF
+              🧾 Visualizar Ficha
             </button>
 
             <button style={styles.primaryBtn} onClick={gerarTermoPDF}>
-              📄 Gerar Termo PDF
+              📄 Visualizar Termo
             </button>
           </div>
         </div>
+
+        {pdfPreview.open && (
+          <div style={styles.previewOverlay}>
+            <div style={styles.previewModal}>
+              <div style={styles.previewHeader}>
+                <h3 style={{ margin: 0 }}>{pdfPreview.title}</h3>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button style={styles.outlineDarkBtn} onClick={printPreviewPdf}>
+                    🖨 Imprimir
+                  </button>
+                  <button style={styles.primaryBtn} onClick={downloadPreviewPdf}>
+                    ⬇ Download
+                  </button>
+                  <button style={styles.outlineDangerBtn} onClick={closePdfPreview}>
+                    ✖ Fechar
+                  </button>
+                </div>
+              </div>
+
+              <iframe
+                src={pdfPreview.url}
+                title="Pré-visualização PDF"
+                style={styles.previewFrame}
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -3825,6 +3906,34 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+      {pdfPreview.open && (
+        <div style={styles.previewOverlay}>
+          <div style={styles.previewModal}>
+            <div style={styles.previewHeader}>
+              <h3 style={{ margin: 0 }}>{pdfPreview.title}</h3>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button style={styles.outlineDarkBtn} onClick={printPreviewPdf}>
+                  🖨 Imprimir
+                </button>
+                <button style={styles.primaryBtn} onClick={downloadPreviewPdf}>
+                  ⬇ Download
+                </button>
+                <button style={styles.outlineDangerBtn} onClick={closePdfPreview}>
+                  ✖ Fechar
+                </button>
+              </div>
+            </div>
+
+            <iframe
+              src={pdfPreview.url}
+              title="Pré-visualização PDF"
+              style={styles.previewFrame}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4502,5 +4611,42 @@ const styles = {
   },
   serviceTop: {
     marginBottom: 12,
+  },
+  previewOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.6)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+    padding: 20,
+  },
+  previewModal: {
+    width: "100%",
+    maxWidth: 1100,
+    height: "90vh",
+    background: "var(--card-bg)",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 18,
+    boxShadow: "var(--shadow-main)",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+  },
+  previewHeader: {
+    padding: 16,
+    borderBottom: "1px solid var(--border-soft)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  previewFrame: {
+    width: "100%",
+    height: "100%",
+    border: "none",
+    background: "#fff",
   },
 };
