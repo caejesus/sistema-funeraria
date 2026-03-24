@@ -374,6 +374,7 @@ function getThemeVars(isDark) {
 }
 
 export default function App() {
+alert("APP REAL RODANDO");
   const [users, setUsers] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [session, setSession] = useState(() =>
@@ -571,6 +572,7 @@ useEffect(() => {
 
 
   useEffect(() => {
+alert("LENDO LINK DA FAMÍLIA");
     async function bootstrapAppData() {
       setBootLoading(true);
 
@@ -909,6 +911,7 @@ useEffect(() => {
 
 
   function updateOperationalStage(attendanceId, stageKey, action) {
+alert("SALVANDO ETAPA");
     const now = currentTime();
 
     setAtendimentos((prev) =>
