@@ -2265,7 +2265,7 @@ function printPreviewPdf() {
           </div>
 
           <div style={styles.searchRow}>
-            <div style={{ ...styles.field, marginBottom: 0, flex: 1 }}>
+            <div style={{ marginBottom: 0, flex: 1 }}>
               <label style={styles.label}>Buscar atendimento</label>
               <input
                 style={styles.input}
@@ -2639,7 +2639,7 @@ function printPreviewPdf() {
           ) : (
             <>
               <div style={styles.searchRow}>
-                <div style={{ ...styles.field, marginBottom: 0, flex: 1 }}>
+                <div style={{ .....styles.field, marginBottom: 0, flex: 1 }}>
                   <label style={styles.label}>Selecionar atendimento</label>
                   <select
                     style={styles.input}
