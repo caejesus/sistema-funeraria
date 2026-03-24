@@ -407,6 +407,7 @@ useEffect(() => {
   carregarAtendimentos();
 }, []);
   const [viewingAttendanceId, setViewingAttendanceId] = useState(null);
+  const [publicTrackingId, setPublicTrackingId] = useState("");
 
   const [cepStatus, setCepStatus] = useState({
     responsavel: { loading: false, error: "" },
@@ -435,15 +436,16 @@ useEffect(() => {
   const [theme, setTheme] = useState(() =>
     loadStorage("sf_theme_v1", "dark")
   );
-  const [pdfPreview, setPdfPreview] = useState({
-    open: false,
-    title: "",
-    url: "",
-    filename: "",
-  });
-
+const [pdfPreview, setPdfPreview] = useState({
+  open: false,
+  title: "",
+  url: "",
+  filename: "",
+});
   const isDark = theme === "dark";
   const themeVars = getThemeVars(isDark);
+
+  
 
   useEffect(() => {
     saveStorage("sf_theme_v1", theme);
@@ -453,6 +455,24 @@ useEffect(() => {
   saveStorage(STORAGE_KEYS.attendances, atendimentos);
 
   }, [atendimentos]);
+
+  useEffect(() => {
+    function syncTrackingRoute() {
+      const trackingId = getTrackingIdFromPath();
+      setPublicTrackingId(trackingId);
+      if (trackingId) {
+        setViewingAttendanceId(trackingId);
+        setActiveTab("acompanhamento");
+      }
+    }
+
+    syncTrackingRoute();
+    window.addEventListener("popstate", syncTrackingRoute);
+
+    return () => {
+      window.removeEventListener("popstate", syncTrackingRoute);
+    };
+  }, []);
 
   const selectedCount = useMemo(
     () => services.filter((s) => s.checked).length,
@@ -490,6 +510,14 @@ useEffect(() => {
     if (!viewingAttendanceId) return null;
     return atendimentos.find((item) => item.id === viewingAttendanceId) || null;
   }, [viewingAttendanceId, atendimentos]);
+
+  function getTrackingIdFromPath() {
+    if (typeof window === "undefined") return "";
+    const match = window.location.pathname.match(/^\/acompanhamento\/([^/]+)/);
+    return match?.[1] || "";
+  }
+
+  const isPublicAcompanhamento = !!publicTrackingId;
 
   function updateForm(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -757,6 +785,50 @@ useEffect(() => {
     };
   }
 
+  async function persistAttendanceRecord(record) {
+    const { error } = await supabase
+      .from("atendimentos")
+      .upsert(
+        [
+          {
+            record_id: String(record.id),
+            codigo: record.codigo,
+            falecido: record.form?.falecido || record.falecido || "",
+            responsavel: record.form?.responsavelNome || record.responsavelNome || "",
+            data_atendimento: record.form?.dataAtendimento || record.dataAtendimento || null,
+            status: record.status || "aberto",
+            observacoes: record.form?.observacaoTermo || "",
+            dados: record,
+          },
+        ],
+        { onConflict: "record_id" }
+      );
+
+    if (error) {
+      console.error("Erro ao salvar atualização operacional no Supabase:", error);
+      alert("Erro ao salvar atualização do painel operacional no banco.");
+      return false;
+    }
+
+    return true;
+  }
+
+  async function updateAttendanceRecord(attendanceId, updater) {
+    let updatedRecord = null;
+
+    setAtendimentos((prev) =>
+      prev.map((item) => {
+        if (item.id !== attendanceId) return item;
+        updatedRecord = updater(item);
+        return updatedRecord;
+      })
+    );
+
+    if (updatedRecord) {
+      await persistAttendanceRecord(updatedRecord);
+    }
+  }
+
   function openAttendance(record, mode = "edit") {
     setForm(record.form);
     setServices(record.services);
@@ -870,27 +942,9 @@ useEffect(() => {
     setForm((prev) => ({ ...preparedForm, codigo: record.codigo }));
     setEditingAttendanceId(recordId);
 
-    const { error } = await supabase
-      .from("atendimentos")
-      .upsert(
-        [
-          {
-            record_id: String(record.id),
-            codigo: record.codigo,
-            falecido: record.form?.falecido || record.falecido || "",
-            responsavel: record.form?.responsavelNome || record.responsavelNome || "",
-            data_atendimento: record.form?.dataAtendimento || record.dataAtendimento || null,
-            status: record.status || "aberto",
-            observacoes: record.form?.observacaoTermo || "",
-            dados: record,
-          },
-        ],
-        { onConflict: "record_id" }
-      );
+    const saved = await persistAttendanceRecord(record);
 
-    if (error) {
-      console.error("Erro ao salvar no Supabase:", error);
-      alert("Erro ao salvar no banco");
+    if (!saved) {
       return;
     }
     setAtendimentos((prev) => {
@@ -904,153 +958,141 @@ useEffect(() => {
   }
 
 
-  function updateOperationalStage(attendanceId, stageKey, action) {
+  async function updateOperationalStage(attendanceId, stageKey, action) {
     const now = currentTime();
 
-    setAtendimentos((prev) =>
-      prev.map((item) => {
-        if (item.id !== attendanceId) return item;
+    await updateAttendanceRecord(attendanceId, (item) => {
+      const nextStages = JSON.parse(
+        JSON.stringify(item.operationalStages || createOperationStages())
+      );
+      const currentStage = nextStages[stageKey] || {
+        status: "nao_iniciado",
+        start: "",
+        end: "",
+        driver: "",
+        car: "",
+        attendant: "",
+        technician: "",
+        support: "",
+      };
 
-        const nextStages = JSON.parse(
-          JSON.stringify(item.operationalStages || createOperationStages())
-        );
-        const currentStage = nextStages[stageKey] || {
-          status: "nao_iniciado",
-          start: "",
-          end: "",
-          driver: "",
-          car: "",
-          attendant: "",
-          technician: "",
-          support: "",
-        };
-
-        if (action === "start") {
-          nextStages[stageKey] = {
-            ...currentStage,
-            status: "em_andamento",
-            start: currentStage.start || now,
-            end: "",
-          };
-        }
-
-        if (action === "finish") {
-          nextStages[stageKey] = {
-            ...currentStage,
-            status: "finalizado",
-            start: currentStage.start || now,
-            end: now,
-          };
-        }
-
-        return {
-          ...item,
-          operationalStages: nextStages,
-          status: getAttendanceOperationalStatus(nextStages),
-          updatedAt: new Date().toISOString(),
-        };
-      })
-    );
-  }
-
-  function updateOperationalTransport(attendanceId, stageKey, field, value) {
-    setAtendimentos((prev) =>
-      prev.map((item) => {
-        if (item.id !== attendanceId) return item;
-
-        const nextStages = JSON.parse(
-          JSON.stringify(item.operationalStages || createOperationStages())
-        );
-        const currentStage = nextStages[stageKey] || {
-          status: "nao_iniciado",
-          start: "",
-          end: "",
-          driver: "",
-          car: "",
-          attendant: "",
-          technician: "",
-          support: "",
-        };
-
+      if (action === "start") {
         nextStages[stageKey] = {
           ...currentStage,
-          [field]: value,
-        };
-
-        const nextForm = JSON.parse(JSON.stringify(item.form || getInitialForm()));
-
-        if (stageKey === "remocao") {
-          if (field === "driver") nextForm.Remocao = value;
-          if (field === "car") nextForm.carroRemocao = value;
-        }
-
-        if (stageKey === "entrega") {
-          if (field === "driver") nextForm.Entrega = value;
-          if (field === "car") nextForm.carroEntrega = value;
-        }
-
-        if (stageKey === "sepultamento") {
-          if (field === "driver") nextForm.Sepultamento = value;
-          if (field === "car") nextForm.carroSepultamento = value;
-        }
-
-        return {
-          ...item,
-          operationalStages: nextStages,
-          updatedAt: new Date().toISOString(),
-          form: nextForm,
-        };
-      })
-    );
-  }
-
-  function updateOperationalPerson(attendanceId, stageKey, field, value) {
-    setAtendimentos((prev) =>
-      prev.map((item) => {
-        if (item.id !== attendanceId) return item;
-
-        const nextStages = JSON.parse(
-          JSON.stringify(item.operationalStages || createOperationStages())
-        );
-        const currentStage = nextStages[stageKey] || {
-          status: "nao_iniciado",
-          start: "",
+          status: "em_andamento",
+          start: currentStage.start || now,
           end: "",
-          driver: "",
-          car: "",
-          attendant: "",
-          technician: "",
-          support: "",
         };
+      }
 
+      if (action === "finish") {
         nextStages[stageKey] = {
           ...currentStage,
-          [field]: value,
+          status: "finalizado",
+          start: currentStage.start || now,
+          end: now,
         };
+      }
 
-        const nextForm = JSON.parse(JSON.stringify(item.form || getInitialForm()));
+      return {
+        ...item,
+        operationalStages: nextStages,
+        status: getAttendanceOperationalStatus(nextStages),
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }
 
-        if (stageKey === "atendimento" && field === "attendant") {
-          nextForm.atendenteGeral = value;
-        }
+  async function updateOperationalTransport(attendanceId, stageKey, field, value) {
+    await updateAttendanceRecord(attendanceId, (item) => {
+      const nextStages = JSON.parse(
+        JSON.stringify(item.operationalStages || createOperationStages())
+      );
+      const currentStage = nextStages[stageKey] || {
+        status: "nao_iniciado",
+        start: "",
+        end: "",
+        driver: "",
+        car: "",
+        attendant: "",
+        technician: "",
+        support: "",
+      };
 
-        if (stageKey === "procedimentoClinico" && field === "technician") {
-          nextForm.tecnico = value;
-        }
+      nextStages[stageKey] = {
+        ...currentStage,
+        [field]: value,
+      };
 
-        if (stageKey === "ornamentacao" && field === "support") {
-          nextForm.apoio = value;
-        }
+      const nextForm = JSON.parse(JSON.stringify(item.form || getInitialForm()));
 
-        return {
-          ...item,
-          operationalStages: nextStages,
-          updatedAt: new Date().toISOString(),
-          form: nextForm,
-          atendente: stageKey === "atendimento" && field === "attendant" ? value : item.atendente,
-        };
-      })
-    );
+      if (stageKey === "remocao") {
+        if (field === "driver") nextForm.Remocao = value;
+        if (field === "car") nextForm.carroRemocao = value;
+      }
+
+      if (stageKey === "entrega") {
+        if (field === "driver") nextForm.Entrega = value;
+        if (field === "car") nextForm.carroEntrega = value;
+      }
+
+      if (stageKey === "sepultamento") {
+        if (field === "driver") nextForm.Sepultamento = value;
+        if (field === "car") nextForm.carroSepultamento = value;
+      }
+
+      return {
+        ...item,
+        operationalStages: nextStages,
+        updatedAt: new Date().toISOString(),
+        form: nextForm,
+      };
+    });
+  }
+
+  async function updateOperationalPerson(attendanceId, stageKey, field, value) {
+    await updateAttendanceRecord(attendanceId, (item) => {
+      const nextStages = JSON.parse(
+        JSON.stringify(item.operationalStages || createOperationStages())
+      );
+      const currentStage = nextStages[stageKey] || {
+        status: "nao_iniciado",
+        start: "",
+        end: "",
+        driver: "",
+        car: "",
+        attendant: "",
+        technician: "",
+        support: "",
+      };
+
+      nextStages[stageKey] = {
+        ...currentStage,
+        [field]: value,
+      };
+
+      const nextForm = JSON.parse(JSON.stringify(item.form || getInitialForm()));
+
+      if (stageKey === "atendimento" && field === "attendant") {
+        nextForm.atendenteGeral = value;
+      }
+
+      if (stageKey === "procedimentoClinico" && field === "technician") {
+        nextForm.tecnico = value;
+      }
+
+      if (stageKey === "ornamentacao" && field === "support") {
+        nextForm.apoio = value;
+      }
+
+      return {
+        ...item,
+        operationalStages: nextStages,
+        updatedAt: new Date().toISOString(),
+        form: nextForm,
+        atendente: stageKey === "atendimento" && field === "attendant" ? value : item.atendente,
+      };
+    });
   }
 
   function toggleOperationalCard(attendanceId) {
@@ -1486,10 +1528,10 @@ useEffect(() => {
     doc.line(70, assinaturaY, 145, assinaturaY);
 
     const filename = `ficha-${(form.falecido || "atendimento")
-      .replace(/\s+/g, "-")
-      .toLowerCase()}.pdf`;
+  .replace(/\s+/g, "-")
+  .toLowerCase()}.pdf`;
 
-    openPdfPreview(doc, filename, "Pré-visualização da Ficha");
+openPdfPreview(doc, filename, "Pré-visualização da Ficha");
   }
 
   function gerarTermoPDF() {
@@ -1768,69 +1810,64 @@ useEffect(() => {
     doc.text("autorização", 95, y);
 
     const filename = `termo-${(form.falecido || "atendimento")
-      .replace(/\s+/g, "-")
-      .toLowerCase()}.pdf`;
+  .replace(/\s+/g, "-")
+  .toLowerCase()}.pdf`;
 
-    openPdfPreview(doc, filename, "Pré-visualização do Termo");
+openPdfPreview(doc, filename, "Pré-visualização do Termo");
   }
+function openPdfPreview(doc, filename, title) {
+  const blob = doc.output("blob");
+  const url = URL.createObjectURL(blob);
 
-  function openPdfPreview(doc, filename, title) {
-    const blob = doc.output("blob");
-    const url = URL.createObjectURL(blob);
-
-    setPdfPreview((prev) => {
-      if (prev.url) {
-        URL.revokeObjectURL(prev.url);
-      }
-
-      return {
-        open: true,
-        title,
-        url,
-        filename,
-      };
-    });
-  }
-
-  function closePdfPreview() {
-    setPdfPreview((prev) => {
-      if (prev.url) {
-        URL.revokeObjectURL(prev.url);
-      }
-
-      return {
-        open: false,
-        title: "",
-        url: "",
-        filename: "",
-      };
-    });
-  }
-
-  function downloadPreviewPdf() {
-    if (!pdfPreview.url) return;
-
-    const a = document.createElement("a");
-    a.href = pdfPreview.url;
-    a.download = pdfPreview.filename || "documento.pdf";
-    a.click();
-  }
-
-  function printPreviewPdf() {
-    if (!pdfPreview.url) return;
-
-    const printWindow = window.open(pdfPreview.url, "_blank");
-    if (!printWindow) {
-      alert("Não foi possível abrir a janela de impressão.");
-      return;
+  setPdfPreview((prev) => {
+    if (prev.url) {
+      URL.revokeObjectURL(prev.url);
     }
 
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
+    return {
+      open: true,
+      title,
+      url,
+      filename,
     };
+  });
+}
+function closePdfPreview() {
+  setPdfPreview((prev) => {
+    if (prev.url) {
+      URL.revokeObjectURL(prev.url);
+    }
+
+    return {
+      open: false,
+      title: "",
+      url: "",
+      filename: "",
+    };
+  });
+}
+function downloadPreviewPdf() {
+  if (!pdfPreview.url) return;
+
+  const a = document.createElement("a");
+  a.href = pdfPreview.url;
+  a.download = pdfPreview.filename || "documento.pdf";
+  a.click();
+}
+function printPreviewPdf() {
+  if (!pdfPreview.url) return;
+
+  const printWindow = window.open(pdfPreview.url, "_blank");
+  if (!printWindow) {
+    alert("Não foi possível abrir a janela de impressão.");
+    return;
   }
 
+  printWindow.onload = () => {
+    printWindow.focus();
+    printWindow.print();
+  };
+}
   if (finalizado) {
     return (
       <div style={{ ...styles.page, ...themeVars }}>
@@ -1867,42 +1904,14 @@ useEffect(() => {
             </button>
 
             <button style={styles.primaryBtn} onClick={gerarFichaPDF}>
-              🧾 Visualizar Ficha
+              🧾 Gerar Ficha PDF
             </button>
 
             <button style={styles.primaryBtn} onClick={gerarTermoPDF}>
-              📄 Visualizar Termo
+              📄 Gerar Termo PDF
             </button>
           </div>
         </div>
-
-        {pdfPreview.open && (
-          <div style={styles.previewOverlay}>
-            <div style={styles.previewModal}>
-              <div style={styles.previewHeader}>
-                <h3 style={{ margin: 0 }}>{pdfPreview.title}</h3>
-
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button style={styles.outlineDarkBtn} onClick={printPreviewPdf}>
-                    🖨 Imprimir
-                  </button>
-                  <button style={styles.primaryBtn} onClick={downloadPreviewPdf}>
-                    ⬇ Download
-                  </button>
-                  <button style={styles.outlineDangerBtn} onClick={closePdfPreview}>
-                    ✖ Fechar
-                  </button>
-                </div>
-              </div>
-
-              <iframe
-                src={pdfPreview.url}
-                title="Pré-visualização PDF"
-                style={styles.previewFrame}
-              />
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -1921,6 +1930,121 @@ useEffect(() => {
             <p style={styles.loginSub}>Carregando usuários e configurações...</p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!session && isPublicAcompanhamento) {
+    return (
+      <div style={{ ...styles.page, ...themeVars }}>
+        <section style={{ ...styles.moduleCard, maxWidth: 980, margin: "32px auto" }}>
+          <div style={styles.moduleHeader}>
+            <div>
+              <h2 style={styles.moduleTitle}>Acompanhamento da Família</h2>
+              <p style={styles.moduleSub}>
+                Atualizações do atendimento do seu ente querido.
+              </p>
+            </div>
+          </div>
+
+          {!viewingAttendance ? (
+            <div style={styles.modulePlaceholder}>
+              <div style={styles.modulePlaceholderTitle}>Atendimento não encontrado</div>
+              <div style={styles.modulePlaceholderText}>
+                Verifique se o link está correto ou peça um novo link à funerária.
+              </div>
+            </div>
+          ) : (
+            <div style={styles.acompanhamentoWrap}>
+              <div style={styles.acompanhamentoHero}>
+                <div>
+                  <div style={styles.recordNumber}>{viewingAttendance.numero}</div>
+                  <div style={styles.recordName}>
+                    {viewingAttendance.falecido || "Sem nome informado"}
+                  </div>
+                  <div style={styles.recordMeta}>
+                    {viewingAttendance.unidade || "Unidade não informada"}
+                    {viewingAttendance.sala ? ` • ${viewingAttendance.sala}` : ""}
+                    {viewingAttendance.cemiterio ? ` • ${viewingAttendance.cemiterio}` : ""}
+                  </div>
+                </div>
+                <div style={styles.statusBadge}>{viewingAttendance.status}</div>
+              </div>
+
+              <div style={styles.acompanhamentoInfoGrid}>
+                <div><strong>Responsável:</strong> {viewingAttendance.responsavelNome || "—"}</div>
+                <div><strong>Local do óbito:</strong> {viewingAttendance.localObito || "—"}</div>
+                <div><strong>Atendente geral:</strong> {viewingAttendance.atendente || "—"}</div>
+                <div><strong>Motorista geral:</strong> {viewingAttendance.motorista || "—"}</div>
+              </div>
+
+              <div style={styles.acompanhamentoStages}>
+                {OPERATION_STAGES.map((stage) => {
+                  const stageState =
+                    viewingAttendance.operationalStages?.[stage.key] || {
+                      status: "nao_iniciado",
+                      start: "",
+                      end: "",
+                      driver: "",
+                      car: "",
+                      attendant: "",
+                      technician: "",
+                      support: "",
+                    };
+
+                  const statusLabel = getOperationStatusLabel(stageState.status);
+                  const statusStyle =
+                    stageState.status === "finalizado"
+                      ? styles.operationStatusDone
+                      : stageState.status === "em_andamento"
+                        ? styles.operationStatusRunning
+                        : styles.operationStatusWaiting;
+
+                  return (
+                    <div key={stage.key} style={styles.acompanhamentoStageCard}>
+                      <div style={styles.operationMain}>
+                        <div style={styles.operationName}>{stage.label}</div>
+                        <div style={{ ...styles.operationStatusBase, ...statusStyle }}>
+                          {statusLabel}
+                        </div>
+                      </div>
+
+                      <div style={styles.acompanhamentoTimes}>
+                        <div><strong>Início:</strong> {stageState.start || "—"}</div>
+                        <div><strong>Fim:</strong> {stageState.end || "—"}</div>
+                      </div>
+
+                      {stage.key === "atendimento" && (
+                        <div style={styles.acompanhamentoExtra}>
+                          <strong>Atendente:</strong> {stageState.attendant || "—"}
+                        </div>
+                      )}
+
+                      {stage.key === "procedimentoClinico" && (
+                        <div style={styles.acompanhamentoExtra}>
+                          <strong>Técnico:</strong> {stageState.technician || "—"}
+                        </div>
+                      )}
+
+                      {stage.key === "ornamentacao" && (
+                        <div style={styles.acompanhamentoExtra}>
+                          <strong>Apoio:</strong> {stageState.support || "—"}
+                        </div>
+                      )}
+
+                      {isTransportStage(stage.key) && (
+                        <div style={styles.acompanhamentoExtraGrid}>
+                          <div><strong>Motorista:</strong> {stageState.driver || "—"}</div>
+                          <div><strong>Carro:</strong> {stageState.car || "—"}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     );
   }
@@ -3906,7 +4030,6 @@ useEffect(() => {
           </div>
         </div>
       )}
-
       {pdfPreview.open && (
         <div style={styles.previewOverlay}>
           <div style={styles.previewModal}>
@@ -4612,41 +4735,44 @@ const styles = {
   serviceTop: {
     marginBottom: 12,
   },
-  previewOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.6)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 9999,
-    padding: 20,
-  },
-  previewModal: {
-    width: "100%",
-    maxWidth: 1100,
-    height: "90vh",
-    background: "var(--card-bg)",
-    border: "1px solid var(--border-soft)",
-    borderRadius: 18,
-    boxShadow: "var(--shadow-main)",
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-  },
-  previewHeader: {
-    padding: 16,
-    borderBottom: "1px solid var(--border-soft)",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  previewFrame: {
-    width: "100%",
-    height: "100%",
-    border: "none",
-    background: "#fff",
-  },
 };
+previewOverlay: {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.6)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 9999,
+  padding: 20,
+},
+
+previewModal: {
+  width: "100%",
+  maxWidth: 1100,
+  height: "90vh",
+  background: "var(--card-bg)",
+  border: "1px solid var(--border-soft)",
+  borderRadius: 18,
+  boxShadow: "var(--shadow-main)",
+  display: "flex",
+  flexDirection: "column",
+  overflow: "hidden",
+},
+
+previewHeader: {
+  padding: 16,
+  borderBottom: "1px solid var(--border-soft)",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
+},
+
+previewFrame: {
+  width: "100%",
+  height: "100%",
+  border: "none",
+  background: "#fff",
+},
