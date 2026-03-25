@@ -42,6 +42,47 @@ function getStatus(status) {
 export default function AcompanhamentoPublico() {
   const { id } = useParams();
   const [atendimento, setAtendimento] = useState(null);
+function getMensagem(stageKey, status) {
+  const mensagens = {
+    atendimento: {
+      aguardando: "Estamos organizando o início do atendimento.",
+      em_andamento: "Nossa equipe já iniciou o atendimento.",
+      finalizado: "Atendimento concluído com sucesso.",
+    },
+    remocao: {
+      aguardando: "Preparando a equipe para a remoção.",
+      em_andamento: "Nossa equipe está em deslocamento.",
+      finalizado: "Remoção realizada com todo cuidado.",
+    },
+    procedimentoClinico: {
+      aguardando: "Procedimento será iniciado em breve.",
+      em_andamento: "Procedimento sendo realizado com respeito.",
+      finalizado: "Procedimento concluído.",
+    },
+    ornamentacao: {
+      aguardando: "Organizando a ornamentação.",
+      em_andamento: "Preparando o ambiente com cuidado.",
+      finalizado: "Ornamentação concluída.",
+    },
+    entrega: {
+      aguardando: "Preparando para entrega.",
+      em_andamento: "Realizando a entrega.",
+      finalizado: "Entrega realizada.",
+    },
+    velorio: {
+      aguardando: "Velório será iniciado em breve.",
+      em_andamento: "Velório em andamento.",
+      finalizado: "Velório encerrado.",
+    },
+    sepultamento: {
+      aguardando: "Sepultamento será realizado.",
+      em_andamento: "Sepultamento em andamento.",
+      finalizado: "Sepultamento concluído.",
+    },
+  };
+
+  return mensagens[stageKey]?.[status] || "";
+}
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
