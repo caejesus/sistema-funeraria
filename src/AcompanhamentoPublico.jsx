@@ -95,14 +95,7 @@ export default function AcompanhamentoPublico() {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        <div style={styles.brandCard}>
-          <img
-            src="/logo.png"
-            alt="Grupo São Francisco"
-            style={styles.logo}
-          />
-        </div>
-
+        
         <div style={styles.headerCard}>
           <div style={styles.smallTitle}>Acompanhamento do Serviço</div>
           <div style={styles.deceasedName}>
