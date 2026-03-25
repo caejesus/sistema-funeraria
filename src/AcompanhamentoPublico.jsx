@@ -42,6 +42,9 @@ function getStatus(status) {
 export default function AcompanhamentoPublico() {
   const { id } = useParams();
   const [atendimento, setAtendimento] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+
 function getMensagem(stageKey, status) {
   const mensagens = {
     atendimento: {
@@ -83,7 +86,7 @@ function getMensagem(stageKey, status) {
 
   return mensagens[stageKey]?.[status] || "";
 }
-  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     async function carregar() {
@@ -136,7 +139,14 @@ function getMensagem(stageKey, status) {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        
+        <div style={styles.brandCard}>
+          <img
+            src="/logo.png"
+            alt="Grupo São Francisco"
+            style={styles.logo}
+          />
+        </div>
+
         <div style={styles.headerCard}>
           <div style={styles.smallTitle}>Acompanhamento do Serviço</div>
           <div style={styles.deceasedName}>
@@ -179,6 +189,10 @@ function getMensagem(stageKey, status) {
                     <span style={styles.timeLabel}>Fim</span>
                     <span style={styles.timeValue}>{stage.end || "—"}</span>
                   </div>
+                </div>
+
+                <div style={{ marginTop: 10, fontSize: 14, color: "#cbd5e1", lineHeight: 1.5 }}>
+                  {getMensagem(item.key, stage.status)}
                 </div>
               </div>
             );
