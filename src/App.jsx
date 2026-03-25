@@ -1932,6 +1932,34 @@ function printPreviewPdf() {
             </button>
           </div>
         </div>
+
+        {pdfPreview.open && (
+          <div style={styles.previewOverlay}>
+            <div style={styles.previewModal}>
+              <div style={styles.previewHeader}>
+                <h3 style={{ margin: 0 }}>{pdfPreview.title}</h3>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button style={styles.outlineDarkBtn} onClick={printPreviewPdf}>
+                    🖨 Imprimir
+                  </button>
+                  <button style={styles.primaryBtn} onClick={downloadPreviewPdf}>
+                    ⬇ Download
+                  </button>
+                  <button style={styles.outlineDangerBtn} onClick={closePdfPreview}>
+                    ✖ Fechar
+                  </button>
+                </div>
+              </div>
+
+              <iframe
+                src={pdfPreview.url}
+                title="Pré-visualização PDF"
+                style={styles.previewFrame}
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -2265,7 +2293,7 @@ function printPreviewPdf() {
           </div>
 
           <div style={styles.searchRow}>
-            <div style={{ marginBottom: 0, flex: 1 }}>
+            <div style={{ ...styles.field, marginBottom: 0, flex: 1 }}>
               <label style={styles.label}>Buscar atendimento</label>
               <input
                 style={styles.input}
@@ -2639,7 +2667,7 @@ function printPreviewPdf() {
           ) : (
             <>
               <div style={styles.searchRow}>
-                <div style={{ .....styles.field, marginBottom: 0, flex: 1 }}>
+                <div style={{ ...styles.field, marginBottom: 0, flex: 1 }}>
                   <label style={styles.label}>Selecionar atendimento</label>
                   <select
                     style={styles.input}
@@ -4755,44 +4783,44 @@ const styles = {
   serviceTop: {
     marginBottom: 12,
   },
+  previewOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.6)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+    padding: 20,
+  },
+
+  previewModal: {
+    width: "100%",
+    maxWidth: 1100,
+    height: "90vh",
+    background: "var(--card-bg)",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 18,
+    boxShadow: "var(--shadow-main)",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+  },
+
+  previewHeader: {
+    padding: 16,
+    borderBottom: "1px solid var(--border-soft)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+
+  previewFrame: {
+    width: "100%",
+    height: "100%",
+    border: "none",
+    background: "#fff",
+  },
 };
-previewOverlay: {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,0.6)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 9999,
-  padding: 20,
-},
-
-previewModal: {
-  width: "100%",
-  maxWidth: 1100,
-  height: "90vh",
-  background: "var(--card-bg)",
-  border: "1px solid var(--border-soft)",
-  borderRadius: 18,
-  boxShadow: "var(--shadow-main)",
-  display: "flex",
-  flexDirection: "column",
-  overflow: "hidden",
-},
-
-previewHeader: {
-  padding: 16,
-  borderBottom: "1px solid var(--border-soft)",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  flexWrap: "wrap",
-},
-
-previewFrame: {
-  width: "100%",
-  height: "100%",
-  border: "none",
-  background: "#fff",
-},
