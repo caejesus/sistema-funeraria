@@ -8,6 +8,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />} />
+      <Route path="/equipe" element={<App />} />
       <Route path="/acompanhamento/:id" element={<AcompanhamentoPublico />} />
     </Routes>
   </BrowserRouter>
