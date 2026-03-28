@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import jsPDF from "jspdf";
 import { supabase } from "./lib/supabaseClient.js";
+import Equipe from "./pages/Equipe.jsx";
 
 const STORAGE_KEYS = {
   users: "sf_users_v3",
@@ -442,7 +443,9 @@ const [pdfPreview, setPdfPreview] = useState({
   url: "",
   filename: "",
 });
-  const isDark = theme === "dark";
+  
+  const isEquipeRoute = window.location.pathname === "/equipe";
+const isDark = theme === "dark";
   const themeVars = getThemeVars(isDark);
 
   
@@ -469,7 +472,11 @@ const [pdfPreview, setPdfPreview] = useState({
     syncTrackingRoute();
     window.addEventListener("popstate", syncTrackingRoute);
 
-    return () => {
+    
+  if (isEquipeRoute) {
+    return <Equipe atendimentos={atendimentos} />;
+  }
+  return () => {
       window.removeEventListener("popstate", syncTrackingRoute);
     };
   }, []);
@@ -505,6 +512,12 @@ const [pdfPreview, setPdfPreview] = useState({
         .some((value) => String(value).toLowerCase().includes(term))
     );
   }, [attendanceSearch, atendimentos]);
+
+  const operationalAttendances = useMemo(() => {
+    return atendimentos.filter(
+      (item) => item.status === "Aguardando início" || item.status === "Em andamento"
+    );
+  }, [atendimentos]);
 
   const viewingAttendance = useMemo(() => {
     if (!viewingAttendanceId) return null;
@@ -1932,34 +1945,6 @@ function printPreviewPdf() {
             </button>
           </div>
         </div>
-
-        {pdfPreview.open && (
-          <div style={styles.previewOverlay}>
-            <div style={styles.previewModal}>
-              <div style={styles.previewHeader}>
-                <h3 style={{ margin: 0 }}>{pdfPreview.title}</h3>
-
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button style={styles.outlineDarkBtn} onClick={printPreviewPdf}>
-                    🖨 Imprimir
-                  </button>
-                  <button style={styles.primaryBtn} onClick={downloadPreviewPdf}>
-                    ⬇ Download
-                  </button>
-                  <button style={styles.outlineDangerBtn} onClick={closePdfPreview}>
-                    ✖ Fechar
-                  </button>
-                </div>
-              </div>
-
-              <iframe
-                src={pdfPreview.url}
-                title="Pré-visualização PDF"
-                style={styles.previewFrame}
-              />
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -2205,6 +2190,13 @@ function printPreviewPdf() {
           </button>
 
           <button
+            style={activeTab === "equipe" ? styles.tabActive : styles.tab}
+            onClick={() => setActiveTab("equipe")}
+          >
+            Equipe
+          </button>
+
+          <button
             style={activeTab === "acompanhamento" ? styles.tabActive : styles.tab}
             onClick={() => setActiveTab("acompanhamento")}
           >
@@ -2397,16 +2389,16 @@ function printPreviewPdf() {
             </div>
           </div>
 
-          {atendimentos.length === 0 ? (
+          {operationalAttendances.length === 0 ? (
             <div style={styles.modulePlaceholder}>
               <div style={styles.modulePlaceholderTitle}>Nenhum atendimento disponível</div>
               <div style={styles.modulePlaceholderText}>
-                Finalize um atendimento para ele aparecer no painel operacional.
+                Apenas atendimentos aguardando início ou em andamento aparecem no painel operacional.
               </div>
             </div>
           ) : (
             <div style={styles.recordsList}>
-              {atendimentos.map((item) => {
+              {operationalAttendances.map((item) => {
                 const expanded = !!expandedOperations[item.id];
 
                 return (
@@ -2646,7 +2638,16 @@ function printPreviewPdf() {
         </section>
       )}
 
-      {activeTab === "acompanhamento" && (
+      
+
+      {activeTab === "equipe" && (
+        <Equipe
+          atendimentos={atendimentos}
+          updateOperationalStage={updateOperationalStage}
+          formatDateBR={formatDateBR}
+        />
+      )}
+{activeTab === "acompanhamento" && (
         <section style={styles.moduleCard}>
           <div style={styles.moduleHeader}>
             <div>
