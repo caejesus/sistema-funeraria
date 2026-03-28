@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import jsPDF from "jspdf";
 import { supabase } from "./lib/supabaseClient.js";
-import Equipe from "./pages/Equipe.jsx";
 
 const STORAGE_KEYS = {
   users: "sf_users_v3",
@@ -443,9 +442,8 @@ const [pdfPreview, setPdfPreview] = useState({
   url: "",
   filename: "",
 });
-  
   const isEquipeRoute = window.location.pathname === "/equipe";
-const isDark = theme === "dark";
+  const isDark = theme === "dark";
   const themeVars = getThemeVars(isDark);
 
   
@@ -472,11 +470,7 @@ const isDark = theme === "dark";
     syncTrackingRoute();
     window.addEventListener("popstate", syncTrackingRoute);
 
-    
-  if (isEquipeRoute) {
-    return <Equipe atendimentos={atendimentos} />;
-  }
-  return () => {
+    return () => {
       window.removeEventListener("popstate", syncTrackingRoute);
     };
   }, []);
@@ -512,12 +506,6 @@ const isDark = theme === "dark";
         .some((value) => String(value).toLowerCase().includes(term))
     );
   }, [attendanceSearch, atendimentos]);
-
-  const operationalAttendances = useMemo(() => {
-    return atendimentos.filter(
-      (item) => item.status === "Aguardando início" || item.status === "Em andamento"
-    );
-  }, [atendimentos]);
 
   const viewingAttendance = useMemo(() => {
     if (!viewingAttendanceId) return null;
@@ -1901,6 +1889,16 @@ function printPreviewPdf() {
     printWindow.print();
   };
 }
+  if (isEquipeRoute) {
+    return (
+      <Equipe
+        atendimentos={atendimentos}
+        updateOperationalStage={updateOperationalStage}
+        formatDateBR={formatDateBR}
+      />
+    );
+  }
+
   if (finalizado) {
     return (
       <div style={{ ...styles.page, ...themeVars }}>
@@ -2190,13 +2188,6 @@ function printPreviewPdf() {
           </button>
 
           <button
-            style={activeTab === "equipe" ? styles.tabActive : styles.tab}
-            onClick={() => setActiveTab("equipe")}
-          >
-            Equipe
-          </button>
-
-          <button
             style={activeTab === "acompanhamento" ? styles.tabActive : styles.tab}
             onClick={() => setActiveTab("acompanhamento")}
           >
@@ -2389,16 +2380,16 @@ function printPreviewPdf() {
             </div>
           </div>
 
-          {operationalAttendances.length === 0 ? (
+          {atendimentos.length === 0 ? (
             <div style={styles.modulePlaceholder}>
               <div style={styles.modulePlaceholderTitle}>Nenhum atendimento disponível</div>
               <div style={styles.modulePlaceholderText}>
-                Apenas atendimentos aguardando início ou em andamento aparecem no painel operacional.
+                Finalize um atendimento para ele aparecer no painel operacional.
               </div>
             </div>
           ) : (
             <div style={styles.recordsList}>
-              {operationalAttendances.map((item) => {
+              {atendimentos.map((item) => {
                 const expanded = !!expandedOperations[item.id];
 
                 return (
@@ -2638,16 +2629,7 @@ function printPreviewPdf() {
         </section>
       )}
 
-      
-
-      {activeTab === "equipe" && (
-        <Equipe
-          atendimentos={atendimentos}
-          updateOperationalStage={updateOperationalStage}
-          formatDateBR={formatDateBR}
-        />
-      )}
-{activeTab === "acompanhamento" && (
+      {activeTab === "acompanhamento" && (
         <section style={styles.moduleCard}>
           <div style={styles.moduleHeader}>
             <div>
