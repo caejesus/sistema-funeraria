@@ -45,7 +45,7 @@ function getVelorioHorario(form = {}) {
     return [data, hora].filter(Boolean).join(" ");
   }
 
-  return form.horarioVelorio || "";
+  return form.inicioAs || "";
 }
 
 function getSupportByStage(record, stageKey) {
@@ -517,7 +517,7 @@ export default function Equipe({
                       </div>
 
                       <InfoRow label="Local" value={form.cemiterio || item.cemiterio} />
-                      <InfoRow label="Horário" value={form.horarioSepultamento || form.horaSepultamento} />
+                      <InfoRow label="Horário" value={[formatDateBR(form.dataSaida), form.horaSaida].filter(Boolean).join(" ")} />
                       <InfoRow label="Motorista" value={sepultamentoMotorista} />
                       <InfoRow label="Carro" value={sepultamentoCarro} />
                       <InfoRow label="Apoio" value={sepultamentoApoio} />

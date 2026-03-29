@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import jsPDF from "jspdf";
 import { supabase } from "./lib/supabaseClient.js";
-import Equipe from "./pages/Equipe.jsx";
 
 const STORAGE_KEYS = {
   users: "sf_users_v3",
@@ -49,6 +48,7 @@ const DEFAULT_SETTINGS = {
   drivers: [],
   cars: [],
   supports: [],
+  embarques: [],
 };
 
 const SETTINGS_FIELDS = [
@@ -60,6 +60,7 @@ const SETTINGS_FIELDS = [
   "drivers",
   "cars",
   "supports",
+  "embarques",
 ];
 
 const FUNERAL_UNITS = {
@@ -236,6 +237,8 @@ function getInitialForm() {
     velorioBairro: "",
     velorioUnidade: "",
     velorioSala: "",
+    cidadeDestino: "",
+    embarque: "",
 
     atendenteGeral: "",
     carroGeral: "",
@@ -276,7 +279,6 @@ function getInitialForm() {
 
     tempoVelorioValor: "",
     tempoVelorioUnidade: "horas",
-    horarioVelorio: "",
 
     religiao: "católico",
     tecnico: "",
@@ -426,6 +428,7 @@ useEffect(() => {
   const [newDriver, setNewDriver] = useState("");
   const [newCar, setNewCar] = useState("");
   const [newSupport, setNewSupport] = useState("");
+  const [newEmbarque, setNewEmbarque] = useState("");
   const [expandedOperations, setExpandedOperations] = useState({});
   const [newUser, setNewUser] = useState({
     name: "",
@@ -445,8 +448,6 @@ const [pdfPreview, setPdfPreview] = useState({
 });
   const isDark = theme === "dark";
   const themeVars = getThemeVars(isDark);
-
-  const isEquipeRoute = window.location.pathname === "/equipe";
 
   
 
@@ -508,12 +509,6 @@ const [pdfPreview, setPdfPreview] = useState({
         .some((value) => String(value).toLowerCase().includes(term))
     );
   }, [attendanceSearch, atendimentos]);
-
-  const operationalAttendances = useMemo(() => {
-    return atendimentos.filter(
-      (item) => item.status === "Aguardando início" || item.status === "Em andamento"
-    );
-  }, [atendimentos]);
 
   const viewingAttendance = useMemo(() => {
     if (!viewingAttendanceId) return null;
@@ -1897,16 +1892,6 @@ function printPreviewPdf() {
     printWindow.print();
   };
 }
-  if (isEquipeRoute) {
-    return (
-      <Equipe
-        atendimentos={atendimentos || []}
-        updateOperationalStage={updateOperationalStage}
-        formatDateBR={formatDateBR}
-      />
-    );
-  }
-
   if (finalizado) {
     return (
       <div style={{ ...styles.page, ...themeVars }}>
@@ -2196,13 +2181,6 @@ function printPreviewPdf() {
           </button>
 
           <button
-            style={activeTab === "equipe" ? styles.tabActive : styles.tab}
-            onClick={() => setActiveTab("equipe")}
-          >
-            Equipe
-          </button>
-
-          <button
             style={activeTab === "acompanhamento" ? styles.tabActive : styles.tab}
             onClick={() => setActiveTab("acompanhamento")}
           >
@@ -2395,16 +2373,16 @@ function printPreviewPdf() {
             </div>
           </div>
 
-          {operationalAttendances.length === 0 ? (
+          {atendimentos.length === 0 ? (
             <div style={styles.modulePlaceholder}>
               <div style={styles.modulePlaceholderTitle}>Nenhum atendimento disponível</div>
               <div style={styles.modulePlaceholderText}>
-                Apenas atendimentos aguardando início ou em andamento aparecem no painel operacional.
+                Finalize um atendimento para ele aparecer no painel operacional.
               </div>
             </div>
           ) : (
             <div style={styles.recordsList}>
-              {operationalAttendances.map((item) => {
+              {atendimentos.map((item) => {
                 const expanded = !!expandedOperations[item.id];
 
                 return (
@@ -2644,16 +2622,7 @@ function printPreviewPdf() {
         </section>
       )}
 
-      
-
-      {activeTab === "equipe" && (
-        <Equipe
-          atendimentos={atendimentos}
-          updateOperationalStage={updateOperationalStage}
-          formatDateBR={formatDateBR}
-        />
-      )}
-{activeTab === "acompanhamento" && (
+      {activeTab === "acompanhamento" && (
         <section style={styles.moduleCard}>
           <div style={styles.moduleHeader}>
             <div>
@@ -3228,15 +3197,6 @@ function printPreviewPdf() {
                 </div>
               </div>
 
-              <div style={styles.field}>
-                <label style={styles.label}>Horário</label>
-                <input
-                  type="time"
-                  style={styles.input}
-                  value={form.horarioVelorio}
-                  onChange={(e) => updateForm("horarioVelorio", e.target.value)}
-                />
-              </div>
             </div>
 
             <div style={styles.grid3}>
@@ -3842,6 +3802,43 @@ function printPreviewPdf() {
                 <button
                   style={styles.outlineDarkBtn}
                   onClick={() => removeSettingItem("supports", item)}
+                >
+                  Remover
+                </button>
+              </div>
+            ))}
+
+            <div style={{ height: 18 }} />
+
+            <div style={styles.field}>
+              <label style={styles.label}>Novo embarque</label>
+              <div style={styles.row}>
+                <input
+                  style={styles.input}
+                  value={newEmbarque}
+                  onChange={(e) => setNewEmbarque(e.target.value)}
+                />
+                <button
+                  style={styles.primaryBtn}
+                  onClick={() =>
+                    addSettingItem(
+                      "embarques",
+                      newEmbarque.toUpperCase(),
+                      setNewEmbarque
+                    )
+                  }
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+            {(settings.embarques || []).map((item) => (
+              <div key={item} style={styles.listItem}>
+                <span>{item}</span>
+                <button
+                  style={styles.outlineDarkBtn}
+                  onClick={() => removeSettingItem("embarques", item)}
                 >
                   Remover
                 </button>
