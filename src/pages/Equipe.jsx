@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 function formatDateBR(date) {
   if (!date) return "";
@@ -46,6 +46,12 @@ function getVelorioHorario(form = {}) {
   }
 
   return form.inicioAs || "";
+}
+
+function getSepultamentoHorario(form = {}) {
+  const data = formatDateBR(form.dataSaida);
+  const hora = form.horaSaida || "";
+  return [data, hora].filter(Boolean).join(" ");
 }
 
 function getSupportByStage(record, stageKey) {
@@ -123,6 +129,10 @@ const colors = {
   runningText: "#fde68a",
   doneBg: "#123c2f",
   doneText: "#86efac",
+  onlineBg: "#123c2f",
+  onlineText: "#86efac",
+  offlineBg: "#3f1d1d",
+  offlineText: "#fecaca",
 };
 
 const styles = {
@@ -131,6 +141,22 @@ const styles = {
     maxWidth: 820,
     margin: "0 auto",
     color: colors.text,
+  },
+  topBar: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 14,
+    flexWrap: "wrap",
+  },
+  onlineBtn: {
+    borderRadius: 12,
+    padding: "12px 16px",
+    border: "none",
+    cursor: "pointer",
+    fontWeight: 800,
+    fontSize: 14,
   },
   empty: {
     padding: 18,
@@ -308,7 +334,6 @@ function StatusBadge({ status }) {
 
 function StageButtons({ itemId, stageKey, stageLabel, status, updateOperationalStage }) {
   if (typeof updateOperationalStage !== "function") return null;
-
   if (status === "finalizado") return null;
 
   return (
@@ -338,205 +363,217 @@ export default function Equipe({
   atendimentos = [],
   updateOperationalStage,
 }) {
+  const [expandedId, setExpandedId] = useState(null);
+  const [online, setOnline] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("sf_equipe_online_v1") || "false");
+    } catch {
+      return false;
+    }
+  });
+  const prevCountRef = useRef(0);
+
+  useEffect(() => {
+    localStorage.setItem("sf_equipe_online_v1", JSON.stringify(online));
+  }, [online]);
+
   const ativos = useMemo(
     () =>
       atendimentos.filter(
-        (item) => item.status === "Aguardando início" || item.status === "Em andamento"
+        (item) =>
+          item.equipeAcionada === true &&
+          (item.status === "Aguardando início" ||
+            item.status === "Em andamento" ||
+            item.status === "Em progresso")
       ),
     [atendimentos]
   );
 
-  const [expandedId, setExpandedId] = useState(null);
+  useEffect(() => {
+    if (!online) {
+      prevCountRef.current = ativos.length;
+      return;
+    }
 
-  if (!ativos.length) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.empty}>Nenhuma ordem de serviço ativa.</div>
-      </div>
-    );
-  }
+    if (ativos.length > prevCountRef.current && prevCountRef.current !== 0) {
+      try {
+        const audio = new Audio(
+          "data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTAAAAAAAP//AAD//wAA//8AAP//AAD//wAA"
+        );
+        audio.play().catch(() => {});
+      } catch {}
+    }
+
+    prevCountRef.current = ativos.length;
+  }, [ativos.length, online]);
 
   return (
     <div style={styles.page}>
-      {ativos.map((item) => {
-        const form = item.form || {};
-        const remocao = item.operationalStages?.remocao || {};
-        const procedimento = item.operationalStages?.procedimentoClinico || {};
-        const ornamentacao = item.operationalStages?.ornamentacao || {};
-        const entrega = item.operationalStages?.entrega || {};
-        const sepultamento = item.operationalStages?.sepultamento || {};
-        const isViagem = form.velorioTipo === "viagem";
-        const isOpen = expandedId === item.id;
+      <div style={styles.topBar}>
+        <div style={{ fontWeight: 800, color: colors.title }}>Equipe de plantão</div>
+        <button
+          style={{
+            ...styles.onlineBtn,
+            background: online ? colors.onlineBg : colors.offlineBg,
+            color: online ? colors.onlineText : colors.offlineText,
+          }}
+          onClick={() => setOnline((prev) => !prev)}
+        >
+          {online ? "Ficar offline" : "Ficar online"}
+        </button>
+      </div>
 
-        const remocaoMotorista = getDriverByStage(item, "remocao", "Remocao");
-        const remocaoCarro = getCarByStage(item, "remocao", "carroRemocao");
-        const remocaoApoio = getSupportByStage(item, "remocao");
+      {!online ? (
+        <div style={styles.empty}>
+          Você está offline. Fique online para receber os serviços acionados.
+        </div>
+      ) : ativos.length === 0 ? (
+        <div style={styles.empty}>Nenhuma ordem de serviço acionada no momento.</div>
+      ) : (
+        ativos.map((item) => {
+          const form = item.form || {};
+          const remocao = item.operationalStages?.remocao || {};
+          const procedimento = item.operationalStages?.procedimentoClinico || {};
+          const ornamentacao = item.operationalStages?.ornamentacao || {};
+          const entrega = item.operationalStages?.entrega || {};
+          const sepultamento = item.operationalStages?.sepultamento || {};
+          const isViagem = form.velorioTipo === "viagem";
+          const isOpen = expandedId === item.id;
 
-        const entregaMotorista = getDriverByStage(item, "entrega", "Entrega");
-        const entregaCarro = getCarByStage(item, "entrega", "carroEntrega");
-        const entregaApoio = getSupportByStage(item, "entrega");
+          const remocaoMotorista = getDriverByStage(item, "remocao", "Remocao");
+          const remocaoCarro = getCarByStage(item, "remocao", "carroRemocao");
+          const remocaoApoio = getSupportByStage(item, "remocao");
 
-        const sepultamentoMotorista = getDriverByStage(item, "sepultamento", "Sepultamento");
-        const sepultamentoCarro = getCarByStage(item, "sepultamento", "carroSepultamento");
-        const sepultamentoApoio = getSupportByStage(item, "sepultamento");
+          const entregaMotorista = getDriverByStage(item, "entrega", "Entrega");
+          const entregaCarro = getCarByStage(item, "entrega", "carroEntrega");
+          const entregaApoio = getSupportByStage(item, "entrega");
 
-        const tecnico = getTechnician(item);
-        const apoioOrnamentacao = getSupportByStage(item, "ornamentacao");
+          const sepultamentoMotorista = getDriverByStage(item, "sepultamento", "Sepultamento");
+          const sepultamentoCarro = getCarByStage(item, "sepultamento", "carroSepultamento");
+          const sepultamentoApoio = getSupportByStage(item, "sepultamento");
 
-        const localPrincipal = form.localObito || item.localObito || "—";
-        const horarioPrincipal = isViagem
-          ? getVelorioHorario(form)
-          : getVelorioHorario(form) || form.horarioSepultamento || form.horaSepultamento || "—";
+          const tecnico = getTechnician(item);
+          const apoioOrnamentacao = getSupportByStage(item, "ornamentacao");
 
-        return (
-          <div key={item.id} style={styles.osCard}>
-            <button
-              type="button"
-              style={styles.osButton}
-              onClick={() => setExpandedId(isOpen ? null : item.id)}
-            >
-              <div style={styles.osTop}>
-                <div style={styles.osTitleWrap}>
-                  <div style={styles.osNumber}>{item.numero || "Ordem de serviço"}</div>
-                  <div style={styles.osTitle}>
-                    {item.falecido || form.falecido || "Sem nome informado"}
+          const localPrincipal = form.localObito || item.localObito || "—";
+          const horarioPrincipal = isViagem
+            ? getVelorioHorario(form)
+            : getVelorioHorario(form) || getSepultamentoHorario(form) || "—";
+
+          return (
+            <div key={item.id} style={styles.osCard}>
+              <button
+                type="button"
+                style={styles.osButton}
+                onClick={() => setExpandedId(isOpen ? null : item.id)}
+              >
+                <div style={styles.osTop}>
+                  <div style={styles.osTitleWrap}>
+                    <div style={styles.osNumber}>{item.numero || "Ordem de serviço"}</div>
+                    <div style={styles.osTitle}>
+                      {item.falecido || form.falecido || "Sem nome informado"}
+                    </div>
                   </div>
+
+                  <div style={styles.badge}>{item.status || "Aguardando início"}</div>
                 </div>
 
-                <div style={styles.badge}>{item.status || "Aguardando início"}</div>
-              </div>
+                <div style={styles.osSummary}>
+                  <div><span style={styles.label}>Local principal: </span>{localPrincipal}</div>
+                  <div><span style={styles.label}>Próxima etapa: </span>{getNextStepLabel(item)}</div>
+                  <div><span style={styles.label}>Horário: </span>{horarioPrincipal || "—"}</div>
+                </div>
 
-              <div style={styles.osSummary}>
-                <div><span style={styles.label}>Local principal: </span>{localPrincipal}</div>
-                <div><span style={styles.label}>Próxima etapa: </span>{getNextStepLabel(item)}</div>
-                <div><span style={styles.label}>Horário: </span>{horarioPrincipal || "—"}</div>
-              </div>
+                <div style={styles.osFooter}>
+                  {isOpen ? "Toque para recolher" : "Toque para abrir a ordem de serviço"}
+                </div>
+              </button>
 
-              <div style={styles.osFooter}>
-                {isOpen ? "Toque para recolher" : "Toque para abrir a ordem de serviço"}
-              </div>
-            </button>
-
-            {isOpen && (
-              <div style={styles.details}>
-                <div style={styles.grid}>
-                  <div style={styles.block}>
-                    <div style={styles.blockHeader}>
-                      <div style={styles.blockTitle}>Óbito / Remoção</div>
-                      <StatusBadge status={remocao.status} />
-                    </div>
-
-                    <InfoRow label="Local" value={form.localObito || item.localObito} />
-                    <InfoRow label="Responsável" value={form.responsavelNome || item.responsavelNome} />
-                    <InfoRow label="Contato" value={form.responsavelCelular1 || form.responsavelCelular2} />
-                    <InfoRow label="Religião" value={form.religiao} />
-                    <InfoRow label="Motorista" value={remocaoMotorista} />
-                    <InfoRow label="Carro" value={remocaoCarro} />
-                    <InfoRow label="Apoio" value={remocaoApoio} />
-
-                    <StageButtons
-                      itemId={item.id}
-                      stageKey="remocao"
-                      stageLabel="Remoção"
-                      status={remocao.status}
-                      updateOperationalStage={updateOperationalStage}
-                    />
-                  </div>
-
-                  <div style={styles.block}>
-                    <div style={styles.blockHeader}>
-                      <div style={styles.blockTitle}>Procedimento</div>
-                      <StatusBadge status={procedimento.status} />
-                    </div>
-
-                    <InfoRow label="Técnico" value={tecnico} />
-
-                    <StageButtons
-                      itemId={item.id}
-                      stageKey="procedimentoClinico"
-                      stageLabel="Procedimento"
-                      status={procedimento.status}
-                      updateOperationalStage={updateOperationalStage}
-                    />
-                  </div>
-
-                  <div style={styles.block}>
-                    <div style={styles.blockHeader}>
-                      <div style={styles.blockTitle}>Ornamentação</div>
-                      <StatusBadge status={ornamentacao.status} />
-                    </div>
-
-                    <InfoRow
-                      label="Ornamentação"
-                      value={form.ornamentacao === "sim" ? "Sim" : form.ornamentacao === "nao" ? "Não" : ""}
-                    />
-                    <InfoRow
-                      label="Tipo"
-                      value={form.tipoFlor === "naturais" ? "Natural" : form.tipoFlor === "artificiais" ? "Artificial" : ""}
-                    />
-                    <InfoRow label="Modelo da urna" value={form.modeloUrna} />
-                    <InfoRow label="Cor da urna" value={form.corUrna} />
-                    <InfoRow label="Apoio" value={apoioOrnamentacao} />
-
-                    <StageButtons
-                      itemId={item.id}
-                      stageKey="ornamentacao"
-                      stageLabel="Ornamentação"
-                      status={ornamentacao.status}
-                      updateOperationalStage={updateOperationalStage}
-                    />
-                  </div>
-
-                  <div style={styles.block}>
-                    <div style={styles.blockHeader}>
-                      <div style={styles.blockTitle}>{getVelorioTitulo(form)}</div>
-                      <StatusBadge status={entrega.status} />
-                    </div>
-
-                    <InfoRow label={getVelorioLabelLocal(form)} value={getVelorioLocal(form)} />
-                    <InfoRow label={getVelorioLabelHorario(form)} value={getVelorioHorario(form)} />
-                    {isViagem ? <InfoRow label="Embarque" value={form.embarque} /> : null}
-                    <InfoRow label="Motorista" value={entregaMotorista} />
-                    <InfoRow label="Carro" value={entregaCarro} />
-                    <InfoRow label="Apoio" value={entregaApoio} />
-
-                    <StageButtons
-                      itemId={item.id}
-                      stageKey="entrega"
-                      stageLabel={isViagem ? "Viagem" : "Entrega"}
-                      status={entrega.status}
-                      updateOperationalStage={updateOperationalStage}
-                    />
-                  </div>
-
-                  {!isViagem && (
+              {isOpen && (
+                <div style={styles.details}>
+                  <div style={styles.grid}>
                     <div style={styles.block}>
                       <div style={styles.blockHeader}>
-                        <div style={styles.blockTitle}>Sepultamento</div>
-                        <StatusBadge status={sepultamento.status} />
+                        <div style={styles.blockTitle}>Óbito / Remoção</div>
+                        <StatusBadge status={remocao.status} />
                       </div>
 
-                      <InfoRow label="Local" value={form.cemiterio || item.cemiterio} />
-                      <InfoRow label="Horário" value={[formatDateBR(form.dataSaida), form.horaSaida].filter(Boolean).join(" ")} />
-                      <InfoRow label="Motorista" value={sepultamentoMotorista} />
-                      <InfoRow label="Carro" value={sepultamentoCarro} />
-                      <InfoRow label="Apoio" value={sepultamentoApoio} />
+                      <InfoRow label="Local" value={form.localObito || item.localObito} />
+                      <InfoRow label="Responsável" value={form.responsavelNome || item.responsavelNome} />
+                      <InfoRow label="Contato" value={form.responsavelCelular1 || form.responsavelCelular2} />
+                      <InfoRow label="Religião" value={form.religiao} />
+                      <InfoRow label="Motorista" value={remocaoMotorista} />
+                      <InfoRow label="Carro" value={remocaoCarro} />
+                      <InfoRow label="Apoio" value={remocaoApoio} />
 
-                      <StageButtons
-                        itemId={item.id}
-                        stageKey="sepultamento"
-                        stageLabel="Sepultamento"
-                        status={sepultamento.status}
-                        updateOperationalStage={updateOperationalStage}
-                      />
+                      <StageButtons itemId={item.id} stageKey="remocao" stageLabel="Remoção" status={remocao.status} updateOperationalStage={updateOperationalStage} />
                     </div>
-                  )}
+
+                    <div style={styles.block}>
+                      <div style={styles.blockHeader}>
+                        <div style={styles.blockTitle}>Procedimento</div>
+                        <StatusBadge status={procedimento.status} />
+                      </div>
+
+                      <InfoRow label="Técnico" value={tecnico} />
+
+                      <StageButtons itemId={item.id} stageKey="procedimentoClinico" stageLabel="Procedimento" status={procedimento.status} updateOperationalStage={updateOperationalStage} />
+                    </div>
+
+                    <div style={styles.block}>
+                      <div style={styles.blockHeader}>
+                        <div style={styles.blockTitle}>Ornamentação</div>
+                        <StatusBadge status={ornamentacao.status} />
+                      </div>
+
+                      <InfoRow label="Ornamentação" value={form.ornamentacao === "sim" ? "Sim" : form.ornamentacao === "nao" ? "Não" : ""} />
+                      <InfoRow label="Tipo" value={form.tipoFlor === "naturais" ? "Natural" : form.tipoFlor === "artificiais" ? "Artificial" : ""} />
+                      <InfoRow label="Modelo da urna" value={form.modeloUrna} />
+                      <InfoRow label="Cor da urna" value={form.corUrna} />
+                      <InfoRow label="Apoio" value={apoioOrnamentacao} />
+
+                      <StageButtons itemId={item.id} stageKey="ornamentacao" stageLabel="Ornamentação" status={ornamentacao.status} updateOperationalStage={updateOperationalStage} />
+                    </div>
+
+                    <div style={styles.block}>
+                      <div style={styles.blockHeader}>
+                        <div style={styles.blockTitle}>{getVelorioTitulo(form)}</div>
+                        <StatusBadge status={entrega.status} />
+                      </div>
+
+                      <InfoRow label={getVelorioLabelLocal(form)} value={getVelorioLocal(form)} />
+                      <InfoRow label={getVelorioLabelHorario(form)} value={getVelorioHorario(form)} />
+                      {isViagem ? <InfoRow label="Embarque" value={form.embarque} /> : null}
+                      <InfoRow label="Motorista" value={entregaMotorista} />
+                      <InfoRow label="Carro" value={entregaCarro} />
+                      <InfoRow label="Apoio" value={entregaApoio} />
+
+                      <StageButtons itemId={item.id} stageKey="entrega" stageLabel={isViagem ? "Viagem" : "Entrega"} status={entrega.status} updateOperationalStage={updateOperationalStage} />
+                    </div>
+
+                    {!isViagem && (
+                      <div style={styles.block}>
+                        <div style={styles.blockHeader}>
+                          <div style={styles.blockTitle}>Sepultamento</div>
+                          <StatusBadge status={sepultamento.status} />
+                        </div>
+
+                        <InfoRow label="Local" value={form.cemiterio || item.cemiterio} />
+                        <InfoRow label="Horário" value={getSepultamentoHorario(form)} />
+                        <InfoRow label="Motorista" value={sepultamentoMotorista} />
+                        <InfoRow label="Carro" value={sepultamentoCarro} />
+                        <InfoRow label="Apoio" value={sepultamentoApoio} />
+
+                        <StageButtons itemId={item.id} stageKey="sepultamento" stageLabel="Sepultamento" status={sepultamento.status} updateOperationalStage={updateOperationalStage} />
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }

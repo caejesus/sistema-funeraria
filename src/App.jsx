@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import jsPDF from "jspdf";
+import gerarFichaPDF from "./pdf/gerarFichaPDF";
+import gerarTermoPDF from "./pdf/gerarTermoPDF";
 import { supabase } from "./lib/supabaseClient.js";
+import Equipe from "./pages/Equipe.jsx";
 
 const STORAGE_KEYS = {
   users: "sf_users_v3",
@@ -279,6 +281,7 @@ function getInitialForm() {
 
     tempoVelorioValor: "",
     tempoVelorioUnidade: "horas",
+    horarioVelorio: "",
 
     religiao: "católico",
     tecnico: "",
@@ -449,6 +452,8 @@ const [pdfPreview, setPdfPreview] = useState({
   const isDark = theme === "dark";
   const themeVars = getThemeVars(isDark);
 
+  const isEquipeRoute = window.location.pathname === "/equipe";
+
   
 
   useEffect(() => {
@@ -509,6 +514,12 @@ const [pdfPreview, setPdfPreview] = useState({
         .some((value) => String(value).toLowerCase().includes(term))
     );
   }, [attendanceSearch, atendimentos]);
+
+  const operationalAttendances = useMemo(() => {
+    return atendimentos.filter(
+      (item) => item.status === "Aguardando início" || item.status === "Em andamento"
+    );
+  }, [atendimentos]);
 
   const viewingAttendance = useMemo(() => {
     if (!viewingAttendanceId) return null;
@@ -1226,619 +1237,6 @@ const [pdfPreview, setPdfPreview] = useState({
     setUsers((prev) => prev.filter((u) => u.id !== id));
   }
 
-  function drawCell(doc, x, y, w, h, text = "", opts = {}) {
-    doc.rect(x, y, w, h);
-    const fontSize = opts.fontSize || 8;
-    doc.setFont("times", opts.bold ? "bold" : "normal");
-    doc.setFontSize(fontSize);
-
-    const tx =
-      opts.align === "center" ? x + w / 2 : x + (opts.paddingLeft ?? 1.3);
-    const ty = y + h / 2 + (opts.offsetY ?? 1.25);
-
-    if (text) {
-      doc.text(String(text), tx, ty, {
-        maxWidth: w - 2,
-        align: opts.align === "center" ? "center" : "left",
-      });
-    }
-  }
-
-  function gerarFichaPDF() {
-    const doc = new jsPDF("p", "mm", "a4");
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.22);
-
-    const left = 5;
-    let y = 5;
-
-    doc.setFont("times", "bold");
-    doc.setFontSize(14);
-    doc.text("FUNERÁRIA SANTA RITA", 105, y + 5, { align: "center" });
-
-    doc.setFontSize(11);
-    doc.text("RENATO R. BATISTA – EPP", 105, y + 9.7, { align: "center" });
-
-    doc.setFont("times", "normal");
-    doc.setFontSize(9);
-    doc.text("CNPJ: 00.579.750/0001-60 – Insc. 04.102.221-1", 105, y + 14, {
-      align: "center",
-    });
-    doc.text(
-      "Fones: (092) 3308-3404 / 98139-6563  CEP: 69.095-010",
-      105,
-      y + 18.2,
-      {
-        align: "center",
-      }
-    );
-    doc.text(
-      "Rua Professor Félix, N°15 – Cidade Nova I / Manaus – AM",
-      105,
-      y + 22.4,
-      {
-        align: "center",
-      }
-    );
-
-    y += 26;
-
-    drawCell(doc, left, y, 200, 5.9, `FALECIDO: ${form.falecido}`, {
-      bold: true,
-      fontSize: 8.6,
-    });
-    y += 5.9;
-
-    drawCell(doc, left, y, 150, 5.9, `LOCAL DO ÓBITO: ${form.localObito}`, {
-      bold: true,
-      fontSize: 8.2,
-    });
-    drawCell(
-      doc,
-      155,
-      y,
-      50,
-      5.9,
-      `DATA/SAÍDA: ${formatDateBR(form.dataSaida)}`,
-      {
-        bold: true,
-        fontSize: 8.2,
-      }
-    );
-    y += 5.9;
-
-    drawCell(doc, left, y, 150, 5.9, `CEMITÉRIO: ${form.cemiterio}`, {
-      bold: true,
-      fontSize: 8.2,
-    });
-    drawCell(doc, 155, y, 50, 5.9, `HORA/SAÍDA: ${form.horaSaida}`, {
-      bold: true,
-      fontSize: 8.2,
-    });
-    y += 5.9;
-
-    drawCell(doc, left, y, 200, 5.9, `HORA/ATEND: ${form.horaAtendimento}`, {
-      bold: true,
-      fontSize: 8.2,
-    });
-    y += 5.9;
-
-    drawCell(
-      doc,
-      left,
-      y,
-      60,
-      5.9,
-      `DATA/ATEND: ${formatDateBR(form.dataAtendimento)}`,
-      {
-        bold: true,
-        fontSize: 8,
-      }
-    );
-    drawCell(
-      doc,
-      65,
-      y,
-      95,
-      5.9,
-      `CHEGOU NA CLÍNICA ÀS: ${form.chegouClinica}`,
-      {
-        bold: true,
-        fontSize: 7.8,
-      }
-    );
-    drawCell(doc, 160, y, 45, 5.9, `INÍCIO ÀS: ${form.inicioAs}`, {
-      bold: true,
-      fontSize: 8,
-    });
-    y += 5.9;
-
-    if (form.tipoPlano === "socio") {
-      drawCell(doc, left, y, 55, 5.9, `PLANO: ${form.plano}`, {
-        fontSize: 8,
-      });
-      drawCell(doc, 60, y, 45, 5.9, `CÓDIGO: ${form.codigo}`, {
-        fontSize: 8,
-      });
-      drawCell(doc, 105, y, 100, 5.9, `DEPENDENTE: ${form.dependente}`, {
-        fontSize: 8,
-      });
-    } else {
-      drawCell(doc, left, y, 200, 5.9, `PLANO: SERVIÇO PARTICULAR`, {
-        fontSize: 8,
-      });
-    }
-    y += 6.6;
-
-    drawCell(doc, left, y, 200, 5.9, "SERVIÇOS PRESTADOS", {
-      bold: true,
-      fontSize: 8.8,
-      align: "center",
-    });
-    y += 5.9;
-
-    drawCell(doc, left, y, 8, 5.1, "", {});
-    drawCell(doc, 13, y, 152, 5.1, "", {});
-    drawCell(doc, 165, y, 20, 5.1, "QUANT.", {
-      fontSize: 7.6,
-      align: "center",
-    });
-    drawCell(doc, 185, y, 20, 5.1, "VALOR:", {
-      fontSize: 7.6,
-      align: "center",
-    });
-    y += 5.1;
-
-    services.forEach((item) => {
-      let label = item.name;
-
-      if (item.name === "COROA DE FLORES" && item.note) {
-        label += `     FRASE: ${item.note}`;
-      }
-
-      if (item.name === "OUTRAS DESPESAS" && item.note) {
-        label += ` ${item.note}`;
-      }
-
-      drawCell(doc, left, y, 8, 4.8, item.checked ? "X" : "", {
-        fontSize: 8,
-        bold: true,
-        align: "center",
-        offsetY: 1.1,
-      });
-
-      drawCell(doc, 13, y, 152, 4.8, label, {
-        fontSize: item.name === "COROA DE FLORES" ? 6.8 : 7.6,
-        paddingLeft: 1.5,
-      });
-
-      drawCell(doc, 165, y, 20, 4.8, item.qty || "", {
-        fontSize: 7.3,
-        align: "center",
-      });
-
-      drawCell(
-        doc,
-        185,
-        y,
-        20,
-        4.8,
-        item.value ? formatMoney(item.value) : "",
-        {
-          fontSize: 7.3,
-          align: "center",
-        }
-      );
-
-      y += 4.8;
-    });
-
-    drawCell(doc, left, y, 180, 5.6, "VALOR TOTAL:", {
-      bold: true,
-      fontSize: 7.8,
-    });
-    drawCell(doc, 185, y, 20, 5.6, formatMoney(totalValue), {
-      bold: true,
-      fontSize: 7.5,
-      align: "center",
-    });
-    y += 6.8;
-
-    drawCell(doc, left, y, 200, 5.9, "DADOS DO RESPONSÁVEL", {
-      bold: true,
-      fontSize: 8.8,
-      align: "center",
-    });
-    y += 5.9;
-
-    drawCell(doc, left, y, 145, 5.9, `NOME: ${form.responsavelNome}`, {
-      fontSize: 7.7,
-    });
-    drawCell(doc, 150, y, 55, 5.9, `CPF: ${form.responsavelCpf}`, {
-      fontSize: 7.7,
-    });
-    y += 5.9;
-
-    drawCell(doc, left, y, 200, 5.9, `RG: ${form.responsavelRg}`, {
-      fontSize: 7.7,
-    });
-    y += 5.9;
-
-    drawCell(doc, left, y, 160, 5.9, `ENDEREÇO: ${form.responsavelEndereco}`, {
-      fontSize: 7.4,
-    });
-    drawCell(doc, 165, y, 40, 5.9, `CEP: ${form.responsavelCep}`, {
-      fontSize: 7.4,
-    });
-    y += 5.9;
-
-    drawCell(doc, left, y, 75, 5.9, `BAIRRO: ${form.responsavelBairro}`, {
-      fontSize: 7.4,
-    });
-    drawCell(doc, 80, y, 60, 5.9, `CELULAR: ${form.responsavelCelular1}`, {
-      fontSize: 7.4,
-    });
-    drawCell(doc, 140, y, 65, 5.9, `CELULAR: ${form.responsavelCelular2}`, {
-      fontSize: 7.4,
-    });
-    y += 5.9;
-
-    const velorioTexto =
-      form.velorioTipo === "funeraria"
-        ? [form.velorioUnidade, form.velorioSala].filter(Boolean).join(" - ")
-        : [
-            form.velorioNomeLocal,
-            form.velorioEndereco,
-            form.velorioNumero,
-            form.velorioBairro,
-          ]
-            .filter(Boolean)
-            .join(", ");
-
-    drawCell(doc, left, y, 200, 6, `LOCAL DO VELÓRIO: ${velorioTexto}`, {
-      fontSize: 7.4,
-    });
-    y += 6.8;
-
-    function drawFinalBlock(titulo, atendente, assinatura, carro) {
-      drawCell(doc, left, y, 70, 5.5, `ATENDENTE: ${atendente || ""}`, {
-        bold: true,
-        fontSize: 7.2,
-      });
-      drawCell(doc, 75, y, 80, 5.5, `${titulo} ${assinatura || ""}`, {
-        bold: true,
-        fontSize: 7.2,
-      });
-      drawCell(doc, 155, y, 50, 5.5, `CARRO: ${carro || ""}`, {
-        bold: true,
-        fontSize: 7.2,
-      });
-      y += 5.5;
-
-      drawCell(doc, left, y, 70, 5.5, "", {});
-      drawCell(doc, 75, y, 80, 5.5, "ASSINATURA:", {
-        bold: true,
-        fontSize: 7.2,
-      });
-      drawCell(doc, 155, y, 50, 5.5, "", {});
-      y += 5.5;
-    }
-
-    drawFinalBlock(
-      "REMOÇÃO:",
-      form.atendenteRemocao,
-      form.assinaturaRemocao,
-      form.carroRemocao
-    );
-
-    drawFinalBlock(
-      "ENTREGA:",
-      form.atendenteEntrega,
-      form.assinaturaEntrega,
-      form.carroEntrega
-    );
-
-    drawFinalBlock(
-      "SEPULTAMENTO:",
-      form.atendenteSepultamento,
-      form.assinaturaSepultamento,
-      form.carroSepultamento
-    );
-
-    const assinaturaY = Math.min(y + 16, 287);
-    doc.setFont("times", "bold");
-    doc.setFontSize(8.2);
-    doc.text("Responsável:", 45, assinaturaY + 0.5);
-    doc.line(70, assinaturaY, 145, assinaturaY);
-
-    const filename = `ficha-${(form.falecido || "atendimento")
-  .replace(/\s+/g, "-")
-  .toLowerCase()}.pdf`;
-
-openPdfPreview(doc, filename, "Pré-visualização da Ficha");
-  }
-
-  function gerarTermoPDF() {
-    const doc = new jsPDF("p", "mm", "a4");
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.2);
-
-    let y = 15;
-    const left = 15;
-
-    function xMark(cond) {
-      return cond ? "X" : "";
-    }
-
-    function drawSimpleLine(x1, yy, x2) {
-      doc.line(x1, yy, x2, yy);
-    }
-
-    const dataAtual = new Date();
-    const dia = String(dataAtual.getDate()).padStart(2, "0");
-    const ano = dataAtual.getFullYear();
-    const meses = [
-      "JANEIRO",
-      "FEVEREIRO",
-      "MARÇO",
-      "ABRIL",
-      "MAIO",
-      "JUNHO",
-      "JULHO",
-      "AGOSTO",
-      "SETEMBRO",
-      "OUTUBRO",
-      "NOVEMBRO",
-      "DEZEMBRO",
-    ];
-    const mes = meses[dataAtual.getMonth()];
-
-    const localVelorio =
-      form.velorioTipo === "funeraria"
-        ? "funerária"
-        : form.velorioTipo === "residencia"
-          ? "residência"
-          : form.velorioTipo === "igreja"
-            ? "igreja"
-            : form.velorioTipo || "";
-
-    doc.setFont("times", "bold");
-    doc.setFontSize(12);
-    doc.text("TERMO DE AUTORIZAÇÃO PREPARO DO CORPO", 105, y, {
-      align: "center",
-    });
-
-    y += 10;
-
-    doc.setFont("times", "normal");
-    doc.setFontSize(10);
-
-    doc.text("PELO PRESENTE EU,", left, y);
-    doc.text((form.responsavelNome || "").toUpperCase(), 58, y);
-    drawSimpleLine(58, y + 0.5, 118, y);
-    doc.text("RG:", 120, y);
-    doc.text(form.responsavelRg || "", 128, y);
-    drawSimpleLine(128, y + 0.5, 152, y);
-    doc.text("CPF:", 154, y);
-    doc.text(form.responsavelCpf || "", 163, y);
-    drawSimpleLine(163, y + 0.5, 198, y);
-
-    y += 7;
-
-    doc.text("REPRESENTANTE LEGAL DO FALECIDO:", left, y);
-    doc.text((form.falecido || "").toUpperCase(), 85, y);
-    drawSimpleLine(85, y + 0.5, 145, y);
-
-    doc.text("LOCAL DO ÓBITO:", 147, y);
-    doc.text((form.localObito || "").toUpperCase(), 177, y);
-
-    y += 7;
-
-    drawSimpleLine(15, y + 0.5, 98, y);
-    drawSimpleLine(177, y + 0.5, 198, y);
-
-    doc.text("FALECIMENTO:", left, y);
-    doc.text(formatDateBR(form.dataSaida), 42, y);
-    drawSimpleLine(42, y + 0.5, 67, y);
-
-    doc.text("HORA", 69, y);
-    doc.text(form.horaSaida || "", 79, y);
-    drawSimpleLine(79, y + 0.5, 95, y);
-
-    doc.text("SENDO O GRAU DE PARENTESCO COM O", 98, y);
-
-    y += 7;
-
-    doc.text("FALECIDO:", left, y);
-    doc.text((form.parentesco || "").toUpperCase(), 30, y);
-    drawSimpleLine(30, y + 0.5, 75, y);
-
-    y += 10;
-
-    doc.text(
-      "Solicito e autorizo, após obter as informações sobre o procedimento, da realização de Tanatopraxia para conservar",
-      left,
-      y
-    );
-    y += 6;
-    doc.text(
-      "e manter a aparência normal do corpo. Autorizo também o registro de imagens do procedimento realizado em",
-      left,
-      y
-    );
-    y += 6;
-    doc.text(
-      "caráter sigiloso, com o único propósito de esclarecer quaisquer dúvidas que possam surgir quanto ao procedimento realizado.",
-      left,
-      y
-    );
-
-    y += 12;
-
-    doc.setFont("times", "bold");
-    doc.text("DO CORPO", 20, y);
-    y += 8;
-
-    doc.setFont("times", "normal");
-    doc.text("•", 18, y);
-    doc.text("Condições:", 22, y);
-    doc.text(`( ${xMark(form.necropsia === "sim")} ) Necropsiado`, 82, y);
-    doc.text(`( ${xMark(form.necropsia === "nao")} ) Não Necropsiado.`, 118, y);
-
-    y += 8;
-
-    doc.text("•", 18, y);
-    doc.text("Chegou vestido:", 22, y);
-    doc.text(`( ${xMark(form.veioVestido === "sim")} ) Sim`, 82, y);
-    doc.text(`( ${xMark(form.veioVestido === "nao")} ) Não`, 102, y);
-    doc.text(`( ${xMark(form.roupaDestino === "devolver")} ) Devolver`, 120, y);
-    doc.text(`( ${xMark(form.roupaDestino === "descartar")} ) Descartar`, 155, y);
-
-    y += 8;
-
-    doc.text("•", 18, y);
-    doc.text("Retirar o esmalte da unha:", 22, y);
-    doc.text(`( ${xMark(form.retirarEsmalte === "sim")} ) Sim`, 98, y);
-    doc.text(`( ${xMark(form.retirarEsmalte === "nao")} ) Não`, 126, y);
-
-    y += 12;
-
-    doc.setFont("times", "bold");
-    doc.text("DA ESTÉTICA", 20, y);
-    y += 8;
-
-    doc.setFont("times", "normal");
-    doc.text("•", 18, y);
-    doc.text("Barbear:", 22, y);
-    doc.text(`( ${xMark(form.barbear === "sim")} ) Sim`, 50, y);
-    doc.text(`( ${xMark(form.barbear === "nao")} ) Não`, 69, y);
-
-    doc.text("| Bigode:", 90, y);
-    doc.text(`( ${xMark(form.bigode === "sim")} ) Sim`, 116, y);
-    doc.text(`( ${xMark(form.bigode === "nao")} ) Não`, 135, y);
-
-    doc.text("| Cavanhaque:", 154, y);
-    doc.text(`( ${xMark(form.cavanhaque === "sim")} ) Sim`, 183, y);
-
-    y += 8;
-    doc.text(`( ${xMark(form.cavanhaque === "nao")} ) Não`, 183, y);
-
-    y += 8;
-
-    doc.text("•", 18, y);
-    doc.text("Maquiagem:", 22, y);
-    doc.text(`( ${xMark(form.maquiagem === "sim")} ) Sim`, 52, y);
-    doc.text(`( ${xMark(form.maquiagem === "nao")} ) Não`, 71, y);
-    doc.text("->", 91, y);
-    doc.text(`( ${xMark(form.maquiagemTipo === "leve")} ) leve`, 98, y);
-    doc.text(`( ${xMark(form.maquiagemTipo === "natural")} ) natural`, 124, y);
-    doc.text(`( ${xMark(form.maquiagemTipo === "forte")} ) forte`, 155, y);
-
-    y += 12;
-
-    doc.setFont("times", "bold");
-    doc.text("ORNATO E ADORNO", 20, y);
-    y += 8;
-
-    doc.setFont("times", "normal");
-    doc.text("•", 18, y);
-    doc.text("Ornamentação com flores", 22, y);
-    doc.text(`( ${xMark(form.ornamentacao === "sim")} ) Sim`, 78, y);
-    doc.text(`( ${xMark(form.ornamentacao === "nao")} ) Não`, 97, y);
-    doc.text(`| ( ${xMark(form.tipoFlor === "naturais")} ) Naturais`, 116, y);
-    doc.text(`( ${xMark(form.tipoFlor === "artificiais")} ) Artificiais`, 154, y);
-
-    y += 8;
-
-    doc.text("•", 18, y);
-    doc.text(
-      `A roupa foi entregue para: ${(form.roupaEntreguePara || "").toUpperCase()}`,
-      22,
-      y
-    );
-
-    y += 10;
-
-    doc.setFont("times", "bold");
-    doc.text("OBSERVAÇÃO", 20, y);
-    y += 6;
-    doc.setFont("times", "normal");
-    doc.text((form.observacaoTermo || "").toUpperCase(), 22, y);
-    drawSimpleLine(22, y + 2, 190);
-
-    y += 14;
-
-    doc.setFont("times", "bold");
-    doc.text("GERAL", 20, y);
-    y += 8;
-    doc.setFont("times", "normal");
-
-    doc.text("•", 18, y);
-    doc.text(
-      `Tempo previsto de velório: ${form.tempoVelorioValor || ""} - ${(form.tempoVelorioUnidade || "").toUpperCase()}`,
-      22,
-      y
-    );
-
-    y += 8;
-
-    doc.text("•", 18, y);
-    doc.text(`Local do velório: ${localVelorio},`, 22, y);
-
-    y += 8;
-
-    doc.text("•", 18, y);
-    doc.text(`Sala: ${(form.velorioSala || "").toUpperCase()}`, 22, y);
-    doc.text(`Horário: ${form.horarioVelorio || ""}`, 75, y);
-
-    y += 8;
-
-    doc.text("•", 18, y);
-    doc.text(`Religião: ${(form.religiao || "").toUpperCase()}`, 22, y);
-
-    y += 8;
-
-    doc.text("•", 18, y);
-    doc.text(`Técnico: ${(form.tecnico || "").toUpperCase()}`, 22, y);
-
-    y += 8;
-
-    doc.text("•", 18, y);
-    doc.text(`Atendente: ${(form.atendenteEntrega || "").toUpperCase()}`, 22, y);
-
-    y += 8;
-
-    let modeloUrnaTexto = form.modeloUrna || "";
-    if (form.modeloUrna === "luxo" && form.refUrna) {
-      modeloUrnaTexto = `LUXO REF: ${form.refUrna}`;
-    } else {
-      modeloUrnaTexto = (form.modeloUrna || "").toUpperCase();
-    }
-
-    doc.text("•", 18, y);
-    doc.text(
-      `Modelo de urna: ${modeloUrnaTexto} Cor: ${(form.corUrna || "").toUpperCase()}`,
-      22,
-      y
-    );
-
-    y += 18;
-
-    doc.text(`Manaus, ${dia} de ${mes} de ${ano}`, 115, y);
-
-    y += 22;
-
-    doc.line(60, y, 140, y);
-    y += 6;
-    doc.setFont("times", "bold");
-    doc.text("autorização", 95, y);
-
-    const filename = `termo-${(form.falecido || "atendimento")
-  .replace(/\s+/g, "-")
-  .toLowerCase()}.pdf`;
-
-openPdfPreview(doc, filename, "Pré-visualização do Termo");
-  }
 function openPdfPreview(doc, filename, title) {
   const blob = doc.output("blob");
   const url = URL.createObjectURL(blob);
@@ -1892,6 +1290,15 @@ function printPreviewPdf() {
     printWindow.print();
   };
 }
+  if (isEquipeRoute) {
+    return (
+      <Equipe
+        atendimentos={atendimentos || []}
+        updateOperationalStage={updateOperationalStage}
+      />
+    );
+  }
+
   if (finalizado) {
     return (
       <div style={{ ...styles.page, ...themeVars }}>
@@ -1927,11 +1334,32 @@ function printPreviewPdf() {
               📋 Atendimentos
             </button>
 
-            <button style={styles.primaryBtn} onClick={gerarFichaPDF}>
+            <button
+              style={styles.primaryBtn}
+              onClick={() =>
+                gerarFichaPDF({
+                  form,
+                  services,
+                  totalValue,
+                  formatDateBR,
+                  formatMoney,
+                  openPdfPreview,
+                })
+              }
+            >
               🧾 Gerar Ficha PDF
             </button>
 
-            <button style={styles.primaryBtn} onClick={gerarTermoPDF}>
+            <button
+              style={styles.primaryBtn}
+              onClick={() =>
+                gerarTermoPDF({
+                  form,
+                  formatDateBR,
+                  openPdfPreview,
+                })
+              }
+            >
               📄 Gerar Termo PDF
             </button>
           </div>
@@ -2373,16 +1801,16 @@ function printPreviewPdf() {
             </div>
           </div>
 
-          {atendimentos.length === 0 ? (
+          {operationalAttendances.length === 0 ? (
             <div style={styles.modulePlaceholder}>
               <div style={styles.modulePlaceholderTitle}>Nenhum atendimento disponível</div>
               <div style={styles.modulePlaceholderText}>
-                Finalize um atendimento para ele aparecer no painel operacional.
+                Apenas atendimentos aguardando início ou em andamento aparecem no painel operacional.
               </div>
             </div>
           ) : (
             <div style={styles.recordsList}>
-              {atendimentos.map((item) => {
+              {operationalAttendances.map((item) => {
                 const expanded = !!expandedOperations[item.id];
 
                 return (
@@ -2815,19 +2243,33 @@ function printPreviewPdf() {
                   style={styles.input}
                   value={form.velorioTipo}
                   onChange={(e) => {
-                    updateForm("velorioTipo", e.target.value);
-                    if (e.target.value !== "funeraria") {
+                    const value = e.target.value;
+                    updateForm("velorioTipo", value);
+
+                    if (value !== "funeraria") {
                       updateForm("velorioUnidade", "");
                       updateForm("velorioSala", "");
                     }
-                    if (e.target.value !== "igreja") {
+
+                    if (value !== "igreja") {
                       updateForm("velorioNomeLocal", "");
+                    }
+
+                    if (value === "viagem") {
+                      updateForm("velorioCep", "");
+                      updateForm("velorioEndereco", "");
+                      updateForm("velorioNumero", "");
+                      updateForm("velorioBairro", "");
+                    } else {
+                      updateForm("cidadeDestino", "");
+                      updateForm("embarque", "");
                     }
                   }}
                 >
                   <option value="funeraria">Funerária</option>
                   <option value="residencia">Residência</option>
                   <option value="igreja">Igreja</option>
+                  <option value="viagem">Vai viajar</option>
                 </select>
               </div>
 
@@ -2870,7 +2312,36 @@ function printPreviewPdf() {
                 </>
               )}
 
-              {form.velorioTipo !== "funeraria" && (
+              {form.velorioTipo === "viagem" && (
+                <>
+                  <div style={styles.field}>
+                    <label style={styles.label}>Cidade de destino</label>
+                    <input
+                      style={styles.input}
+                      value={form.cidadeDestino || ""}
+                      onChange={(e) => updateForm("cidadeDestino", e.target.value)}
+                    />
+                  </div>
+
+                  <div style={styles.field}>
+                    <label style={styles.label}>Embarque</label>
+                    <select
+                      style={styles.input}
+                      value={form.embarque || ""}
+                      onChange={(e) => updateForm("embarque", e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {(settings.embarques || []).map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {(form.velorioTipo === "residencia" || form.velorioTipo === "igreja") && (
                 <>
                   {form.velorioTipo === "igreja" && (
                     <div style={styles.fieldWide}>
@@ -3811,43 +3282,6 @@ function printPreviewPdf() {
             <div style={{ height: 18 }} />
 
             <div style={styles.field}>
-              <label style={styles.label}>Novo embarque</label>
-              <div style={styles.row}>
-                <input
-                  style={styles.input}
-                  value={newEmbarque}
-                  onChange={(e) => setNewEmbarque(e.target.value)}
-                />
-                <button
-                  style={styles.primaryBtn}
-                  onClick={() =>
-                    addSettingItem(
-                      "embarques",
-                      newEmbarque.toUpperCase(),
-                      setNewEmbarque
-                    )
-                  }
-                >
-                  Adicionar
-                </button>
-              </div>
-            </div>
-
-            {(settings.embarques || []).map((item) => (
-              <div key={item} style={styles.listItem}>
-                <span>{item}</span>
-                <button
-                  style={styles.outlineDarkBtn}
-                  onClick={() => removeSettingItem("embarques", item)}
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
-
-            <div style={{ height: 18 }} />
-
-            <div style={styles.field}>
               <label style={styles.label}>Novo atendente</label>
               <div style={styles.row}>
                 <input
@@ -3913,6 +3347,44 @@ function printPreviewPdf() {
                 <button
                   style={styles.outlineDarkBtn}
                   onClick={() => removeSettingItem("drivers", item)}
+                >
+                  Remover
+                </button>
+              </div>
+            ))}
+
+            <div style={{ height: 18 }} />
+
+            <div style={styles.field}>
+              <label style={styles.label}>Novo embarque</label>
+              <div style={styles.row}>
+                <input
+                  style={styles.input}
+                  value={newEmbarque}
+                  onChange={(e) => setNewEmbarque(e.target.value)}
+                  placeholder="Ex: LANCHA LIMA DE ABREU"
+                />
+                <button
+                  style={styles.primaryBtn}
+                  onClick={() =>
+                    addSettingItem(
+                      "embarques",
+                      newEmbarque.toUpperCase(),
+                      setNewEmbarque
+                    )
+                  }
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+            {(settings.embarques || []).map((item) => (
+              <div key={item} style={styles.listItem}>
+                <span>{item}</span>
+                <button
+                  style={styles.outlineDarkBtn}
+                  onClick={() => removeSettingItem("embarques", item)}
                 >
                   Remover
                 </button>
