@@ -72,6 +72,12 @@ function getCarByStage(record, stageKey, fallbackField) {
   return stage.car || form[fallbackField] || "";
 }
 
+function getTechnician(record) {
+  const form = record?.form || {};
+  const stage = record?.operationalStages?.procedimentoClinico || {};
+  return stage.technician || form.tecnico || "";
+}
+
 function getStatusLabel(status) {
   if (status === "em_andamento") return "Em andamento";
   if (status === "finalizado") return "Finalizado";
@@ -85,6 +91,8 @@ function getNextStepLabel(item) {
 
   const order = [
     ["remocao", "Remoção"],
+    ["procedimentoClinico", "Procedimento"],
+    ["ornamentacao", "Ornamentação"],
     ["entrega", isViagem ? "Viagem" : "Entrega"],
     ...(!isViagem ? [["sepultamento", "Sepultamento"]] : []),
   ];
@@ -98,7 +106,6 @@ function getNextStepLabel(item) {
 }
 
 const colors = {
-  pageBg: "#081226",
   cardBg: "#0b1830",
   blockBg: "#0d1b34",
   border: "#29415f",
@@ -110,6 +117,12 @@ const colors = {
   badgeText: "#8fdcff",
   buttonBg: "#1d4ed8",
   buttonText: "#ffffff",
+  waitingBg: "#1f2937",
+  waitingText: "#d1d5db",
+  runningBg: "#5b3a00",
+  runningText: "#fde68a",
+  doneBg: "#123c2f",
+  doneText: "#86efac",
 };
 
 const styles = {
@@ -207,10 +220,17 @@ const styles = {
     padding: 14,
     background: colors.blockBg,
   },
+  blockHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 10,
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginBottom: 12,
+  },
   blockTitle: {
     fontSize: 16,
     fontWeight: 800,
-    marginBottom: 12,
     color: colors.title,
   },
   row: {
@@ -224,7 +244,7 @@ const styles = {
     color: colors.accent,
     fontWeight: 800,
   },
-  actions: {
+  stageActions: {
     display: "grid",
     gap: 10,
     marginTop: 14,
@@ -247,6 +267,69 @@ function InfoRow({ label, value }) {
     <div style={styles.row}>
       <span style={styles.label}>{label}: </span>
       <span>{value || "—"}</span>
+    </div>
+  );
+}
+
+function StatusBadge({ status }) {
+  const normalized = status || "nao_iniciado";
+
+  let bg = colors.waitingBg;
+  let text = colors.waitingText;
+
+  if (normalized === "em_andamento") {
+    bg = colors.runningBg;
+    text = colors.runningText;
+  }
+
+  if (normalized === "finalizado") {
+    bg = colors.doneBg;
+    text = colors.doneText;
+  }
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "6px 10px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 800,
+        background: bg,
+        color: text,
+        border: `1px solid ${colors.border}`,
+      }}
+    >
+      {getStatusLabel(normalized)}
+    </span>
+  );
+}
+
+function StageButtons({ itemId, stageKey, stageLabel, status, updateOperationalStage }) {
+  if (typeof updateOperationalStage !== "function") return null;
+
+  if (status === "finalizado") return null;
+
+  return (
+    <div style={styles.stageActions}>
+      {status !== "em_andamento" && (
+        <button
+          style={styles.btn}
+          onClick={() => updateOperationalStage(itemId, stageKey, "start")}
+        >
+          Iniciar {stageLabel.toLowerCase()}
+        </button>
+      )}
+
+      {status === "em_andamento" && (
+        <button
+          style={styles.btn}
+          onClick={() => updateOperationalStage(itemId, stageKey, "finish")}
+        >
+          Finalizar {stageLabel.toLowerCase()}
+        </button>
+      )}
     </div>
   );
 }
@@ -278,6 +361,8 @@ export default function Equipe({
       {ativos.map((item) => {
         const form = item.form || {};
         const remocao = item.operationalStages?.remocao || {};
+        const procedimento = item.operationalStages?.procedimentoClinico || {};
+        const ornamentacao = item.operationalStages?.ornamentacao || {};
         const entrega = item.operationalStages?.entrega || {};
         const sepultamento = item.operationalStages?.sepultamento || {};
         const isViagem = form.velorioTipo === "viagem";
@@ -294,6 +379,9 @@ export default function Equipe({
         const sepultamentoMotorista = getDriverByStage(item, "sepultamento", "Sepultamento");
         const sepultamentoCarro = getCarByStage(item, "sepultamento", "carroSepultamento");
         const sepultamentoApoio = getSupportByStage(item, "sepultamento");
+
+        const tecnico = getTechnician(item);
+        const apoioOrnamentacao = getSupportByStage(item, "ornamentacao");
 
         const localPrincipal = form.localObito || item.localObito || "—";
         const horarioPrincipal = isViagem
@@ -333,7 +421,11 @@ export default function Equipe({
               <div style={styles.details}>
                 <div style={styles.grid}>
                   <div style={styles.block}>
-                    <div style={styles.blockTitle}>Óbito / Remoção</div>
+                    <div style={styles.blockHeader}>
+                      <div style={styles.blockTitle}>Óbito / Remoção</div>
+                      <StatusBadge status={remocao.status} />
+                    </div>
+
                     <InfoRow label="Local" value={form.localObito || item.localObito} />
                     <InfoRow label="Responsável" value={form.responsavelNome || item.responsavelNome} />
                     <InfoRow label="Contato" value={form.responsavelCelular1 || form.responsavelCelular2} />
@@ -341,16 +433,39 @@ export default function Equipe({
                     <InfoRow label="Motorista" value={remocaoMotorista} />
                     <InfoRow label="Carro" value={remocaoCarro} />
                     <InfoRow label="Apoio" value={remocaoApoio} />
-                    <InfoRow label="Status" value={getStatusLabel(remocao.status)} />
+
+                    <StageButtons
+                      itemId={item.id}
+                      stageKey="remocao"
+                      stageLabel="Remoção"
+                      status={remocao.status}
+                      updateOperationalStage={updateOperationalStage}
+                    />
                   </div>
 
                   <div style={styles.block}>
-                    <div style={styles.blockTitle}>{getVelorioTitulo(form)}</div>
-                    <InfoRow label={getVelorioLabelLocal(form)} value={getVelorioLocal(form)} />
-                    <InfoRow label={getVelorioLabelHorario(form)} value={getVelorioHorario(form)} />
-                    {isViagem ? <InfoRow label="Embarque" value={form.embarque} /> : null}
-                    <InfoRow label="Modelo da urna" value={form.modeloUrna} />
-                    <InfoRow label="Cor da urna" value={form.corUrna} />
+                    <div style={styles.blockHeader}>
+                      <div style={styles.blockTitle}>Procedimento</div>
+                      <StatusBadge status={procedimento.status} />
+                    </div>
+
+                    <InfoRow label="Técnico" value={tecnico} />
+
+                    <StageButtons
+                      itemId={item.id}
+                      stageKey="procedimentoClinico"
+                      stageLabel="Procedimento"
+                      status={procedimento.status}
+                      updateOperationalStage={updateOperationalStage}
+                    />
+                  </div>
+
+                  <div style={styles.block}>
+                    <div style={styles.blockHeader}>
+                      <div style={styles.blockTitle}>Ornamentação</div>
+                      <StatusBadge status={ornamentacao.status} />
+                    </div>
+
                     <InfoRow
                       label="Ornamentação"
                       value={form.ornamentacao === "sim" ? "Sim" : form.ornamentacao === "nao" ? "Não" : ""}
@@ -359,79 +474,64 @@ export default function Equipe({
                       label="Tipo"
                       value={form.tipoFlor === "naturais" ? "Natural" : form.tipoFlor === "artificiais" ? "Artificial" : ""}
                     />
+                    <InfoRow label="Modelo da urna" value={form.modeloUrna} />
+                    <InfoRow label="Cor da urna" value={form.corUrna} />
+                    <InfoRow label="Apoio" value={apoioOrnamentacao} />
+
+                    <StageButtons
+                      itemId={item.id}
+                      stageKey="ornamentacao"
+                      stageLabel="Ornamentação"
+                      status={ornamentacao.status}
+                      updateOperationalStage={updateOperationalStage}
+                    />
+                  </div>
+
+                  <div style={styles.block}>
+                    <div style={styles.blockHeader}>
+                      <div style={styles.blockTitle}>{getVelorioTitulo(form)}</div>
+                      <StatusBadge status={entrega.status} />
+                    </div>
+
+                    <InfoRow label={getVelorioLabelLocal(form)} value={getVelorioLocal(form)} />
+                    <InfoRow label={getVelorioLabelHorario(form)} value={getVelorioHorario(form)} />
+                    {isViagem ? <InfoRow label="Embarque" value={form.embarque} /> : null}
                     <InfoRow label="Motorista" value={entregaMotorista} />
                     <InfoRow label="Carro" value={entregaCarro} />
                     <InfoRow label="Apoio" value={entregaApoio} />
-                    <InfoRow label="Status" value={getStatusLabel(entrega.status)} />
+
+                    <StageButtons
+                      itemId={item.id}
+                      stageKey="entrega"
+                      stageLabel={isViagem ? "Viagem" : "Entrega"}
+                      status={entrega.status}
+                      updateOperationalStage={updateOperationalStage}
+                    />
                   </div>
 
                   {!isViagem && (
                     <div style={styles.block}>
-                      <div style={styles.blockTitle}>Sepultamento</div>
+                      <div style={styles.blockHeader}>
+                        <div style={styles.blockTitle}>Sepultamento</div>
+                        <StatusBadge status={sepultamento.status} />
+                      </div>
+
                       <InfoRow label="Local" value={form.cemiterio || item.cemiterio} />
                       <InfoRow label="Horário" value={form.horarioSepultamento || form.horaSepultamento} />
                       <InfoRow label="Motorista" value={sepultamentoMotorista} />
                       <InfoRow label="Carro" value={sepultamentoCarro} />
                       <InfoRow label="Apoio" value={sepultamentoApoio} />
-                      <InfoRow label="Status" value={getStatusLabel(sepultamento.status)} />
+
+                      <StageButtons
+                        itemId={item.id}
+                        stageKey="sepultamento"
+                        stageLabel="Sepultamento"
+                        status={sepultamento.status}
+                        updateOperationalStage={updateOperationalStage}
+                      />
                     </div>
                   )}
                 </div>
-
-                {typeof updateOperationalStage === "function" ? (
-                  <div style={styles.actions}>
-                    {remocao.status !== "finalizado" && (
-                      <>
-                        <button
-                          style={styles.btn}
-                          onClick={() => updateOperationalStage(item.id, "remocao", "start")}
-                        >
-                          Iniciar remoção
-                        </button>
-                        <button
-                          style={styles.btn}
-                          onClick={() => updateOperationalStage(item.id, "remocao", "finish")}
-                        >
-                          Finalizar remoção
-                        </button>
-                      </>
-                    )}
-
-                    {entrega.status !== "finalizado" && (
-                      <>
-                        <button
-                          style={styles.btn}
-                          onClick={() => updateOperationalStage(item.id, "entrega", "start")}
-                        >
-                          Iniciar {isViagem ? "viagem" : "entrega"}
-                        </button>
-                        <button
-                          style={styles.btn}
-                          onClick={() => updateOperationalStage(item.id, "entrega", "finish")}
-                        >
-                          Finalizar {isViagem ? "viagem" : "entrega"}
-                        </button>
-                      </>
-                    )}
-
-                    {!isViagem && sepultamento.status !== "finalizado" && (
-                      <>
-                        <button
-                          style={styles.btn}
-                          onClick={() => updateOperationalStage(item.id, "sepultamento", "start")}
-                        >
-                          Iniciar sepultamento
-                        </button>
-                        <button
-                          style={styles.btn}
-                          onClick={() => updateOperationalStage(item.id, "sepultamento", "finish")}
-                        >
-                          Finalizar sepultamento
-                        </button>
-                      </>
-                    )}
-                  </div>
-                ) : null}
               </div>
             )}
           </div>
