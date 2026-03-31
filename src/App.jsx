@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import gerarFichaPDF from "./pdf/gerarFichaPDF";
-import gerarTermoPDF from "./pdf/gerarTermoPDF";
+import jsPDF from "jspdf";
 import { supabase } from "./lib/supabaseClient.js";
 import Equipe from "./pages/Equipe.jsx";
+import AcompanhamentoPublico from "./AcompanhamentoPublico.jsx";
 
 const STORAGE_KEYS = {
   users: "sf_users_v3",
@@ -150,6 +150,12 @@ function createOperationStages() {
       attendant: "",
       technician: "",
       support: "",
+      startedBy: "",
+      startedById: "",
+      startedAt: "",
+      finishedBy: "",
+      finishedById: "",
+      finishedAt: "",
     };
     return acc;
   }, {});
@@ -210,6 +216,8 @@ function getInitialForm() {
     falecido: "",
     localObito: "",
     cemiterio: "",
+    dataFalecimento: todayDate(),
+    horaFalecimento: currentTime(),
     dataSaida: todayDate(),
     horaSaida: currentTime(),
     horaAtendimento: currentTime(),
@@ -461,6 +469,13 @@ const [pdfPreview, setPdfPreview] = useState({
   }, [theme]);
 
   useEffect(() => {
+    const savedSession = loadStorage(STORAGE_KEYS.session, null);
+    if (savedSession) {
+      setSession(savedSession);
+    }
+  }, []);
+
+  useEffect(() => {
   saveStorage(STORAGE_KEYS.attendances, atendimentos);
 
   }, [atendimentos]);
@@ -468,10 +483,9 @@ const [pdfPreview, setPdfPreview] = useState({
   useEffect(() => {
     function syncTrackingRoute() {
       const trackingId = getTrackingIdFromPath();
-      setPublicTrackingId(trackingId);
+      setPublicTrackingId(trackingId || "");
       if (trackingId) {
         setViewingAttendanceId(trackingId);
-        setActiveTab("acompanhamento");
       }
     }
 
@@ -517,7 +531,9 @@ const [pdfPreview, setPdfPreview] = useState({
 
   const operationalAttendances = useMemo(() => {
     return atendimentos.filter(
-      (item) => item.status === "Aguardando início" || item.status === "Em andamento"
+      (item) =>
+        item &&
+        ["Aguardando início", "Em andamento", "Em progresso"].includes(item.status)
     );
   }, [atendimentos]);
 
@@ -525,6 +541,63 @@ const [pdfPreview, setPdfPreview] = useState({
     if (!viewingAttendanceId) return null;
     return atendimentos.find((item) => item.id === viewingAttendanceId) || null;
   }, [viewingAttendanceId, atendimentos]);
+
+  const atendimentosEquipe = useMemo(() => {
+    return atendimentos.filter(
+      (item) =>
+        item &&
+        item.equipeAcionada === true &&
+        ["Aguardando início", "Em andamento", "Em progresso"].includes(item.status)
+    );
+  }, [atendimentos]);
+
+  const currentAttendanceRecord = useMemo(() => {
+    if (!editingAttendanceId) return null;
+    return atendimentos.find((item) => item.id === editingAttendanceId) || null;
+  }, [editingAttendanceId, atendimentos]);
+
+  function formatDateTimeBR(value) {
+    if (!value) return "—";
+    try {
+      return new Date(value).toLocaleString("pt-BR");
+    } catch {
+      return String(value);
+    }
+  }
+
+  function buildAttendanceTimeline(attendance) {
+    if (!attendance?.operationalStages) return [];
+
+    const events = [];
+
+    OPERATION_STAGES.forEach((stage) => {
+      const stageData = attendance.operationalStages?.[stage.key] || {};
+
+      if (stageData.startedAt || stageData.startedBy) {
+        events.push({
+          id: `${stage.key}-start`,
+          when: stageData.startedAt || "",
+          label: `${stage.label} iniciada`,
+          by: stageData.startedBy || "Não informado",
+        });
+      }
+
+      if (stageData.finishedAt || stageData.finishedBy) {
+        events.push({
+          id: `${stage.key}-finish`,
+          when: stageData.finishedAt || "",
+          label: `${stage.label} finalizada`,
+          by: stageData.finishedBy || "Não informado",
+        });
+      }
+    });
+
+    return events.sort((a, b) => {
+      const timeA = a.when ? new Date(a.when).getTime() : 0;
+      const timeB = b.when ? new Date(b.when).getTime() : 0;
+      return timeA - timeB;
+    });
+  }
 
   function getTrackingIdFromPath() {
     if (typeof window === "undefined") return "";
@@ -755,11 +828,13 @@ const [pdfPreview, setPdfPreview] = useState({
     }
 
     setSession(user);
+    saveStorage(STORAGE_KEYS.session, user);
     setLoginError("");
   }
 
   function handleLogout() {
     setSession(null);
+    saveStorage(STORAGE_KEYS.session, null);
     setLogin("");
     setPassword("");
     setLoginError("");
@@ -900,6 +975,15 @@ const [pdfPreview, setPdfPreview] = useState({
     }
   }
 
+  async function toggleEquipeAcionada(attendanceId, shouldActivate) {
+    await updateAttendanceRecord(attendanceId, (item) => ({
+      ...item,
+      equipeAcionada: shouldActivate,
+      acionadoEm: shouldActivate ? new Date().toISOString() : item.acionadoEm || "",
+      updatedAt: new Date().toISOString(),
+    }));
+  }
+
   async function finalizarAtendimento() {
     const preparedForm = getPreparedFormData(form);
     const now = new Date().toISOString();
@@ -972,6 +1056,8 @@ const [pdfPreview, setPdfPreview] = useState({
       operationalStages: JSON.parse(JSON.stringify(existingStages)),
       form: JSON.parse(JSON.stringify(preparedForm)),
       services: JSON.parse(JSON.stringify(services)),
+      equipeAcionada: existingRecord?.equipeAcionada || false,
+      acionadoEm: existingRecord?.acionadoEm || "",
     };
 
     setForm((prev) => ({ ...preparedForm, codigo: record.codigo }));
@@ -1009,6 +1095,12 @@ const [pdfPreview, setPdfPreview] = useState({
         attendant: "",
         technician: "",
         support: "",
+        startedBy: "",
+        startedById: "",
+        startedAt: "",
+        finishedBy: "",
+        finishedById: "",
+        finishedAt: "",
       };
 
       if (action === "start") {
@@ -1017,6 +1109,9 @@ const [pdfPreview, setPdfPreview] = useState({
           status: "em_andamento",
           start: currentStage.start || now,
           end: "",
+          startedBy: session?.name || currentStage.startedBy || "",
+          startedById: session?.id || currentStage.startedById || "",
+          startedAt: currentStage.startedAt || new Date().toISOString(),
         };
       }
 
@@ -1026,6 +1121,9 @@ const [pdfPreview, setPdfPreview] = useState({
           status: "finalizado",
           start: currentStage.start || now,
           end: now,
+          finishedBy: session?.name || "",
+          finishedById: session?.id || "",
+          finishedAt: new Date().toISOString(),
         };
       }
 
@@ -1237,6 +1335,603 @@ const [pdfPreview, setPdfPreview] = useState({
     setUsers((prev) => prev.filter((u) => u.id !== id));
   }
 
+  function drawCell(doc, x, y, w, h, text = "", opts = {}) {
+    doc.rect(x, y, w, h);
+    const fontSize = opts.fontSize || 8;
+    doc.setFont("times", opts.bold ? "bold" : "normal");
+    doc.setFontSize(fontSize);
+
+    const tx =
+      opts.align === "center" ? x + w / 2 : x + (opts.paddingLeft ?? 1.3);
+    const ty = y + h / 2 + (opts.offsetY ?? 1.25);
+
+    if (text) {
+      doc.text(String(text), tx, ty, {
+        maxWidth: w - 2,
+        align: opts.align === "center" ? "center" : "left",
+      });
+    }
+  }
+
+  function gerarFichaPDF() {
+    const doc = new jsPDF("p", "mm", "a4");
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.22);
+
+    const left = 5;
+    let y = 5;
+
+    doc.setFont("times", "bold");
+    doc.setFontSize(14);
+    doc.text("FUNERÁRIA SÃO FRANCISCO DE ASSIS", 105, y + 5, { align: "center" });
+
+    doc.setFontSize(11);
+    doc.text("SUELY R. DO PRADO – EPP", 105, y + 9.7, { align: "center" });
+
+    doc.setFont("times", "normal");
+    doc.setFontSize(9);
+    doc.text("CNPJ: 84.522.143/0001-53 – Insc. 04.105.072-0", 105, y + 14, {
+      align: "center",
+    });
+    doc.text(
+      "Fones: (092) 3633-8095 / 3234-4499 / 3308-3966 / 3308-3966  CEP: 69065-000",
+      105,
+      y + 18.2,
+      {
+        align: "center",
+      }
+    );
+    doc.text(
+      "Avenida Carvalho Leal, N°1.000 – Cachoeirinha / Manaus – AM",
+      105,
+      y + 22.4,
+      {
+        align: "center",
+      }
+    );
+
+    y += 26;
+
+    drawCell(doc, left, y, 200, 5.9, `FALECIDO: ${form.falecido}`, {
+      bold: true,
+      fontSize: 8.6,
+    });
+    y += 5.9;
+
+    drawCell(doc, left, y, 150, 5.9, `LOCAL DO ÓBITO: ${form.localObito}`, {
+      bold: true,
+      fontSize: 8.2,
+    });
+    drawCell(
+      doc,
+      155,
+      y,
+      50,
+      5.9,
+      `DATA/SAÍDA: ${formatDateBR(form.dataSaida)}`,
+      {
+        bold: true,
+        fontSize: 8.2,
+      }
+    );
+    y += 5.9;
+
+    drawCell(doc, left, y, 150, 5.9, `CEMITÉRIO: ${form.cemiterio}`, {
+      bold: true,
+      fontSize: 8.2,
+    });
+    drawCell(doc, 155, y, 50, 5.9, `HORA/SAÍDA: ${form.horaSaida}`, {
+      bold: true,
+      fontSize: 8.2,
+    });
+    y += 5.9;
+
+    drawCell(doc, left, y, 200, 5.9, `HORA/ATEND: ${form.horaAtendimento}`, {
+      bold: true,
+      fontSize: 8.2,
+    });
+    y += 5.9;
+
+    drawCell(
+      doc,
+      left,
+      y,
+      60,
+      5.9,
+      `DATA/ATEND: ${formatDateBR(form.dataAtendimento)}`,
+      {
+        bold: true,
+        fontSize: 8,
+      }
+    );
+    drawCell(
+      doc,
+      65,
+      y,
+      95,
+      5.9,
+      `CHEGOU NA CLÍNICA ÀS: ${form.chegouClinica}`,
+      {
+        bold: true,
+        fontSize: 7.8,
+      }
+    );
+    drawCell(doc, 160, y, 45, 5.9, `INÍCIO ÀS: ${form.inicioAs}`, {
+      bold: true,
+      fontSize: 8,
+    });
+    y += 5.9;
+
+    if (form.tipoPlano === "socio") {
+      drawCell(doc, left, y, 55, 5.9, `PLANO: ${form.plano}`, {
+        fontSize: 8,
+      });
+      drawCell(doc, 60, y, 45, 5.9, `CÓDIGO: ${form.codigo}`, {
+        fontSize: 8,
+      });
+      drawCell(doc, 105, y, 100, 5.9, `DEPENDENTE: ${form.dependente}`, {
+        fontSize: 8,
+      });
+    } else {
+      drawCell(doc, left, y, 200, 5.9, `PLANO: SERVIÇO PARTICULAR`, {
+        fontSize: 8,
+      });
+    }
+    y += 6.6;
+
+    drawCell(doc, left, y, 200, 5.9, "SERVIÇOS PRESTADOS", {
+      bold: true,
+      fontSize: 8.8,
+      align: "center",
+    });
+    y += 5.9;
+
+    drawCell(doc, left, y, 8, 5.1, "", {});
+    drawCell(doc, 13, y, 152, 5.1, "", {});
+    drawCell(doc, 165, y, 20, 5.1, "QUANT.", {
+      fontSize: 7.6,
+      align: "center",
+    });
+    drawCell(doc, 185, y, 20, 5.1, "VALOR:", {
+      fontSize: 7.6,
+      align: "center",
+    });
+    y += 5.1;
+
+    services.forEach((item) => {
+      let label = item.name;
+
+      if (item.name === "COROA DE FLORES" && item.note) {
+        label += `     FRASE: ${item.note}`;
+      }
+
+      if (item.name === "OUTRAS DESPESAS" && item.note) {
+        label += ` ${item.note}`;
+      }
+
+      drawCell(doc, left, y, 8, 4.8, item.checked ? "X" : "", {
+        fontSize: 8,
+        bold: true,
+        align: "center",
+        offsetY: 1.1,
+      });
+
+      drawCell(doc, 13, y, 152, 4.8, label, {
+        fontSize: item.name === "COROA DE FLORES" ? 6.8 : 7.6,
+        paddingLeft: 1.5,
+      });
+
+      drawCell(doc, 165, y, 20, 4.8, item.qty || "", {
+        fontSize: 7.3,
+        align: "center",
+      });
+
+      drawCell(
+        doc,
+        185,
+        y,
+        20,
+        4.8,
+        item.value ? formatMoney(item.value) : "",
+        {
+          fontSize: 7.3,
+          align: "center",
+        }
+      );
+
+      y += 4.8;
+    });
+
+    drawCell(doc, left, y, 180, 5.6, "VALOR TOTAL:", {
+      bold: true,
+      fontSize: 7.8,
+    });
+    drawCell(doc, 185, y, 20, 5.6, formatMoney(totalValue), {
+      bold: true,
+      fontSize: 7.5,
+      align: "center",
+    });
+    y += 6.8;
+
+    drawCell(doc, left, y, 200, 5.9, "DADOS DO RESPONSÁVEL", {
+      bold: true,
+      fontSize: 8.8,
+      align: "center",
+    });
+    y += 5.9;
+
+    drawCell(doc, left, y, 145, 5.9, `NOME: ${form.responsavelNome}`, {
+      fontSize: 7.7,
+    });
+    drawCell(doc, 150, y, 55, 5.9, `CPF: ${form.responsavelCpf}`, {
+      fontSize: 7.7,
+    });
+    y += 5.9;
+
+    drawCell(doc, left, y, 200, 5.9, `RG: ${form.responsavelRg}`, {
+      fontSize: 7.7,
+    });
+    y += 5.9;
+
+    drawCell(doc, left, y, 160, 5.9, `ENDEREÇO: ${form.responsavelEndereco}`, {
+      fontSize: 7.4,
+    });
+    drawCell(doc, 165, y, 40, 5.9, `CEP: ${form.responsavelCep}`, {
+      fontSize: 7.4,
+    });
+    y += 5.9;
+
+    drawCell(doc, left, y, 75, 5.9, `BAIRRO: ${form.responsavelBairro}`, {
+      fontSize: 7.4,
+    });
+    drawCell(doc, 80, y, 60, 5.9, `CELULAR: ${form.responsavelCelular1}`, {
+      fontSize: 7.4,
+    });
+    drawCell(doc, 140, y, 65, 5.9, `CELULAR: ${form.responsavelCelular2}`, {
+      fontSize: 7.4,
+    });
+    y += 5.9;
+
+    const velorioTexto =
+      form.velorioTipo === "funeraria"
+        ? [form.velorioUnidade, form.velorioSala].filter(Boolean).join(" - ")
+        : [
+            form.velorioNomeLocal,
+            form.velorioEndereco,
+            form.velorioNumero,
+            form.velorioBairro,
+          ]
+            .filter(Boolean)
+            .join(", ");
+
+    drawCell(doc, left, y, 200, 6, `LOCAL DO VELÓRIO: ${velorioTexto}`, {
+      fontSize: 7.4,
+    });
+    y += 6.8;
+
+    function drawFinalBlock(titulo, atendente, motorista, carro, showDetails = false) {
+      drawCell(
+        doc,
+        left,
+        y,
+        70,
+        5.5,
+        showDetails ? `ATENDENTE: ${atendente || ""}` : "",
+        {
+          bold: true,
+          fontSize: 7.2,
+        }
+      );
+      drawCell(
+        doc,
+        75,
+        y,
+        80,
+        5.5,
+        showDetails ? `${titulo} ${motorista || ""}` : titulo,
+        {
+          bold: true,
+          fontSize: 7.2,
+        }
+      );
+      drawCell(
+        doc,
+        155,
+        y,
+        50,
+        5.5,
+        showDetails ? `CARRO: ${carro || ""}` : "",
+        {
+          bold: true,
+          fontSize: 7.2,
+        }
+      );
+      y += 5.5;
+
+      drawCell(doc, left, y, 70, 5.5, "", {});
+      drawCell(doc, 75, y, 80, 5.5, "ASSINATURA:", {
+        bold: true,
+        fontSize: 7.2,
+      });
+      drawCell(doc, 155, y, 50, 5.5, "", {});
+      y += 5.5;
+    }
+
+    drawFinalBlock(
+      "REMOÇÃO:",
+      form.atendenteRemocao,
+      form.Remocao,
+      form.carroRemocao,
+      true
+    );
+
+    drawFinalBlock(
+      "ENTREGA:",
+      form.atendenteEntrega,
+      form.Entrega,
+      form.carroEntrega,
+      false
+    );
+
+    drawFinalBlock(
+      "SEPULTAMENTO:",
+      form.atendenteSepultamento,
+      form.Sepultamento,
+      form.carroSepultamento,
+      false
+    );
+
+    const assinaturaY = Math.min(y + 24, 287);
+    doc.setFont("times", "bold");
+    doc.setFontSize(8.2);
+    doc.text("Responsável:", 45, assinaturaY + 0.5);
+    doc.line(70, assinaturaY, 145, assinaturaY);
+
+    const filename = `ficha-${(form.falecido || "atendimento")
+  .replace(/\s+/g, "-")
+  .toLowerCase()}.pdf`;
+
+openPdfPreview(doc, filename, "Pré-visualização da Ficha");
+  }
+
+  function gerarTermoPDF() {
+    const doc = new jsPDF("p", "mm", "a4");
+    doc.setDrawColor(0, 0, 0);
+    doc.setTextColor(0, 0, 0);
+    doc.setLineWidth(0.2);
+
+    const left = 15;
+    let y = 18;
+
+    function safeText(value) {
+      return String(value || "");
+    }
+
+    function upper(value) {
+      return safeText(value).toUpperCase();
+    }
+
+    function line(x1, yy, x2) {
+      doc.line(x1, yy, x2, yy);
+    }
+
+    function writeLineValue(label, value, x, yy, xLineStart, xLineEnd, options = {}) {
+      const valueX = options.valueX ?? xLineStart + 1.5;
+      doc.text(label, x, yy);
+      const text = safeText(value);
+      if (text) {
+        doc.text(text, valueX, yy);
+      }
+      line(xLineStart, yy + 0.6, xLineEnd);
+    }
+
+    function drawCheckbox(x, yy, checked) {
+      const boxTop = yy - 3.1;
+      doc.rect(x, boxTop, 3.3, 3.3);
+      if (checked) {
+        doc.setFont("times", "bold");
+        doc.setFontSize(9);
+        doc.text("X", x + 0.85, yy - 0.25);
+        doc.setFont("times", "normal");
+        doc.setFontSize(10);
+      }
+    }
+
+    function checkboxOption(x, yy, checked, label) {
+      drawCheckbox(x, yy, checked);
+      doc.text(label, x + 5, yy);
+    }
+
+    const dataAtual = new Date();
+    const dia = String(dataAtual.getDate()).padStart(2, "0");
+    const ano = dataAtual.getFullYear();
+    const meses = [
+      "janeiro",
+      "fevereiro",
+      "março",
+      "abril",
+      "maio",
+      "junho",
+      "julho",
+      "agosto",
+      "setembro",
+      "outubro",
+      "novembro",
+      "dezembro",
+    ];
+    const mes = meses[dataAtual.getMonth()];
+
+    const localVelorioMarcacao = {
+      funeraria: form.velorioTipo === "funeraria",
+      residencia: form.velorioTipo === "residencia",
+      igreja: form.velorioTipo === "igreja",
+      interior: !["funeraria", "residencia", "igreja"].includes(form.velorioTipo),
+    };
+
+    let modeloUrnaTexto = upper(form.modeloUrna);
+    if (form.modeloUrna === "luxo" && form.refUrna) {
+      modeloUrnaTexto = `LUXO REF: ${upper(form.refUrna)}`;
+    }
+
+    const tempoVelorio = safeText(form.tempoVelorioValor);
+    const horarioVelorio = safeText(form.horarioVelorio);
+    const tecnicoNome = upper(form.tecnico);
+    const atendenteNome = upper(form.atendenteGeral || form.atendenteEntrega);
+
+    doc.setFont("times", "bold");
+    doc.setFontSize(12);
+    doc.text("TERMO DE AUTORIZAÇÃO PREPARO DO CORPO", 105, y, { align: "center" });
+
+    y += 11;
+    doc.setFont("times", "normal");
+    doc.setFontSize(10);
+
+    doc.text("Pelo presente eu,", left, y);
+    doc.text(upper(form.responsavelNome), 42, y);
+    line(42, y + 0.6, 104);
+    doc.text("RG:", 107, y);
+    doc.text(safeText(form.responsavelRg), 117, y);
+    line(117, y + 0.6, 145);
+    doc.text("CPF:", 148, y);
+    doc.text(safeText(form.responsavelCpf), 159, y);
+    line(159, y + 0.6, 196);
+
+    y += 7;
+    doc.text("Representante legal do falecido:", left, y);
+    doc.text(upper(form.falecido), 67, y);
+    line(67, y + 0.6, 196);
+
+    y += 7;
+    doc.text("Local do óbito:", left, y);
+    doc.text(upper(form.localObito), 39, y);
+    line(39, y + 0.6, 98);
+    doc.text("falecimento:", 102, y);
+    doc.text(formatDateBR(form.dataFalecimento), 127, y);
+    line(127, y + 0.6, 148);
+    doc.text(", hora", 150, y);
+    doc.text(safeText(form.horaFalecimento), 163, y);
+    line(163, y + 0.6, 182);
+
+    y += 7;
+    doc.text("grau de parentesco com o falecido:", left, y);
+    doc.text(upper(form.parentesco), 73, y);
+    line(73, y + 0.6, 196);
+
+    y += 12;
+    const paragrafo = doc.splitTextToSize(
+      "Solicito e autorizo, após obter as informações sobre o procedimento, da realização de Tanatopraxia para conservar e manter a aparência normal do corpo do mesmo. Autorizo também o registro de imagens do procedimento realizado em caráter sigiloso, com o único propósito de esclarecer quaisquer dúvidas que possam surgir quanto ao ato realizado.",
+      180
+    );
+    doc.text(paragrafo, left, y);
+    y += paragrafo.length * 5.2 + 5;
+
+    doc.setFont("times", "bold");
+    doc.text("CORPO", left, y);
+    y += 8;
+    doc.setFont("times", "normal");
+
+    doc.text("· Condições do corpo:", left, y);
+    checkboxOption(72, y, form.necropsia === "sim", "Necropsiado");
+    checkboxOption(118, y, form.necropsia === "nao", "Não Necropsiado.");
+
+    y += 8;
+    doc.text("· Falecido veio vestido:", left, y);
+    checkboxOption(72, y, form.veioVestido === "sim", "Sim");
+    checkboxOption(95, y, form.veioVestido === "nao", "Não");
+
+    y += 8;
+    doc.text("· Retirar o esmalte da unha:", left, y);
+    checkboxOption(72, y, form.retirarEsmalte === "sim", "Sim");
+    checkboxOption(95, y, form.retirarEsmalte === "nao", "Não");
+
+    y += 8;
+    doc.text("· Ornamentação:", left, y);
+    checkboxOption(72, y, form.ornamentacao === "sim", "Sim");
+    checkboxOption(95, y, form.ornamentacao === "nao", "Não");
+    doc.text("-", 118, y);
+    checkboxOption(123, y, form.tipoFlor === "naturais", "Naturais");
+    checkboxOption(157, y, form.tipoFlor === "artificiais", "Artificiais");
+
+    y += 8;
+    doc.text("· Barbear:", left, y);
+    checkboxOption(72, y, form.barbear === "sim", "Sim");
+    checkboxOption(95, y, form.barbear === "nao", "Não");
+
+    y += 8;
+    doc.text("· Bigode:", left, y);
+    checkboxOption(72, y, form.bigode === "sim", "Sim");
+    checkboxOption(95, y, form.bigode === "nao", "Não");
+
+    y += 8;
+    doc.text("· Cavanhaque:", left, y);
+    checkboxOption(72, y, form.cavanhaque === "sim", "Sim");
+    checkboxOption(95, y, form.cavanhaque === "nao", "Não");
+
+    y += 8;
+    doc.text("· Maquiagem:", left, y);
+    checkboxOption(72, y, form.maquiagem === "sim", "Sim");
+    checkboxOption(95, y, form.maquiagem === "nao", "Não");
+    doc.text("-", 118, y);
+    checkboxOption(123, y, form.maquiagemTipo === "leve", "Leve");
+    checkboxOption(145, y, form.maquiagemTipo === "natural", "Natural");
+    checkboxOption(171, y, form.maquiagemTipo === "forte", "Forte");
+
+    y += 10;
+    doc.text("· Joias:", left, y);
+    checkboxOption(30, y, form.joias === "sim", "Sim");
+    checkboxOption(48, y, form.joias === "nao", "Não");
+    writeLineValue("Quais:", safeText(form.joiasQuais), 66, y, 80, 196, { valueX: 81.5 });
+
+    y += 8;
+    writeLineValue("· A roupa foi entregue para:", upper(form.roupaEntreguePara), left, y, 63, 196, { valueX: 64.5 });
+
+    y += 8;
+    doc.text("· Tempo previsto de velório:", left, y);
+    doc.text(tempoVelorio, 65, y);
+    line(65, y + 0.6, 97);
+    doc.text("horas ou", 100, y);
+    doc.text(form.tempoVelorioUnidade === "dias" ? tempoVelorio : "", 125, y);
+    line(125, y + 0.6, 151);
+    doc.text("dias", 154, y);
+
+    y += 8;
+    doc.text("· Local do velório:", left, y);
+    checkboxOption(48, y, localVelorioMarcacao.funeraria, "funerária");
+    checkboxOption(86, y, localVelorioMarcacao.residencia, "residência");
+    checkboxOption(128, y, localVelorioMarcacao.igreja, "igreja");
+    checkboxOption(158, y, localVelorioMarcacao.interior, "interior");
+
+    y += 8;
+    writeLineValue("· Sala:", upper(form.velorioSala), left, y, 26, 92, { valueX: 27.5 });
+    writeLineValue("Horário:", horarioVelorio, 94, y, 114, 152, { valueX: 115.5 });
+
+    y += 8;
+    writeLineValue("· Religião:", upper(form.religiao), left, y, 36, 196, { valueX: 37.5 });
+
+    y += 8;
+    writeLineValue("· Técnico:", tecnicoNome, left, y, 34, 196, { valueX: 35.5 });
+
+    y += 8;
+    writeLineValue("· Atendente:", atendenteNome, left, y, 40, 196, { valueX: 41.5 });
+
+    y += 8;
+    writeLineValue("· Modelo de urna:", modeloUrnaTexto, left, y, 49, 114, { valueX: 50.5 });
+    writeLineValue("Cor:", upper(form.corUrna), 118, y, 128, 196, { valueX: 129.5 });
+
+    y += 20;
+    doc.text(`Manaus, ${dia} de ${mes} de ${ano}`, left + 105, y);
+
+    y += 20;
+    doc.line(65, y, 140, y);
+    y += 6;
+    doc.text("Responsável", 93, y, { align: "center" });
+
+    const filename = `termo-${(form.falecido || "atendimento")
+      .replace(/\s+/g, "-")
+      .toLowerCase()}.pdf`;
+
+    openPdfPreview(doc, filename, "Pré-visualização do Termo");
+  }
 function openPdfPreview(doc, filename, title) {
   const blob = doc.output("blob");
   const url = URL.createObjectURL(blob);
@@ -1290,11 +1985,22 @@ function printPreviewPdf() {
     printWindow.print();
   };
 }
+  if (session && session.role === "EQUIPE") {
+    return (
+      <Equipe
+        atendimentos={atendimentosEquipe}
+        updateOperationalStage={updateOperationalStage}
+        formatDateBR={formatDateBR}
+      />
+    );
+  }
+
   if (isEquipeRoute) {
     return (
       <Equipe
-        atendimentos={atendimentos || []}
+        atendimentos={atendimentosEquipe}
         updateOperationalStage={updateOperationalStage}
+        formatDateBR={formatDateBR}
       />
     );
   }
@@ -1334,36 +2040,93 @@ function printPreviewPdf() {
               📋 Atendimentos
             </button>
 
-            <button
-              style={styles.primaryBtn}
-              onClick={() =>
-                gerarFichaPDF({
-                  form,
-                  services,
-                  totalValue,
-                  formatDateBR,
-                  formatMoney,
-                  openPdfPreview,
-                })
-              }
-            >
+            <button style={styles.primaryBtn} onClick={gerarFichaPDF}>
               🧾 Gerar Ficha PDF
             </button>
 
-            <button
-              style={styles.primaryBtn}
-              onClick={() =>
-                gerarTermoPDF({
-                  form,
-                  formatDateBR,
-                  openPdfPreview,
-                })
-              }
-            >
+            <button style={styles.primaryBtn} onClick={gerarTermoPDF}>
               📄 Gerar Termo PDF
             </button>
           </div>
+
+          {(session?.role === "ADM" || session?.role === "OPERADOR") && (
+            <div
+              style={{
+                marginTop: 18,
+                border: "1px solid var(--border-soft)",
+                borderRadius: 16,
+                background: "var(--card-bg-soft)",
+                padding: 16,
+              }}
+            >
+              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>
+                Timeline do atendimento
+              </div>
+              <div style={{ color: "var(--text-muted)", marginBottom: 14 }}>
+                Histórico de quem iniciou e finalizou cada etapa.
+              </div>
+
+              {buildAttendanceTimeline(currentAttendanceRecord).length === 0 ? (
+                <div style={styles.modulePlaceholder}>
+                  <div style={styles.modulePlaceholderTitle}>Ainda sem movimentações</div>
+                  <div style={styles.modulePlaceholderText}>
+                    Quando a equipe iniciar ou finalizar etapas, o histórico aparecerá aqui.
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 10 }}>
+                  {buildAttendanceTimeline(currentAttendanceRecord).map((event) => (
+                    <div
+                      key={event.id}
+                      style={{
+                        border: "1px solid var(--border-soft)",
+                        borderRadius: 14,
+                        background: "var(--card-bg)",
+                        padding: 12,
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, marginBottom: 6 }}>{event.label}</div>
+                      <div style={{ color: "var(--text-soft)", marginBottom: 4 }}>
+                        <strong>Por:</strong> {event.by}
+                      </div>
+                      <div style={{ color: "var(--text-muted)" }}>
+                        <strong>Quando:</strong> {formatDateTimeBR(event.when)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
+        {pdfPreview.open && (
+          <div style={styles.previewOverlay}>
+            <div style={styles.previewModal}>
+              <div style={styles.previewHeader}>
+                <h3 style={{ margin: 0 }}>{pdfPreview.title}</h3>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button style={styles.outlineDarkBtn} onClick={printPreviewPdf}>
+                    🖨 Imprimir
+                  </button>
+                  <button style={styles.primaryBtn} onClick={downloadPreviewPdf}>
+                    ⬇ Download
+                  </button>
+                  <button style={styles.outlineDangerBtn} onClick={closePdfPreview}>
+                    ✖ Fechar
+                  </button>
+                </div>
+              </div>
+
+              <iframe
+                src={pdfPreview.url}
+                title="Pré-visualização PDF"
+                style={styles.previewFrame}
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1386,119 +2149,8 @@ function printPreviewPdf() {
     );
   }
 
-  if (!session && isPublicAcompanhamento) {
-    return (
-      <div style={{ ...styles.page, ...themeVars }}>
-        <section style={{ ...styles.moduleCard, maxWidth: 980, margin: "32px auto" }}>
-          <div style={styles.moduleHeader}>
-            <div>
-              <h2 style={styles.moduleTitle}>Acompanhamento da Família</h2>
-              <p style={styles.moduleSub}>
-                Atualizações do atendimento do seu ente querido.
-              </p>
-            </div>
-          </div>
-
-          {!viewingAttendance ? (
-            <div style={styles.modulePlaceholder}>
-              <div style={styles.modulePlaceholderTitle}>Atendimento não encontrado</div>
-              <div style={styles.modulePlaceholderText}>
-                Verifique se o link está correto ou peça um novo link à funerária.
-              </div>
-            </div>
-          ) : (
-            <div style={styles.acompanhamentoWrap}>
-              <div style={styles.acompanhamentoHero}>
-                <div>
-                  <div style={styles.recordNumber}>{viewingAttendance.numero}</div>
-                  <div style={styles.recordName}>
-                    {viewingAttendance.falecido || "Sem nome informado"}
-                  </div>
-                  <div style={styles.recordMeta}>
-                    {viewingAttendance.unidade || "Unidade não informada"}
-                    {viewingAttendance.sala ? ` • ${viewingAttendance.sala}` : ""}
-                    {viewingAttendance.cemiterio ? ` • ${viewingAttendance.cemiterio}` : ""}
-                  </div>
-                </div>
-                <div style={styles.statusBadge}>{viewingAttendance.status}</div>
-              </div>
-
-              <div style={styles.acompanhamentoInfoGrid}>
-                <div><strong>Responsável:</strong> {viewingAttendance.responsavelNome || "—"}</div>
-                <div><strong>Local do óbito:</strong> {viewingAttendance.localObito || "—"}</div>
-                <div><strong>Atendente geral:</strong> {viewingAttendance.atendente || "—"}</div>
-                <div><strong>Motorista geral:</strong> {viewingAttendance.motorista || "—"}</div>
-              </div>
-
-              <div style={styles.acompanhamentoStages}>
-                {OPERATION_STAGES.map((stage) => {
-                  const stageState =
-                    viewingAttendance.operationalStages?.[stage.key] || {
-                      status: "nao_iniciado",
-                      start: "",
-                      end: "",
-                      driver: "",
-                      car: "",
-                      attendant: "",
-                      technician: "",
-                      support: "",
-                    };
-
-                  const statusLabel = getOperationStatusLabel(stageState.status);
-                  const statusStyle =
-                    stageState.status === "finalizado"
-                      ? styles.operationStatusDone
-                      : stageState.status === "em_andamento"
-                        ? styles.operationStatusRunning
-                        : styles.operationStatusWaiting;
-
-                  return (
-                    <div key={stage.key} style={styles.acompanhamentoStageCard}>
-                      <div style={styles.operationMain}>
-                        <div style={styles.operationName}>{stage.label}</div>
-                        <div style={{ ...styles.operationStatusBase, ...statusStyle }}>
-                          {statusLabel}
-                        </div>
-                      </div>
-
-                      <div style={styles.acompanhamentoTimes}>
-                        <div><strong>Início:</strong> {stageState.start || "—"}</div>
-                        <div><strong>Fim:</strong> {stageState.end || "—"}</div>
-                      </div>
-
-                      {stage.key === "atendimento" && (
-                        <div style={styles.acompanhamentoExtra}>
-                          <strong>Atendente:</strong> {stageState.attendant || "—"}
-                        </div>
-                      )}
-
-                      {stage.key === "procedimentoClinico" && (
-                        <div style={styles.acompanhamentoExtra}>
-                          <strong>Técnico:</strong> {stageState.technician || "—"}
-                        </div>
-                      )}
-
-                      {stage.key === "ornamentacao" && (
-                        <div style={styles.acompanhamentoExtra}>
-                          <strong>Apoio:</strong> {stageState.support || "—"}
-                        </div>
-                      )}
-
-                      {isTransportStage(stage.key) && (
-                        <div style={styles.acompanhamentoExtraGrid}>
-                          <div><strong>Motorista:</strong> {stageState.driver || "—"}</div>
-                          <div><strong>Carro:</strong> {stageState.car || "—"}</div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </section>
-      </div>
-    );
+  if (isPublicAcompanhamento) {
+    return <AcompanhamentoPublico trackingId={publicTrackingId} />;
   }
 
   if (!session) {
@@ -1606,6 +2258,13 @@ function printPreviewPdf() {
             onClick={() => setActiveTab("operacional")}
           >
             Painel Operacional
+          </button>
+
+          <button
+            style={activeTab === "equipe" ? styles.tabActive : styles.tab}
+            onClick={() => setActiveTab("equipe")}
+          >
+            Equipe
           </button>
 
           <button
@@ -1744,6 +2403,7 @@ function printPreviewPdf() {
                     <div><strong>Atendente:</strong> {item.atendente || "—"}</div>
                     <div><strong>Local do óbito:</strong> {item.localObito || "—"}</div>
                     <div><strong>Total:</strong> R$ {formatMoney(item.totalValue || 0)}</div>
+                    <div><strong>Equipe:</strong> {item.equipeAcionada ? "Acionada" : "Não acionada"}</div>
                   </div>
 
                   <div style={styles.recordActions}>
@@ -1768,6 +2428,12 @@ function printPreviewPdf() {
                       }}
                     >
                       📲 Copiar link da família
+                    </button>
+                    <button
+                      style={item.equipeAcionada ? styles.outlineDarkBtn : styles.primaryBtn}
+                      onClick={() => toggleEquipeAcionada(item.id, !item.equipeAcionada)}
+                    >
+                      {item.equipeAcionada ? "Cancelar acionamento" : "Acionar equipe"}
                     </button>
                     <button
                       style={styles.primaryBtn}
@@ -2017,6 +2683,19 @@ function printPreviewPdf() {
                                 stage.key !== "procedimentoClinico" &&
                                 stage.key !== "ornamentacao" && <div />}
 
+                              {(session?.role === "ADM" || session?.role === "OPERADOR") && (
+                                <div style={{ marginTop: 10, display: "grid", gap: 6 }}>
+                                  <div style={styles.infoRow}>
+                                    <div style={styles.infoPill}>
+                                      Iniciado por: {stageState.startedBy || "—"}
+                                    </div>
+                                    <div style={styles.infoPill}>
+                                      Finalizado por: {stageState.finishedBy || "—"}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
                               <div style={styles.operationActions}>
                                 <button
                                   style={styles.outlineDarkBtn}
@@ -2050,7 +2729,16 @@ function printPreviewPdf() {
         </section>
       )}
 
-      {activeTab === "acompanhamento" && (
+      
+
+      {activeTab === "equipe" && (
+        <Equipe
+          atendimentos={atendimentosEquipe}
+          updateOperationalStage={updateOperationalStage}
+          formatDateBR={formatDateBR}
+        />
+      )}
+{activeTab === "acompanhamento" && (
         <section style={styles.moduleCard}>
           <div style={styles.moduleHeader}>
             <div>
@@ -2243,26 +2931,13 @@ function printPreviewPdf() {
                   style={styles.input}
                   value={form.velorioTipo}
                   onChange={(e) => {
-                    const value = e.target.value;
-                    updateForm("velorioTipo", value);
-
-                    if (value !== "funeraria") {
+                    updateForm("velorioTipo", e.target.value);
+                    if (e.target.value !== "funeraria") {
                       updateForm("velorioUnidade", "");
                       updateForm("velorioSala", "");
                     }
-
-                    if (value !== "igreja") {
+                    if (e.target.value !== "igreja") {
                       updateForm("velorioNomeLocal", "");
-                    }
-
-                    if (value === "viagem") {
-                      updateForm("velorioCep", "");
-                      updateForm("velorioEndereco", "");
-                      updateForm("velorioNumero", "");
-                      updateForm("velorioBairro", "");
-                    } else {
-                      updateForm("cidadeDestino", "");
-                      updateForm("embarque", "");
                     }
                   }}
                 >
@@ -2312,36 +2987,7 @@ function printPreviewPdf() {
                 </>
               )}
 
-              {form.velorioTipo === "viagem" && (
-                <>
-                  <div style={styles.field}>
-                    <label style={styles.label}>Cidade de destino</label>
-                    <input
-                      style={styles.input}
-                      value={form.cidadeDestino || ""}
-                      onChange={(e) => updateForm("cidadeDestino", e.target.value)}
-                    />
-                  </div>
-
-                  <div style={styles.field}>
-                    <label style={styles.label}>Embarque</label>
-                    <select
-                      style={styles.input}
-                      value={form.embarque || ""}
-                      onChange={(e) => updateForm("embarque", e.target.value)}
-                    >
-                      <option value="">Selecione</option>
-                      {(settings.embarques || []).map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {(form.velorioTipo === "residencia" || form.velorioTipo === "igreja") && (
+              {form.velorioTipo !== "funeraria" && (
                 <>
                   {form.velorioTipo === "igreja" && (
                     <div style={styles.fieldWide}>
@@ -2398,6 +3044,26 @@ function printPreviewPdf() {
                   </div>
                 </>
               )}
+
+              <div style={styles.field}>
+                <label style={styles.label}>Data/Falecimento</label>
+                <input
+                  type="date"
+                  style={styles.input}
+                  value={form.dataFalecimento}
+                  onChange={(e) => updateForm("dataFalecimento", e.target.value)}
+                />
+              </div>
+
+              <div style={styles.field}>
+                <label style={styles.label}>Hora/Falecimento</label>
+                <input
+                  type="time"
+                  style={styles.input}
+                  value={form.horaFalecimento}
+                  onChange={(e) => updateForm("horaFalecimento", e.target.value)}
+                />
+              </div>
 
               <div style={styles.field}>
                 <label style={styles.label}>Data/Saída</label>
@@ -2668,6 +3334,15 @@ function printPreviewPdf() {
                 </div>
               </div>
 
+              <div style={styles.field}>
+                <label style={styles.label}>Horário</label>
+                <input
+                  type="time"
+                  style={styles.input}
+                  value={form.horarioVelorio}
+                  onChange={(e) => updateForm("horarioVelorio", e.target.value)}
+                />
+              </div>
             </div>
 
             <div style={styles.grid3}>
@@ -3083,6 +3758,7 @@ function printPreviewPdf() {
                 >
                   <option value="ADM">ADM</option>
                   <option value="OPERADOR">Operador</option>
+                  <option value="EQUIPE">Equipe</option>
                 </select>
               </div>
             </div>
@@ -3347,44 +4023,6 @@ function printPreviewPdf() {
                 <button
                   style={styles.outlineDarkBtn}
                   onClick={() => removeSettingItem("drivers", item)}
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
-
-            <div style={{ height: 18 }} />
-
-            <div style={styles.field}>
-              <label style={styles.label}>Novo embarque</label>
-              <div style={styles.row}>
-                <input
-                  style={styles.input}
-                  value={newEmbarque}
-                  onChange={(e) => setNewEmbarque(e.target.value)}
-                  placeholder="Ex: LANCHA LIMA DE ABREU"
-                />
-                <button
-                  style={styles.primaryBtn}
-                  onClick={() =>
-                    addSettingItem(
-                      "embarques",
-                      newEmbarque.toUpperCase(),
-                      setNewEmbarque
-                    )
-                  }
-                >
-                  Adicionar
-                </button>
-              </div>
-            </div>
-
-            {(settings.embarques || []).map((item) => (
-              <div key={item} style={styles.listItem}>
-                <span>{item}</span>
-                <button
-                  style={styles.outlineDarkBtn}
-                  onClick={() => removeSettingItem("embarques", item)}
                 >
                   Remover
                 </button>

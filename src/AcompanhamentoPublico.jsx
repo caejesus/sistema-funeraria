@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import { supabase } from "./lib/supabaseClient.js";
 
 const STAGES = [
@@ -39,63 +38,66 @@ function getStatus(status) {
   };
 }
 
-export default function AcompanhamentoPublico() {
-  const { id } = useParams();
-  const [atendimento, setAtendimento] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-
 function getMensagem(stageKey, status) {
   const mensagens = {
     atendimento: {
-      aguardando: "Estamos organizando o início do atendimento.",
+      nao_iniciado: "Estamos organizando o início do atendimento.",
       em_andamento: "Nossa equipe já iniciou o atendimento.",
       finalizado: "Atendimento concluído com sucesso.",
     },
     remocao: {
-      aguardando: "Preparando a equipe para a remoção.",
+      nao_iniciado: "Preparando a equipe para a remoção.",
       em_andamento: "Nossa equipe está em deslocamento.",
       finalizado: "Remoção realizada com todo cuidado.",
     },
     procedimentoClinico: {
-      aguardando: "Procedimento será iniciado em breve.",
+      nao_iniciado: "Procedimento será iniciado em breve.",
       em_andamento: "Procedimento sendo realizado com respeito.",
       finalizado: "Procedimento concluído.",
     },
     ornamentacao: {
-      aguardando: "Organizando a ornamentação.",
+      nao_iniciado: "Organizando a ornamentação.",
       em_andamento: "Preparando o ambiente com cuidado.",
       finalizado: "Ornamentação concluída.",
     },
     entrega: {
-      aguardando: "Preparando para entrega.",
+      nao_iniciado: "Preparando para entrega.",
       em_andamento: "Realizando a entrega.",
       finalizado: "Entrega realizada.",
     },
     velorio: {
-      aguardando: "Velório será iniciado em breve.",
+      nao_iniciado: "Velório será iniciado em breve.",
       em_andamento: "Velório em andamento.",
       finalizado: "Velório encerrado.",
     },
     sepultamento: {
-      aguardando: "Sepultamento será realizado.",
+      nao_iniciado: "Sepultamento será realizado.",
       em_andamento: "Sepultamento em andamento.",
       finalizado: "Sepultamento concluído.",
     },
   };
 
-  return mensagens[stageKey]?.[status] || "";
+  return mensagens[stageKey]?.[status || "nao_iniciado"] || "";
 }
 
+export default function AcompanhamentoPublico({ trackingId = "" }) {
+  const [atendimento, setAtendimento] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function carregar() {
+      if (!trackingId) {
+        setAtendimento(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
       const { data, error } = await supabase
         .from("atendimentos")
         .select("*")
-        .eq("record_id", id)
+        .eq("record_id", trackingId)
         .single();
 
       if (error) {
@@ -110,7 +112,7 @@ function getMensagem(stageKey, status) {
     }
 
     carregar();
-  }, [id]);
+  }, [trackingId]);
 
   if (loading) {
     return (
@@ -136,15 +138,16 @@ function getMensagem(stageKey, status) {
 
   const stages = atendimento.operationalStages || {};
 
+  const atendimentoConcluido = STAGES.every((item) => {
+    const stage = stages[item.key] || {};
+    return stage.status === "finalizado";
+  });
+
   return (
     <div style={styles.page}>
       <div style={styles.container}>
         <div style={styles.brandCard}>
-          <img
-            src="/logo.png"
-            alt="Grupo São Francisco"
-            style={styles.logo}
-          />
+          <img src="/logo.png" alt="Grupo São Francisco" style={styles.logo} />
         </div>
 
         <div style={styles.headerCard}>
@@ -157,47 +160,56 @@ function getMensagem(stageKey, status) {
           </div>
         </div>
 
-        <div style={styles.timelineWrap}>
-          {STAGES.map((item) => {
-            const stage = stages[item.key] || {};
-            const status = getStatus(stage.status);
+        {!atendimentoConcluido ? (
+          <div style={styles.timelineWrap}>
+            {STAGES.map((item) => {
+              const stage = stages[item.key] || {};
+              const status = getStatus(stage.status);
 
-            return (
-              <div key={item.key} style={styles.stageCard}>
-                <div style={styles.stageTop}>
-                  <div style={styles.stageTitle}>{item.label}</div>
+              return (
+                <div key={item.key} style={styles.stageCard}>
+                  <div style={styles.stageTop}>
+                    <div style={styles.stageTitle}>{item.label}</div>
 
-                  <div
-                    style={{
-                      ...styles.statusBadge,
-                      color: status.color,
-                      background: status.bg,
-                      borderColor: status.border,
-                    }}
-                  >
-                    {status.text}
-                  </div>
-                </div>
-
-                <div style={styles.stageTimes}>
-                  <div style={styles.timeItem}>
-                    <span style={styles.timeLabel}>Início</span>
-                    <span style={styles.timeValue}>{stage.start || "—"}</span>
+                    <div
+                      style={{
+                        ...styles.statusBadge,
+                        color: status.color,
+                        background: status.bg,
+                        borderColor: status.border,
+                      }}
+                    >
+                      {status.text}
+                    </div>
                   </div>
 
-                  <div style={styles.timeItem}>
-                    <span style={styles.timeLabel}>Fim</span>
-                    <span style={styles.timeValue}>{stage.end || "—"}</span>
+                  <div style={styles.stageTimes}>
+                    <div style={styles.timeItem}>
+                      <span style={styles.timeLabel}>Início</span>
+                      <span style={styles.timeValue}>{stage.start || "—"}</span>
+                    </div>
+
+                    <div style={styles.timeItem}>
+                      <span style={styles.timeLabel}>Fim</span>
+                      <span style={styles.timeValue}>{stage.end || "—"}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 10, fontSize: 14, color: "#cbd5e1", lineHeight: 1.5 }}>
+                    {getMensagem(item.key, stage.status)}
                   </div>
                 </div>
-
-                <div style={{ marginTop: 10, fontSize: 14, color: "#cbd5e1", lineHeight: 1.5 }}>
-                  {getMensagem(item.key, stage.status)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={styles.finalMessageCard}>
+            <div style={styles.finalMessageTitle}>Atendimento concluído</div>
+            <div style={styles.finalMessageText}>
+              O Grupo São Francisco agradece pela confiança depositada em nossos serviços. Permaneceremos à disposição da familia
+            </div>
+          </div>
+        )}
 
         <div style={styles.footerText}>
           Estamos cuidando de cada detalhe com respeito e dedicação.
@@ -336,6 +348,25 @@ const styles = {
     fontSize: 16,
     fontWeight: 700,
     color: "#f8fafc",
+  },
+  finalMessageCard: {
+    background: "rgba(15,23,42,0.95)",
+    border: "1px solid rgba(148,163,184,0.18)",
+    borderRadius: 22,
+    padding: "28px 22px",
+    textAlign: "center",
+    boxShadow: "0 12px 28px rgba(0,0,0,0.22)",
+  },
+  finalMessageTitle: {
+    fontSize: 24,
+    fontWeight: 700,
+    color: "#f8fafc",
+    marginBottom: 12,
+  },
+  finalMessageText: {
+    fontSize: 16,
+    color: "#cbd5e1",
+    lineHeight: 1.6,
   },
   footerText: {
     textAlign: "center",
