@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   settings: "sf_settings_v3",
   session: "sf_session_v3",
   attendances: "sf_attendances_v1",
+  activeTab: "sf_active_tab_v1",
 };
 
 const OPERATION_STAGES = [
@@ -397,7 +398,9 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState(() =>
+    loadStorage(STORAGE_KEYS.activeTab, "home")
+  );
   const [showServicesModal, setShowServicesModal] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
   const [atendimentos, setAtendimentos] = useState([]);
@@ -441,6 +444,12 @@ useEffect(() => {
   const [newSupport, setNewSupport] = useState("");
   const [newEmbarque, setNewEmbarque] = useState("");
   const [expandedOperations, setExpandedOperations] = useState({});
+  const [collapsedSections, setCollapsedSections] = useState({
+    atendimentoParte1: false,
+    atendimentoParte2: false,
+    atendimentoParte3: true,
+    atendimentoParte4: true,
+  });
   const [newUser, setNewUser] = useState({
     name: "",
     login: "",
@@ -467,6 +476,10 @@ const [pdfPreview, setPdfPreview] = useState({
   useEffect(() => {
     saveStorage("sf_theme_v1", theme);
   }, [theme]);
+
+  useEffect(() => {
+    saveStorage(STORAGE_KEYS.activeTab, activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     const savedSession = loadStorage(STORAGE_KEYS.session, null);
@@ -565,40 +578,6 @@ const [pdfPreview, setPdfPreview] = useState({
     }
   }
 
-  function buildAttendanceTimeline(attendance) {
-    if (!attendance?.operationalStages) return [];
-
-    const events = [];
-
-    OPERATION_STAGES.forEach((stage) => {
-      const stageData = attendance.operationalStages?.[stage.key] || {};
-
-      if (stageData.startedAt || stageData.startedBy) {
-        events.push({
-          id: `${stage.key}-start`,
-          when: stageData.startedAt || "",
-          label: `${stage.label} iniciada`,
-          by: stageData.startedBy || "Não informado",
-        });
-      }
-
-      if (stageData.finishedAt || stageData.finishedBy) {
-        events.push({
-          id: `${stage.key}-finish`,
-          when: stageData.finishedAt || "",
-          label: `${stage.label} finalizada`,
-          by: stageData.finishedBy || "Não informado",
-        });
-      }
-    });
-
-    return events.sort((a, b) => {
-      const timeA = a.when ? new Date(a.when).getTime() : 0;
-      const timeB = b.when ? new Date(b.when).getTime() : 0;
-      return timeA - timeB;
-    });
-  }
-
   function getTrackingIdFromPath() {
     if (typeof window === "undefined") return "";
     const match = window.location.pathname.match(/^\/acompanhamento\/([^/]+)/);
@@ -623,6 +602,13 @@ const [pdfPreview, setPdfPreview] = useState({
     setServices((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
+  }
+
+  function toggleSection(sectionKey) {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey],
+    }));
   }
 
   async function buscarCEP(cepFormatado, tipo) {
@@ -835,10 +821,18 @@ const [pdfPreview, setPdfPreview] = useState({
   function handleLogout() {
     setSession(null);
     saveStorage(STORAGE_KEYS.session, null);
+    saveStorage(STORAGE_KEYS.activeTab, "home");
     setLogin("");
     setPassword("");
     setLoginError("");
     setFinalizado(false);
+    setActiveTab("home");
+    setEditingAttendanceId(null);
+    setViewingAttendanceId(null);
+
+    if (typeof window !== "undefined" && window.location.pathname === "/equipe") {
+      window.location.href = "/";
+    }
   }
 
   function resetAtendimento() {
@@ -1985,24 +1979,36 @@ function printPreviewPdf() {
     printWindow.print();
   };
 }
-  if (session && session.role === "EQUIPE") {
+  function renderEquipeContainer() {
     return (
-      <Equipe
-        atendimentos={atendimentosEquipe}
-        updateOperationalStage={updateOperationalStage}
-        formatDateBR={formatDateBR}
-      />
+      <div style={{ ...styles.page, ...themeVars }}>
+        <div style={{ ...styles.headerWrap, marginBottom: 16 }}>
+          <div style={styles.headerBox}>
+            <div>
+              <div style={styles.brandTitle}>Painel da Equipe</div>
+              <div style={styles.brandSub}>Acompanhamento operacional da equipe em campo.</div>
+            </div>
+            <button style={styles.outlineBtn} onClick={handleLogout}>
+              Sair
+            </button>
+          </div>
+        </div>
+
+        <Equipe
+          atendimentos={atendimentosEquipe}
+          updateOperationalStage={updateOperationalStage}
+          formatDateBR={formatDateBR}
+        />
+      </div>
     );
   }
 
+  if (session && session.role === "EQUIPE") {
+    return renderEquipeContainer();
+  }
+
   if (isEquipeRoute) {
-    return (
-      <Equipe
-        atendimentos={atendimentosEquipe}
-        updateOperationalStage={updateOperationalStage}
-        formatDateBR={formatDateBR}
-      />
-    );
+    return renderEquipeContainer();
   }
 
   if (finalizado) {
@@ -2049,55 +2055,6 @@ function printPreviewPdf() {
             </button>
           </div>
 
-          {(session?.role === "ADM" || session?.role === "OPERADOR") && (
-            <div
-              style={{
-                marginTop: 18,
-                border: "1px solid var(--border-soft)",
-                borderRadius: 16,
-                background: "var(--card-bg-soft)",
-                padding: 16,
-              }}
-            >
-              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>
-                Timeline do atendimento
-              </div>
-              <div style={{ color: "var(--text-muted)", marginBottom: 14 }}>
-                Histórico de quem iniciou e finalizou cada etapa.
-              </div>
-
-              {buildAttendanceTimeline(currentAttendanceRecord).length === 0 ? (
-                <div style={styles.modulePlaceholder}>
-                  <div style={styles.modulePlaceholderTitle}>Ainda sem movimentações</div>
-                  <div style={styles.modulePlaceholderText}>
-                    Quando a equipe iniciar ou finalizar etapas, o histórico aparecerá aqui.
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: "grid", gap: 10 }}>
-                  {buildAttendanceTimeline(currentAttendanceRecord).map((event) => (
-                    <div
-                      key={event.id}
-                      style={{
-                        border: "1px solid var(--border-soft)",
-                        borderRadius: 14,
-                        background: "var(--card-bg)",
-                        padding: 12,
-                      }}
-                    >
-                      <div style={{ fontWeight: 800, marginBottom: 6 }}>{event.label}</div>
-                      <div style={{ color: "var(--text-soft)", marginBottom: 4 }}>
-                        <strong>Por:</strong> {event.by}
-                      </div>
-                      <div style={{ color: "var(--text-muted)" }}>
-                        <strong>Quando:</strong> {formatDateTimeBR(event.when)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {pdfPreview.open && (
@@ -2881,8 +2838,19 @@ function printPreviewPdf() {
       {activeTab === "atendimento" && (
         <>
           <section style={styles.card}>
-            <h2 style={styles.cardTitle}>Parte 1 — Atendimento</h2>
+            <button
+              type="button"
+              style={styles.sectionToggle}
+              onClick={() => toggleSection("atendimentoParte1")}
+            >
+              <span style={styles.cardTitle}>Parte 1 — Atendimento</span>
+              <span style={styles.sectionToggleIcon}>
+                {collapsedSections.atendimentoParte1 ? "＋" : "−"}
+              </span>
+            </button>
 
+            {!collapsedSections.atendimentoParte1 && (
+              <>
             <div style={styles.grid3}>
               <div style={styles.fieldWide}>
                 <label style={styles.label}>Falecido</label>
@@ -3170,11 +3138,24 @@ function printPreviewPdf() {
                 </div>
               </div>
             )}
+              </>
+            )}
           </section>
 
           <section style={styles.card}>
-            <h2 style={styles.cardTitle}>Parte 2 — Serviços</h2>
+            <button
+              type="button"
+              style={styles.sectionToggle}
+              onClick={() => toggleSection("atendimentoParte2")}
+            >
+              <span style={styles.cardTitle}>Parte 2 — Serviços</span>
+              <span style={styles.sectionToggleIcon}>
+                {collapsedSections.atendimentoParte2 ? "＋" : "−"}
+              </span>
+            </button>
 
+            {!collapsedSections.atendimentoParte2 && (
+              <>
             <div style={styles.infoRow}>
               <div style={styles.infoPill}>
                 {selectedCount} serviço(s) selecionado(s)
@@ -3199,13 +3180,24 @@ function printPreviewPdf() {
                 Selecionar Serviços
               </button>
             </div>
-
-
+              </>
+            )}
           </section>
 
           <section style={styles.card}>
-            <h2 style={styles.cardTitle}>Parte 3 — Dados do Responsável</h2>
+            <button
+              type="button"
+              style={styles.sectionToggle}
+              onClick={() => toggleSection("atendimentoParte3")}
+            >
+              <span style={styles.cardTitle}>Parte 3 — Dados do Responsável</span>
+              <span style={styles.sectionToggleIcon}>
+                {collapsedSections.atendimentoParte3 ? "＋" : "−"}
+              </span>
+            </button>
 
+            {!collapsedSections.atendimentoParte3 && (
+              <>
             <div style={styles.grid3}>
               <div style={styles.fieldWide}>
                 <label style={styles.label}>Nome</label>
@@ -3296,11 +3288,24 @@ function printPreviewPdf() {
                 />
               </div>
             </div>
+              </>
+            )}
           </section>
 
           <section style={styles.card}>
-            <h2 style={styles.cardTitle}>Parte 4 — Termo de Autorização</h2>
+            <button
+              type="button"
+              style={styles.sectionToggle}
+              onClick={() => toggleSection("atendimentoParte4")}
+            >
+              <span style={styles.cardTitle}>Parte 4 — Termo de Autorização</span>
+              <span style={styles.sectionToggleIcon}>
+                {collapsedSections.atendimentoParte4 ? "＋" : "−"}
+              </span>
+            </button>
 
+            {!collapsedSections.atendimentoParte4 && (
+              <>
             <div style={styles.grid3}>
               <div style={styles.field}>
                 <label style={styles.label}>Parentesco</label>
@@ -3704,6 +3709,8 @@ function printPreviewPdf() {
                 Finalizar Atendimento
               </button>
             </div>
+              </>
+            )}
           </section>
         </>
       )}
@@ -4367,6 +4374,26 @@ const styles = {
     marginTop: 0,
     color: "var(--brand-accent)",
     marginBottom: 16,
+  },
+  sectionToggle: {
+    width: "100%",
+    border: "none",
+    background: "transparent",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 0,
+    marginBottom: 16,
+    cursor: "pointer",
+    textAlign: "left",
+  },
+  sectionToggleIcon: {
+    fontSize: 22,
+    lineHeight: 1,
+    color: "var(--brand-accent)",
+    fontWeight: 700,
+    minWidth: 24,
+    textAlign: "center",
   },
   field: {
     display: "flex",
