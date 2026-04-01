@@ -942,11 +942,6 @@ const [pdfPreview, setPdfPreview] = useState({
     setActiveTab(mode === "preview" ? "atendimentos" : "atendimento");
   }
 
-  function openAcompanhamento(record) {
-    setViewingAttendanceId(record.id);
-    setActiveTab("acompanhamento");
-  }
-
   async function deleteAttendance(id) {
     const confirmed = window.confirm("Deseja excluir este atendimento salvo?");
     if (!confirmed) return;
@@ -2224,13 +2219,6 @@ function printPreviewPdf() {
             Equipe
           </button>
 
-          <button
-            style={activeTab === "acompanhamento" ? styles.tabActive : styles.tab}
-            onClick={() => setActiveTab("acompanhamento")}
-          >
-            Acompanhamento
-          </button>
-
           {session.role === "ADM" && (
             <button
               style={activeTab === "config" ? styles.tabActive : styles.tab}
@@ -2372,12 +2360,6 @@ function printPreviewPdf() {
                     </button>
                     <button
                       style={styles.outlineDarkBtn}
-                      onClick={() => openAcompanhamento(item)}
-                    >
-                      Acompanhar
-                    </button>
-                    <button
-                      style={styles.outlineDarkBtn}
                       onClick={() => {
                         const link = `${window.location.origin}/acompanhamento/${item.id}`;
                         navigator.clipboard.writeText(link);
@@ -2453,12 +2435,6 @@ function printPreviewPdf() {
                       </div>
 
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button
-                          style={styles.outlineDarkBtn}
-                          onClick={() => openAcompanhamento(item)}
-                        >
-                          Acompanhar
-                        </button>
                         <button
                           style={styles.outlineDarkBtn}
                           onClick={() => toggleOperationalCard(item.id)}
@@ -2694,145 +2670,6 @@ function printPreviewPdf() {
           updateOperationalStage={updateOperationalStage}
           formatDateBR={formatDateBR}
         />
-      )}
-{activeTab === "acompanhamento" && (
-        <section style={styles.moduleCard}>
-          <div style={styles.moduleHeader}>
-            <div>
-              <h2 style={styles.moduleTitle}>Tela de Acompanhamento</h2>
-              <p style={styles.moduleSub}>
-                Visualização simples do andamento do atendimento, ideal para acompanhamento pela equipe.
-              </p>
-            </div>
-          </div>
-
-          {atendimentos.length === 0 ? (
-            <div style={styles.modulePlaceholder}>
-              <div style={styles.modulePlaceholderTitle}>Nenhum atendimento disponível</div>
-              <div style={styles.modulePlaceholderText}>
-                Finalize um atendimento para liberar a visualização do acompanhamento.
-              </div>
-            </div>
-          ) : (
-            <>
-              <div style={styles.searchRow}>
-                <div style={{ ...styles.field, marginBottom: 0, flex: 1 }}>
-                  <label style={styles.label}>Selecionar atendimento</label>
-                  <select
-                    style={styles.input}
-                    value={viewingAttendanceId || ""}
-                    onChange={(e) => setViewingAttendanceId(e.target.value)}
-                  >
-                    <option value="">Selecione</option>
-                    {atendimentos.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.numero} - {item.falecido || "Sem nome informado"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {!viewingAttendance ? (
-                <div style={styles.modulePlaceholder}>
-                  <div style={styles.modulePlaceholderTitle}>Selecione um atendimento</div>
-                  <div style={styles.modulePlaceholderText}>
-                    Escolha um atendimento salvo para visualizar o andamento das etapas.
-                  </div>
-                </div>
-              ) : (
-                <div style={styles.acompanhamentoWrap}>
-                  <div style={styles.acompanhamentoHero}>
-                    <div>
-                      <div style={styles.recordNumber}>{viewingAttendance.numero}</div>
-                      <div style={styles.recordName}>
-                        {viewingAttendance.falecido || "Sem nome informado"}
-                      </div>
-                      <div style={styles.recordMeta}>
-                        {viewingAttendance.unidade || "Unidade não informada"}
-                        {viewingAttendance.sala ? ` • ${viewingAttendance.sala}` : ""}
-                        {viewingAttendance.cemiterio ? ` • ${viewingAttendance.cemiterio}` : ""}
-                      </div>
-                    </div>
-                    <div style={styles.statusBadge}>{viewingAttendance.status}</div>
-                  </div>
-
-                  <div style={styles.acompanhamentoInfoGrid}>
-                    <div><strong>Responsável:</strong> {viewingAttendance.responsavelNome || "—"}</div>
-                    <div><strong>Local do óbito:</strong> {viewingAttendance.localObito || "—"}</div>
-                    <div><strong>Atendente geral:</strong> {viewingAttendance.atendente || "—"}</div>
-                    <div><strong>Motorista geral:</strong> {viewingAttendance.motorista || "—"}</div>
-                  </div>
-
-                  <div style={styles.acompanhamentoStages}>
-                    {OPERATION_STAGES.map((stage) => {
-                      const stageState =
-                        viewingAttendance.operationalStages?.[stage.key] || {
-                          status: "nao_iniciado",
-                          start: "",
-                          end: "",
-                          driver: "",
-                          car: "",
-                          attendant: "",
-                          technician: "",
-                          support: "",
-                        };
-
-                      const statusLabel = getOperationStatusLabel(stageState.status);
-                      const statusStyle =
-                        stageState.status === "finalizado"
-                          ? styles.operationStatusDone
-                          : stageState.status === "em_andamento"
-                            ? styles.operationStatusRunning
-                            : styles.operationStatusWaiting;
-
-                      return (
-                        <div key={stage.key} style={styles.acompanhamentoStageCard}>
-                          <div style={styles.operationMain}>
-                            <div style={styles.operationName}>{stage.label}</div>
-                            <div style={{ ...styles.operationStatusBase, ...statusStyle }}>
-                              {statusLabel}
-                            </div>
-                          </div>
-
-                          <div style={styles.acompanhamentoTimes}>
-                            <div><strong>Início:</strong> {stageState.start || "—"}</div>
-                            <div><strong>Fim:</strong> {stageState.end || "—"}</div>
-                          </div>
-
-                          {stage.key === "atendimento" && (
-                            <div style={styles.acompanhamentoExtra}>
-                              <strong>Atendente:</strong> {stageState.attendant || "—"}
-                            </div>
-                          )}
-
-                          {stage.key === "procedimentoClinico" && (
-                            <div style={styles.acompanhamentoExtra}>
-                              <strong>Técnico:</strong> {stageState.technician || "—"}
-                            </div>
-                          )}
-
-                          {stage.key === "ornamentacao" && (
-                            <div style={styles.acompanhamentoExtra}>
-                              <strong>Apoio:</strong> {stageState.support || "—"}
-                            </div>
-                          )}
-
-                          {isTransportStage(stage.key) && (
-                            <div style={styles.acompanhamentoExtra}>
-                              <div><strong>Motorista:</strong> {stageState.driver || "—"}</div>
-                              <div><strong>Carro:</strong> {stageState.car || "—"}</div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </section>
       )}
 
       {activeTab === "atendimento" && (
