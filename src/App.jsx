@@ -423,62 +423,6 @@ useEffect(() => {
 
   carregarAtendimentos();
 }, []);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("realtime-atendimentos")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "atendimentos",
-        },
-        (payload) => {
-          if (payload.eventType === "DELETE") {
-            const deletedId = String(payload.old?.record_id || "");
-
-            setAtendimentos((prev) =>
-              prev.filter((item) => String(item.id) !== deletedId)
-            );
-
-            if (editingAttendanceId === deletedId) {
-              resetAtendimento();
-            }
-
-            if (viewingAttendanceId === deletedId) {
-              setViewingAttendanceId(null);
-            }
-
-            return;
-          }
-
-          const novoRegistro = payload.new?.dados || payload.new;
-          const novoId = String(payload.new?.record_id || novoRegistro?.id || "");
-
-          if (!novoId) return;
-
-          setAtendimentos((prev) => {
-            const exists = prev.some((item) => String(item.id) === novoId);
-
-            if (exists) {
-              return prev.map((item) =>
-                String(item.id) === novoId ? novoRegistro : item
-              );
-            }
-
-            return [novoRegistro, ...prev];
-          });
-        }
-      )
-      .subscribe((status) => {
-        console.log("Realtime atendimentos:", status);
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [editingAttendanceId, viewingAttendanceId]);
   const [viewingAttendanceId, setViewingAttendanceId] = useState(null);
   const [publicTrackingId, setPublicTrackingId] = useState("");
 
@@ -900,6 +844,63 @@ const [pdfPreview, setPdfPreview] = useState({
     setViewingAttendanceId(null);
     setActiveTab("home");
   }
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("realtime-atendimentos")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "atendimentos",
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            const deletedId = String(payload.old?.record_id || "");
+
+            setAtendimentos((prev) =>
+              prev.filter((item) => String(item.id) !== deletedId)
+            );
+
+            if (editingAttendanceId === deletedId) {
+              resetAtendimento();
+            }
+
+            if (viewingAttendanceId === deletedId) {
+              setViewingAttendanceId(null);
+            }
+
+            return;
+          }
+
+          const novoRegistro = payload.new?.dados || payload.new;
+          const novoId = String(payload.new?.record_id || novoRegistro?.id || "");
+
+          if (!novoId) return;
+
+          setAtendimentos((prev) => {
+            const exists = prev.some((item) => String(item.id) === novoId);
+
+            if (exists) {
+              return prev.map((item) =>
+                String(item.id) === novoId ? novoRegistro : item
+              );
+            }
+
+            return [novoRegistro, ...prev];
+          });
+        }
+      )
+      .subscribe((status) => {
+        console.log("Realtime atendimentos:", status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [editingAttendanceId, viewingAttendanceId]);
+
 
   function getNextAttendanceNumber() {
     const year = new Date().getFullYear();
