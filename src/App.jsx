@@ -442,6 +442,7 @@ export default function App() {
   const [atendimentos, setAtendimentos] = useState([]);
   const [editingAttendanceId, setEditingAttendanceId] = useState(null);
   const [attendanceSearch, setAttendanceSearch] = useState("");
+
 useEffect(() => {
   async function carregarAtendimentos() {
     const { data, error } = await supabase
