@@ -388,42 +388,6 @@ function getThemeVars(isDark) {
   };
 }
 
-
-function normalizeAttendanceRow(row) {
-  return row?.dados || row || null;
-}
-
-function sortAttendances(records = []) {
-  return [...records].sort((a, b) => {
-    const aTime = new Date(a?.updatedAt || a?.createdAt || 0).getTime();
-    const bTime = new Date(b?.updatedAt || b?.createdAt || 0).getTime();
-
-    if (aTime !== bTime) return bTime - aTime;
-
-    return String(b?.id || "").localeCompare(String(a?.id || ""));
-  });
-}
-
-function upsertAttendanceList(list = [], incoming) {
-  if (!incoming?.id) return list;
-
-  const exists = list.some((item) => String(item.id) === String(incoming.id));
-
-  if (exists) {
-    return sortAttendances(
-      list.map((item) =>
-        String(item.id) === String(incoming.id) ? incoming : item
-      )
-    );
-  }
-
-  return sortAttendances([incoming, ...list]);
-}
-
-function removeAttendanceFromList(list = [], attendanceId) {
-  return list.filter((item) => String(item.id) !== String(attendanceId));
-}
-
 export default function App() {
   const [users, setUsers] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
@@ -442,9 +406,6 @@ export default function App() {
   const [atendimentos, setAtendimentos] = useState([]);
   const [editingAttendanceId, setEditingAttendanceId] = useState(null);
   const [attendanceSearch, setAttendanceSearch] = useState("");
-  const [viewingAttendanceId, setViewingAttendanceId] = useState(null);
-  const [publicTrackingId, setPublicTrackingId] = useState("");
-
 useEffect(() => {
   async function carregarAtendimentos() {
     const { data, error } = await supabase
@@ -457,58 +418,70 @@ useEffect(() => {
       return;
     }
 
-    const normalized = (data || [])
-      .map((item) => normalizeAttendanceRow(item))
-      .filter(Boolean);
-
-    setAtendimentos(sortAttendances(normalized));
+    setAtendimentos((data || []).map((item) => item.dados || item));
   }
 
   carregarAtendimentos();
 }, []);
 
-useEffect(() => {
-  const channel = supabase
-    .channel("realtime-atendimentos")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "atendimentos" },
-      (payload) => {
-        const eventType = payload.eventType;
+  useEffect(() => {
+    const channel = supabase
+      .channel("realtime-atendimentos")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "atendimentos",
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            const deletedId = String(payload.old?.record_id || "");
 
-        if (eventType === "DELETE") {
-          const deletedId = String(payload.old?.record_id || payload.old?.id || "");
+            setAtendimentos((prev) =>
+              prev.filter((item) => String(item.id) !== deletedId)
+            );
 
-          if (!deletedId) return;
+            if (editingAttendanceId === deletedId) {
+              resetAtendimento();
+            }
 
-          setAtendimentos((prev) => removeAttendanceFromList(prev, deletedId));
+            if (viewingAttendanceId === deletedId) {
+              setViewingAttendanceId(null);
+            }
 
-          if (editingAttendanceId === deletedId) {
-            resetAtendimento();
+            return;
           }
 
-          if (viewingAttendanceId === deletedId) {
-            setViewingAttendanceId(null);
-          }
+          const novoRegistro = payload.new?.dados || payload.new;
+          const novoId = String(payload.new?.record_id || novoRegistro?.id || "");
 
-          return;
+          if (!novoId) return;
+
+          setAtendimentos((prev) => {
+            const exists = prev.some((item) => String(item.id) === novoId);
+
+            if (exists) {
+              return prev.map((item) =>
+                String(item.id) === novoId ? novoRegistro : item
+              );
+            }
+
+            return [novoRegistro, ...prev];
+          });
         }
+      )
+      .subscribe((status) => {
+        console.log("Realtime atendimentos:", status);
+      });
 
-        const normalized = normalizeAttendanceRow(payload.new);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [editingAttendanceId, viewingAttendanceId]);
+  const [viewingAttendanceId, setViewingAttendanceId] = useState(null);
+  const [publicTrackingId, setPublicTrackingId] = useState("");
 
-        if (!normalized?.id) return;
-
-        setAtendimentos((prev) => upsertAttendanceList(prev, normalized));
-      }
-    )
-    .subscribe((status) => {
-      console.log("Realtime atendimentos:", status);
-    });
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [editingAttendanceId, viewingAttendanceId]);
   const [cepStatus, setCepStatus] = useState({
     responsavel: { loading: false, error: "" },
     velorio: { loading: false, error: "" },
@@ -1000,7 +973,9 @@ const [pdfPreview, setPdfPreview] = useState({
       return false;
     }
 
-    setAtendimentos((prev) => upsertAttendanceList(prev, updatedRecord));
+    setAtendimentos((prev) =>
+      prev.map((item) => (item.id === attendanceId ? updatedRecord : item))
+    );
 
     if (editingAttendanceId === attendanceId) {
       setForm(JSON.parse(JSON.stringify(updatedRecord.form || getInitialForm())));
@@ -1038,7 +1013,7 @@ const [pdfPreview, setPdfPreview] = useState({
       return;
     }
 
-    setAtendimentos((prev) => removeAttendanceFromList(prev, id));
+    setAtendimentos((prev) => prev.filter((item) => item.id !== id));
 
     if (editingAttendanceId === id) {
       resetAtendimento();
@@ -1138,7 +1113,13 @@ const [pdfPreview, setPdfPreview] = useState({
     if (!saved) {
       return;
     }
-    setAtendimentos((prev) => upsertAttendanceList(prev, record));
+    setAtendimentos((prev) => {
+      const exists = prev.some((item) => item.id === recordId);
+      if (exists) {
+        return prev.map((item) => (item.id === recordId ? record : item));
+      }
+      return [record, ...prev];
+    });
     setFinalizado(true);
   }
 
