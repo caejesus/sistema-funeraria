@@ -388,6 +388,42 @@ function getThemeVars(isDark) {
   };
 }
 
+
+function normalizeAttendanceRow(row) {
+  return row?.dados || row || null;
+}
+
+function sortAttendances(records = []) {
+  return [...records].sort((a, b) => {
+    const aTime = new Date(a?.updatedAt || a?.createdAt || 0).getTime();
+    const bTime = new Date(b?.updatedAt || b?.createdAt || 0).getTime();
+
+    if (aTime !== bTime) return bTime - aTime;
+
+    return String(b?.id || "").localeCompare(String(a?.id || ""));
+  });
+}
+
+function upsertAttendanceList(list = [], incoming) {
+  if (!incoming?.id) return list;
+
+  const exists = list.some((item) => String(item.id) === String(incoming.id));
+
+  if (exists) {
+    return sortAttendances(
+      list.map((item) =>
+        String(item.id) === String(incoming.id) ? incoming : item
+      )
+    );
+  }
+
+  return sortAttendances([incoming, ...list]);
+}
+
+function removeAttendanceFromList(list = [], attendanceId) {
+  return list.filter((item) => String(item.id) !== String(attendanceId));
+}
+
 export default function App() {
   const [users, setUsers] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
@@ -418,11 +454,58 @@ useEffect(() => {
       return;
     }
 
-    setAtendimentos((data || []).map((item) => item.dados || item));
+    const normalized = (data || [])
+      .map((item) => normalizeAttendanceRow(item))
+      .filter(Boolean);
+
+    setAtendimentos(sortAttendances(normalized));
   }
 
   carregarAtendimentos();
 }, []);
+
+useEffect(() => {
+  const channel = supabase
+    .channel("realtime-atendimentos")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "atendimentos" },
+      (payload) => {
+        const eventType = payload.eventType;
+
+        if (eventType === "DELETE") {
+          const deletedId = String(payload.old?.record_id || payload.old?.id || "");
+
+          if (!deletedId) return;
+
+          setAtendimentos((prev) => removeAttendanceFromList(prev, deletedId));
+
+          if (editingAttendanceId === deletedId) {
+            resetAtendimento();
+          }
+
+          if (viewingAttendanceId === deletedId) {
+            setViewingAttendanceId(null);
+          }
+
+          return;
+        }
+
+        const normalized = normalizeAttendanceRow(payload.new);
+
+        if (!normalized?.id) return;
+
+        setAtendimentos((prev) => upsertAttendanceList(prev, normalized));
+      }
+    )
+    .subscribe((status) => {
+      console.log("Realtime atendimentos:", status);
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [editingAttendanceId, viewingAttendanceId]);
   const [viewingAttendanceId, setViewingAttendanceId] = useState(null);
   const [publicTrackingId, setPublicTrackingId] = useState("");
 
@@ -917,9 +1000,7 @@ const [pdfPreview, setPdfPreview] = useState({
       return false;
     }
 
-    setAtendimentos((prev) =>
-      prev.map((item) => (item.id === attendanceId ? updatedRecord : item))
-    );
+    setAtendimentos((prev) => upsertAttendanceList(prev, updatedRecord));
 
     if (editingAttendanceId === attendanceId) {
       setForm(JSON.parse(JSON.stringify(updatedRecord.form || getInitialForm())));
@@ -957,7 +1038,7 @@ const [pdfPreview, setPdfPreview] = useState({
       return;
     }
 
-    setAtendimentos((prev) => prev.filter((item) => item.id !== id));
+    setAtendimentos((prev) => removeAttendanceFromList(prev, id));
 
     if (editingAttendanceId === id) {
       resetAtendimento();
@@ -1057,13 +1138,7 @@ const [pdfPreview, setPdfPreview] = useState({
     if (!saved) {
       return;
     }
-    setAtendimentos((prev) => {
-      const exists = prev.some((item) => item.id === recordId);
-      if (exists) {
-        return prev.map((item) => (item.id === recordId ? record : item));
-      }
-      return [record, ...prev];
-    });
+    setAtendimentos((prev) => upsertAttendanceList(prev, record));
     setFinalizado(true);
   }
 
