@@ -442,6 +442,8 @@ export default function App() {
   const [atendimentos, setAtendimentos] = useState([]);
   const [editingAttendanceId, setEditingAttendanceId] = useState(null);
   const [attendanceSearch, setAttendanceSearch] = useState("");
+  const [viewingAttendanceId, setViewingAttendanceId] = useState(null);
+  const [publicTrackingId, setPublicTrackingId] = useState("");
 
 useEffect(() => {
   async function carregarAtendimentos() {
@@ -507,9 +509,6 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [editingAttendanceId, viewingAttendanceId]);
-  const [viewingAttendanceId, setViewingAttendanceId] = useState(null);
-  const [publicTrackingId, setPublicTrackingId] = useState("");
-
   const [cepStatus, setCepStatus] = useState({
     responsavel: { loading: false, error: "" },
     velorio: { loading: false, error: "" },
