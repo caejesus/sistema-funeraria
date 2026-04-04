@@ -4,7 +4,7 @@ import { supabase } from "./lib/supabaseClient.js";
 import Equipe from "./pages/Equipe.jsx";
 import AcompanhamentoPublico from "./AcompanhamentoPublico.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import "./styles/app-modern-clean.css";
+import "./styles/app-refeito.css";
 
 const STORAGE_KEYS = {
   users: "sf_users_v3",
@@ -15,7 +15,7 @@ const STORAGE_KEYS = {
 };
 
 const OPERATION_STAGES = [
-  { key: "atendimento", label: "Serviço" },
+  { key: "atendimento", label: "Atendimento" },
   { key: "remocao", label: "Remoção" },
   { key: "procedimentoClinico", label: "Procedimento Clínico" },
   { key: "ornamentacao", label: "Ornamentação" },
@@ -311,106 +311,83 @@ function getInitialForm() {
 function getThemeVars(isDark) {
   if (isDark) {
     return {
-      "--page-bg": "#0f1720",
-      "--login-bg": "linear-gradient(135deg, #0f1720, #111827)",
-      "--text-main": "#f3f4f6",
-      "--text-soft": "#d1d5db",
+      "--page-bg": "linear-gradient(135deg, #0f172a, #111827)",
+      "--login-bg": "linear-gradient(135deg, #0f172a, #111827)",
+      "--text-main": "#e5e7eb",
+      "--text-soft": "#cbd5e1",
       "--text-muted": "#94a3b8",
-      "--brand-text": "#f9fafb",
-      "--brand-accent": "#26b1c4",
+      "--brand-text": "#e2e8f0",
+      "--brand-accent": "#7dd3fc",
       "--card-bg": "#111827",
-      "--card-bg-soft": "#162131",
-      "--card-bg-alt": "#1d2939",
-      "--module-bg": "#162131",
-      "--input-bg": "#1d2939",
-      "--input-border": "#314155",
-      "--input-text": "#f3f4f6",
-      "--border-soft": "rgba(148, 163, 184, 0.2)",
-      "--header-bg": "rgba(17, 24, 39, 0.92)",
-      "--header-box-bg": "rgba(29, 41, 57, 0.96)",
-      "--tab-bg": "#162131",
-      "--tab-text": "#dbe4ea",
-      "--tab-border": "rgba(148, 163, 184, 0.18)",
-      "--tab-active-bg": "#26b1c4",
-      "--tab-active-text": "#ffffff",
-      "--primary-btn": "#26b1c4",
-      "--primary-btn-text": "#ffffff",
-      "--outline-bg": "#1d2939",
-      "--outline-text": "#e5e7eb",
-      "--outline-border": "rgba(148, 163, 184, 0.24)",
+      "--card-bg-soft": "#0f172a",
+      "--card-bg-alt": "#172033",
+      "--module-bg": "#111827",
+      "--input-bg": "#0f172a",
+      "--input-border": "#334155",
+      "--input-text": "#e5e7eb",
+      "--border-soft": "#334155",
+      "--header-bg": "rgba(15,23,42,0.86)",
+      "--header-box-bg": "rgba(30,41,59,0.82)",
+      "--tab-bg": "#0f172a",
+      "--tab-text": "#cbd5e1",
+      "--tab-border": "#334155",
+      "--tab-active-bg": "#0ea5e9",
+      "--tab-active-text": "#f8fafc",
+      "--primary-btn": "#0ea5e9",
+      "--primary-btn-text": "#f8fafc",
+      "--outline-bg": "#1e293b",
+      "--outline-text": "#e2e8f0",
+      "--outline-border": "#334155",
       "--danger-text": "#fecaca",
-      "--danger-border": "rgba(239, 68, 68, 0.35)",
-      "--info-pill-bg": "rgba(38, 177, 196, 0.16)",
-      "--info-pill-text": "#8be0eb",
-      "--status-bg": "rgba(38, 177, 196, 0.16)",
-      "--status-text": "#8be0eb",
-      "--status-border": "rgba(38, 177, 196, 0.22)",
-      "--placeholder-bg": "#1d2939",
-      "--shadow-main": "0 10px 30px rgba(0,0,0,0.22)",
+      "--danger-border": "#7f1d1d",
+      "--info-pill-bg": "#0f172a",
+      "--info-pill-text": "#7dd3fc",
+      "--status-bg": "#0f172a",
+      "--status-text": "#7dd3fc",
+      "--status-border": "#334155",
+      "--placeholder-bg": "#0f172a",
+      "--shadow-main": "0 12px 28px rgba(0,0,0,0.28)",
     };
   }
 
   return {
-    "--page-bg": "#f4f7f6",
-    "--login-bg": "linear-gradient(135deg, #f4f7f6, #eef4f3)",
-    "--text-main": "#333333",
-    "--text-soft": "#4b5563",
-    "--text-muted": "#666666",
-    "--brand-text": "#333333",
-    "--brand-accent": "#26b1c4",
-    "--card-bg": "#ffffff",
+    "--page-bg": "linear-gradient(135deg, #d9edf2, #eef5f7)",
+    "--login-bg": "linear-gradient(135deg, #d9edf2, #eef5f7)",
+    "--text-main": "#17313A",
+    "--text-soft": "#31545F",
+    "--text-muted": "#5f7480",
+    "--brand-text": "#17313A",
+    "--brand-accent": "#0F7F99",
+    "--card-bg": "#f8fbfc",
     "--card-bg-soft": "#ffffff",
-    "--card-bg-alt": "#f9fbfb",
-    "--module-bg": "#ffffff",
-    "--input-bg": "#f8fbfb",
-    "--input-border": "#d9e4e2",
-    "--input-text": "#333333",
-    "--border-soft": "#e5ecea",
-    "--header-bg": "rgba(255,255,255,0.88)",
-    "--header-box-bg": "#ffffff",
+    "--card-bg-alt": "#eef4f7",
+    "--module-bg": "#eaf4f7",
+    "--input-bg": "#ffffff",
+    "--input-border": "#c9d8de",
+    "--input-text": "#17313A",
+    "--border-soft": "#d8e5ea",
+    "--header-bg": "rgba(255,255,255,0.75)",
+    "--header-box-bg": "rgba(255,255,255,0.92)",
     "--tab-bg": "#ffffff",
-    "--tab-text": "#5c6670",
-    "--tab-border": "#dfe8e6",
-    "--tab-active-bg": "#26b1c4",
+    "--tab-text": "#0F6F86",
+    "--tab-border": "#bfd7dd",
+    "--tab-active-bg": "#17A8C9",
     "--tab-active-text": "#ffffff",
-    "--primary-btn": "#26b1c4",
+    "--primary-btn": "#17A8C9",
     "--primary-btn-text": "#ffffff",
     "--outline-bg": "#ffffff",
-    "--outline-text": "#333333",
-    "--outline-border": "#dfe8e6",
-    "--danger-text": "#dc2626",
-    "--danger-border": "rgba(220, 38, 38, 0.18)",
-    "--info-pill-bg": "rgba(38, 177, 196, 0.1)",
-    "--info-pill-text": "#1d7f8f",
-    "--status-bg": "rgba(38, 177, 196, 0.1)",
-    "--status-text": "#1d7f8f",
-    "--status-border": "rgba(38, 177, 196, 0.18)",
+    "--outline-text": "#0F7F99",
+    "--outline-border": "#bcd2d9",
+    "--danger-text": "#B53B3B",
+    "--danger-border": "#E4B4B4",
+    "--info-pill-bg": "#eff8fb",
+    "--info-pill-text": "#0F6F86",
+    "--status-bg": "#eff8fb",
+    "--status-text": "#0F7F99",
+    "--status-border": "#cdebf1",
     "--placeholder-bg": "#ffffff",
-    "--shadow-main": "0 10px 30px rgba(0,0,0,0.05)",
+    "--shadow-main": "0 12px 28px rgba(0,0,0,0.08)",
   };
-}
-
-
-
-function normalizeRole(role = "") {
-  return role === "OPERADOR" ? "ATENDENTE" : role;
-}
-
-function getRoleUiLabel(role = "") {
-  const normalized = normalizeRole(role);
-  if (normalized === "ADM") return "ADM";
-  if (normalized === "EQUIPE") return "EQUIPE";
-  return "ATENDENTE";
-}
-
-function getInitials(name = "") {
-  return String(name)
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || "")
-    .join("");
 }
 
 export default function App() {
@@ -428,11 +405,11 @@ export default function App() {
   );
   const [showServicesModal, setShowServicesModal] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
-  const [atendimentos, setAtendimentos] = useState([]);
+  const [atendimentos, setServiços] = useState([]);
   const [editingAttendanceId, setEditingAttendanceId] = useState(null);
   const [attendanceSearch, setAttendanceSearch] = useState("");
 useEffect(() => {
-  async function carregarAtendimentos() {
+  async function carregarServiços() {
     const { data, error } = await supabase
       .from("atendimentos")
       .select("*")
@@ -443,10 +420,10 @@ useEffect(() => {
       return;
     }
 
-    setAtendimentos((data || []).map((item) => item.dados || item));
+    setServiços((data || []).map((item) => item.dados || item));
   }
 
-  carregarAtendimentos();
+  carregarServiços();
 }, []);
   const [viewingAttendanceId, setViewingAttendanceId] = useState(null);
   const [publicTrackingId, setPublicTrackingId] = useState("");
@@ -509,7 +486,7 @@ const [pdfPreview, setPdfPreview] = useState({
   useEffect(() => {
     const savedSession = loadStorage(STORAGE_KEYS.session, null);
     if (savedSession) {
-      setSession({ ...savedSession, role: normalizeRole(savedSession?.role) });
+      setSession(savedSession);
     }
   }, []);
 
@@ -717,7 +694,7 @@ const [pdfPreview, setPdfPreview] = useState({
               name: user.name || "",
               login: user.login || "",
               password: user.password || "",
-              role: normalizeRole(user.role || "ATENDENTE"),
+              role: user.role || "ATENDENTE",
             })
           );
 
@@ -763,11 +740,11 @@ const [pdfPreview, setPdfPreview] = useState({
           });
         }
 
-        setUsers((finalUsers || []).map((user) => ({ ...user, role: normalizeRole(user.role) })));
+        setUsers(finalUsers);
         setSettings(finalSettings);
       } catch (error) {
         console.error("Erro ao carregar usuários/configurações:", error);
-        setUsers((localUsers || DEFAULT_USERS).map((user) => ({ ...user, role: normalizeRole(user.role) })));
+        setUsers(localUsers || DEFAULT_USERS);
         setSettings(localSettings || DEFAULT_SETTINGS);
         alert("Não foi possível sincronizar usuários e configurações com o banco. O sistema usará os dados locais deste navegador.");
       } finally {
@@ -838,9 +815,8 @@ const [pdfPreview, setPdfPreview] = useState({
       return;
     }
 
-    const normalizedUser = { ...user, role: normalizeRole(user.role) };
-    setSession(normalizedUser);
-    saveStorage(STORAGE_KEYS.session, normalizedUser);
+    setSession(user);
+    saveStorage(STORAGE_KEYS.session, user);
     setLoginError("");
   }
 
@@ -885,7 +861,7 @@ const [pdfPreview, setPdfPreview] = useState({
           if (payload.eventType === "DELETE") {
             const deletedId = String(payload.old?.record_id || "");
 
-            setAtendimentos((prev) =>
+            setServiços((prev) =>
               prev.filter((item) => String(item.id) !== deletedId)
             );
 
@@ -905,7 +881,7 @@ const [pdfPreview, setPdfPreview] = useState({
 
           if (!novoId) return;
 
-          setAtendimentos((prev) => {
+          setServiços((prev) => {
             const exists = prev.some((item) => String(item.id) === novoId);
 
             if (exists) {
@@ -1000,7 +976,7 @@ const [pdfPreview, setPdfPreview] = useState({
       return false;
     }
 
-    setAtendimentos((prev) =>
+    setServiços((prev) =>
       prev.map((item) => (item.id === attendanceId ? updatedRecord : item))
     );
 
@@ -1026,7 +1002,7 @@ const [pdfPreview, setPdfPreview] = useState({
   }
 
   async function deleteAttendance(id) {
-    const confirmed = window.confirm("Deseja excluir este atendimento salvo?");
+    const confirmed = window.confirm("Deseja excluir este serviço salvo?");
     if (!confirmed) return;
 
     const { error } = await supabase
@@ -1040,7 +1016,7 @@ const [pdfPreview, setPdfPreview] = useState({
       return;
     }
 
-    setAtendimentos((prev) => prev.filter((item) => item.id !== id));
+    setServiços((prev) => prev.filter((item) => item.id !== id));
 
     if (editingAttendanceId === id) {
       resetAtendimento();
@@ -1140,7 +1116,7 @@ const [pdfPreview, setPdfPreview] = useState({
     if (!saved) {
       return;
     }
-    setAtendimentos((prev) => {
+    setServiços((prev) => {
       const exists = prev.some((item) => item.id === recordId);
       if (exists) {
         return prev.map((item) => (item.id === recordId ? record : item));
@@ -2068,7 +2044,7 @@ function printPreviewPdf() {
               <div style={styles.brandSub}>Acompanhamento operacional da equipe em campo.</div>
             </div>
             <button style={styles.outlineBtn} onClick={handleLogout}>
-              <i className="fa-solid fa-right-from-bracket" style={styles.buttonIcon} /> Sair
+              Sair
             </button>
           </div>
         </div>
@@ -2082,7 +2058,7 @@ function printPreviewPdf() {
     );
   }
 
-  if (session && normalizeRole(session.role) === "EQUIPE") {
+  if (session && session.role === "EQUIPE") {
     return renderEquipeContainer();
   }
 
@@ -2100,19 +2076,19 @@ function printPreviewPdf() {
               resetAtendimento();
             }}
           >
-            <><i className="fa-solid fa-house" style={styles.buttonIcon} /> Início</>
+            🏠 Início
           </button>
         </div>
 
         <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Serviço Finalizado</h2>
+          <h2 style={styles.cardTitle}>Atendimento Finalizado</h2>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <button
               style={styles.outlineDarkBtn}
               onClick={() => setFinalizado(false)}
             >
-              <><i className="fa-solid fa-pen" style={styles.buttonIcon} /> Editar</>
+              ✏️ Editar
             </button>
 
             <button
@@ -2122,15 +2098,15 @@ function printPreviewPdf() {
                 setActiveTab("atendimentos");
               }}
             >
-              <><i className="fa-solid fa-rectangle-list" style={styles.buttonIcon} /> Serviços</>
+              📋 Serviços
             </button>
 
             <button style={styles.primaryBtn} onClick={gerarFichaPDF}>
-              <><i className="fa-solid fa-file-invoice" style={styles.buttonIcon} /> Gerar Ficha PDF</>
+              🧾 Gerar Ficha PDF
             </button>
 
             <button style={styles.primaryBtn} onClick={gerarTermoPDF}>
-              <><i className="fa-solid fa-file-lines" style={styles.buttonIcon} /> Gerar Termo PDF</>
+              📄 Gerar Termo PDF
             </button>
           </div>
 
@@ -2144,13 +2120,13 @@ function printPreviewPdf() {
 
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <button style={styles.outlineDarkBtn} onClick={printPreviewPdf}>
-                    <><i className="fa-solid fa-print" style={styles.buttonIcon} /> Imprimir</>
+                    🖨 Imprimir
                   </button>
                   <button style={styles.primaryBtn} onClick={downloadPreviewPdf}>
-                    <><i className="fa-solid fa-download" style={styles.buttonIcon} /> Download</>
+                    ⬇ Download
                   </button>
                   <button style={styles.outlineDangerBtn} onClick={closePdfPreview}>
-                    <><i className="fa-solid fa-xmark" style={styles.buttonIcon} /> Fechar</>
+                    ✖ Fechar
                   </button>
                 </div>
               </div>
@@ -2235,97 +2211,93 @@ function printPreviewPdf() {
   }
 
   return (
-    <div className="app-shell" style={themeVars}>
+    <div style={{ ...styles.page, ...themeVars }} className="app-shell">
       {activeTab === "home" && (
         <header className="home-header">
-          <div className="home-brand">
+          <div className="home-header__brand">
             <img
               src="/logo.png"
               alt="Logo Grupo São Francisco"
-              className="home-brand-logo"
+              className="home-header__logo"
             />
-            <div className="home-brand-copy">
-              <div className="home-brand-title">GRUPO SÃO FRANCISCO</div>
-              <div className="home-brand-subtitle">Assistência e cuidado em todos os momentos</div>
+            <div>
+              <div className="home-header__title">GRUPO SÃO FRANCISCO</div>
+              <div className="home-header__subtitle">Assistência e cuidado em todos os momentos</div>
             </div>
           </div>
 
-          <div className="home-actions">
+          <div className="home-header__actions">
             <div className="user-pill">
-              <div className="user-pill-avatar">
-                {getInitials(session?.name || "U")}
-              </div>
-              <div className="user-pill-copy">
-                <span className="user-pill-label">{session?.name}</span>
-                <span className="user-pill-sublabel">{getRoleUiLabel(session?.role)}</span>
+              <div className="user-pill__avatar">{getInitials(session.name)}</div>
+              <div className="user-pill__meta">
+                <div className="user-pill__label">{session.name}</div>
+                <div className="user-pill__sublabel">{getRoleLabel(session.role)}</div>
               </div>
             </div>
 
-            {normalizeRole(session?.role) === "ADM" && (
-              <button
-                className="home-utility-button"
-                onClick={() => setActiveTab("config")}
-                title="Configurações"
-              >
+            {session.role === "ADM" && (
+              <button className="home-action-btn" onClick={() => setActiveTab("config")}>
                 <i className="fa-solid fa-gear" />
+                <span>Conf</span>
               </button>
             )}
 
             <button
-              className="home-utility-button"
+              className="home-action-btn"
               onClick={() => setTheme(isDark ? "light" : "dark")}
-              title={isDark ? "Claro" : "Escuro"}
             >
               <i className={`fa-solid ${isDark ? "fa-sun" : "fa-moon"}`} />
+              <span>{isDark ? "Claro" : "Escuro"}</span>
             </button>
 
-            <button className="home-utility-button" onClick={handleLogout} title="Sair">
+            <button className="home-action-btn" onClick={handleLogout}>
               <i className="fa-solid fa-right-from-bracket" />
+              <span>Sair</span>
             </button>
           </div>
         </header>
       )}
 
       {activeTab !== "home" && (
-        <div style={styles.tabs}>
+        <div className="internal-tabs">
           <button
-            style={activeTab === "home" ? styles.tabActive : styles.tab}
+            className={activeTab === "home" ? "internal-tab internal-tab--active" : "internal-tab"}
             onClick={() => setActiveTab("home")}
           >
             Início
           </button>
 
           <button
-            style={activeTab === "atendimento" ? styles.tabActive : styles.tab}
+            className={activeTab === "atendimento" ? "internal-tab internal-tab--active" : "internal-tab"}
             onClick={() => setActiveTab("atendimento")}
           >
             Novo Serviço
           </button>
 
           <button
-            style={activeTab === "atendimentos" ? styles.tabActive : styles.tab}
+            className={activeTab === "atendimentos" ? "internal-tab internal-tab--active" : "internal-tab"}
             onClick={() => setActiveTab("atendimentos")}
           >
             Serviços
           </button>
 
           <button
-            style={activeTab === "operacional" ? styles.tabActive : styles.tab}
+            className={activeTab === "operacional" ? "internal-tab internal-tab--active" : "internal-tab"}
             onClick={() => setActiveTab("operacional")}
           >
             Gestão de Etapas
           </button>
 
           <button
-            style={activeTab === "equipe" ? styles.tabActive : styles.tab}
+            className={activeTab === "equipe" ? "internal-tab internal-tab--active" : "internal-tab"}
             onClick={() => setActiveTab("equipe")}
           >
             Equipe
           </button>
 
-          {normalizeRole(session?.role) === "ADM" && (
+          {session.role === "ADM" && (
             <button
-              style={activeTab === "config" ? styles.tabActive : styles.tab}
+              className={activeTab === "config" ? "internal-tab internal-tab--active" : "internal-tab"}
               onClick={() => setActiveTab("config")}
             >
               Configurações
@@ -2335,56 +2307,50 @@ function printPreviewPdf() {
       )}
 
       {activeTab === "home" && (
-        <section className="home-screen">
-          <div className="home-cards-grid">
-            <button
-              className="home-action-card"
-              onClick={() => {
-                resetAtendimento();
-                setFinalizado(false);
-                setActiveTab("atendimento");
-              }}
-            >
-              <div className="home-action-icon">
-                <i className="fa-solid fa-circle-plus" />
-              </div>
-              <div className="home-action-content">
-                <div className="home-action-title">NOVO SERVIÇO</div>
-                <div className="home-action-text">Iniciar novo serviço</div>
-              </div>
-            </button>
+        <>
+          <section className="home-main">
+            <div className="home-cards">
+              <button
+                className="home-card-button"
+                onClick={() => {
+                  resetAtendimento();
+                  setFinalizado(false);
+                  setActiveTab("atendimento");
+                }}
+              >
+                <div className="home-card-button__icon"><i className="fa-solid fa-circle-plus" /></div>
+                <div>
+                  <div className="home-card-button__title">Novo Serviço</div>
+                  <div className="home-card-button__text">Iniciar novo registro</div>
+                </div>
+              </button>
 
-            <button
-              className="home-action-card"
-              onClick={() => setActiveTab("atendimentos")}
-            >
-              <div className="home-action-icon">
-                <i className="fa-solid fa-file-lines" />
-              </div>
-              <div className="home-action-content">
-                <div className="home-action-title">SERVIÇOS</div>
-                <div className="home-action-text">Consultar, editar e reabrir registros</div>
-              </div>
-            </button>
+              <button
+                className="home-card-button"
+                onClick={() => setActiveTab("atendimentos")}
+              >
+                <div className="home-card-button__icon"><i className="fa-solid fa-file-lines" /></div>
+                <div>
+                  <div className="home-card-button__title">Serviços</div>
+                  <div className="home-card-button__text">Consultar, editar e reabrir registros</div>
+                </div>
+              </button>
 
-            <button
-              className="home-action-card"
-              onClick={() => setActiveTab("operacional")}
-            >
-              <div className="home-action-icon">
-                <i className="fa-solid fa-diagram-project" />
-              </div>
-              <div className="home-action-content">
-                <div className="home-action-title">GESTÃO DE ETAPAS</div>
-                <div className="home-action-text">Acompanhar etapas e serviços em andamento</div>
-              </div>
-            </button>
-          </div>
+              <button
+                className="home-card-button"
+                onClick={() => setActiveTab("operacional")}
+              >
+                <div className="home-card-button__icon"><i className="fa-solid fa-gears" /></div>
+                <div>
+                  <div className="home-card-button__title">Gestão de Etapas</div>
+                  <div className="home-card-button__text">Acompanhar etapas em andamento</div>
+                </div>
+              </button>
+            </div>
+          </section>
 
-          <footer className="home-footer">
-            © 2026 Caetano Digital System. All Rights Reserved.
-          </footer>
-        </section>
+          <footer className="home-footer">© 2026 Caetano Digital System. All Rights Reserved.</footer>
+        </>
       )}
 
       {activeTab === "atendimentos" && (
@@ -2724,7 +2690,7 @@ function printPreviewPdf() {
                                 stage.key !== "procedimentoClinico" &&
                                 stage.key !== "ornamentacao" && <div />}
 
-                              {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE") && (
+                              {(session?.role === "ADM" || session?.role === "OPERADOR") && (
                                 <div style={{ marginTop: 10, display: "grid", gap: 6 }}>
                                   <div style={styles.infoRow}>
                                     <div style={styles.infoPill}>
@@ -2765,6 +2731,7 @@ function printPreviewPdf() {
           )}
 
           <div style={styles.moduleFooterNote}>
+            
           </div>
         </section>
       )}
@@ -2845,19 +2812,23 @@ function printPreviewPdf() {
                   onChange={(e) => {
                     const value = e.target.value;
                     updateForm("velorioTipo", value);
+
                     if (value !== "funeraria") {
                       updateForm("velorioUnidade", "");
                       updateForm("velorioSala", "");
                     }
+
                     if (value !== "igreja") {
                       updateForm("velorioNomeLocal", "");
                     }
+
                     if (value !== "residencia" && value !== "igreja") {
                       updateForm("velorioCep", "");
                       updateForm("velorioEndereco", "");
                       updateForm("velorioNumero", "");
                       updateForm("velorioBairro", "");
                     }
+
                     if (value !== "viagem") {
                       updateForm("cidadeDestino", "");
                       updateForm("embarque", "");
@@ -2980,7 +2951,7 @@ function printPreviewPdf() {
                   </div>
 
                   <div style={styles.field}>
-                    <label style={styles.label}>Local de embarque</label>
+                    <label style={styles.label}>Embarque</label>
                     <select
                       style={styles.input}
                       value={form.embarque}
@@ -3038,7 +3009,7 @@ function printPreviewPdf() {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Hora/Serviço</label>
+                <label style={styles.label}>Hora/Atendimento</label>
                 <input
                   type="time"
                   style={styles.input}
@@ -3048,7 +3019,7 @@ function printPreviewPdf() {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Data/Serviço</label>
+                <label style={styles.label}>Data/Atendimento</label>
                 <input
                   type="date"
                   style={styles.input}
@@ -3690,7 +3661,7 @@ function printPreviewPdf() {
               }}
             >
               <button style={styles.primaryBtn} onClick={finalizarAtendimento}>
-                Finalizar Serviço
+                Finalizar Atendimento
               </button>
             </div>
               </>
@@ -3699,7 +3670,7 @@ function printPreviewPdf() {
         </>
       )}
 
-      {activeTab === "config" && normalizeRole(session.role) === "ADM" && (
+      {activeTab === "config" && session.role === "ADM" && (
         <div style={styles.grid2}>
           <section style={styles.card}>
             <h2 style={styles.cardTitle}>Usuários</h2>
@@ -3748,7 +3719,7 @@ function printPreviewPdf() {
                   }
                 >
                   <option value="ADM">ADM</option>
-                  <option value="ATENDENTE">Atendente</option>
+                  <option value="OPERADOR">Operador</option>
                   <option value="EQUIPE">Equipe</option>
                 </select>
               </div>
@@ -4191,13 +4162,13 @@ function printPreviewPdf() {
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <button style={styles.outlineDarkBtn} onClick={printPreviewPdf}>
-                  <><i className="fa-solid fa-print" style={styles.buttonIcon} /> Imprimir</>
+                  🖨 Imprimir
                 </button>
                 <button style={styles.primaryBtn} onClick={downloadPreviewPdf}>
-                  <><i className="fa-solid fa-download" style={styles.buttonIcon} /> Download</>
+                  ⬇ Download
                 </button>
                 <button style={styles.outlineDangerBtn} onClick={closePdfPreview}>
-                  <><i className="fa-solid fa-xmark" style={styles.buttonIcon} /> Fechar</>
+                  ✖ Fechar
                 </button>
               </div>
             </div>
@@ -4215,120 +4186,737 @@ function printPreviewPdf() {
 }
 
 const styles = {
-  page: { minHeight: "100vh", background: "var(--page-bg)", fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: 24, color: "var(--text-main)" },
-  loginPage: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--login-bg)", padding: 24, fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-  loginCard: { width: "100%", maxWidth: 450, background: "var(--card-bg-soft)", borderRadius: 24, padding: 36, boxShadow: "var(--shadow-main)", border: "1px solid var(--border-soft)" },
-  loginBrandWrap: { textAlign: "center", marginBottom: 22 },
-  loginLogo: { width: 220, maxWidth: "100%", display: "block", margin: "0 auto 14px", objectFit: "contain" },
-  loginTitle: { textAlign: "center", margin: 0, color: "var(--text-main)", fontSize: 28, fontWeight: 800, letterSpacing: 0.4 },
-  loginSub: { textAlign: "center", marginTop: 8, color: "var(--text-muted)", marginBottom: 22, fontSize: 14 },
-  header: { background: "var(--header-bg)", borderRadius: 24, padding: 20, color: "var(--brand-text)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 20, marginBottom: 18, boxShadow: "var(--shadow-main)", border: "1px solid var(--border-soft)", backdropFilter: "blur(14px)", flexWrap: "wrap" },
-  headerBrand: { display: "flex", alignItems: "center", gap: 14 },
-  headerLogo: { width: 72, height: 72, display: "block", objectFit: "contain", borderRadius: 18, background: "rgba(38, 177, 196, 0.08)", padding: 10 },
-  headerTools: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginLeft: "auto" },
-  headerSearch: { display: "flex", alignItems: "center", gap: 10, minWidth: 320, background: "var(--card-bg-soft)", borderRadius: 999, border: "1px solid var(--border-soft)", padding: "0 14px", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)" },
-  headerSearchInput: { border: "none", outline: "none", background: "transparent", color: "var(--text-main)", width: "100%", height: 44, fontSize: 14, fontFamily: 'Inter, system-ui, sans-serif' },
-  searchIcon: { color: "var(--text-muted)", fontSize: 14 },
-  notificationBtn: { width: 44, height: 44, borderRadius: 999, border: "1px solid var(--border-soft)", background: "var(--card-bg-soft)", color: "var(--text-main)", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-main)" },
-  brandTop: { fontSize: 26, fontWeight: 800, letterSpacing: 1, marginBottom: 4 },
-  pageTitle: { margin: 0, fontSize: 28 },
-  brandSub: { fontSize: 14, color: "var(--text-muted)" },
-  userBox: { display: "flex", alignItems: "center", gap: 12, background: "var(--header-box-bg)", borderRadius: 18, padding: "10px 14px", border: "1px solid var(--border-soft)", minWidth: 200 },
-  userAvatar: { width: 42, height: 42, borderRadius: 999, background: "linear-gradient(135deg, #26b1c4, #1d8ea0)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, letterSpacing: 0.8, boxShadow: "0 8px 20px rgba(38, 177, 196, 0.24)" },
-  userMeta: { display: "grid", gap: 2 },
-  userName: { fontWeight: 700, color: "var(--text-main)", fontSize: 14 },
-  userRole: { fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.6 },
-  buttonIcon: { marginRight: 8 },
-  tabs: { display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" },
-  tab: { padding: "12px 16px", borderRadius: 14, border: "1px solid var(--tab-border)", background: "var(--tab-bg)", cursor: "pointer", fontWeight: 700, color: "var(--tab-text)", boxShadow: "var(--shadow-main)" },
-  tabActive: { padding: "12px 16px", borderRadius: 14, border: "1px solid var(--tab-active-bg)", background: "var(--tab-active-bg)", cursor: "pointer", fontWeight: 700, color: "var(--tab-active-text)", boxShadow: "0 10px 24px rgba(38, 177, 196, 0.24)" },
-  grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginBottom: 18 },
-  grid2Simple: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 },
-  grid3: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 },
-  card: { background: "var(--card-bg-soft)", borderRadius: 24, padding: 24, boxShadow: "var(--shadow-main)", border: "1px solid var(--border-soft)", marginBottom: 18 },
-  cardTitle: { marginTop: 0, color: "var(--text-main)", marginBottom: 16, fontSize: 24, fontWeight: 800 },
-  sectionToggle: { width: "100%", border: "none", background: "transparent", display: "flex", alignItems: "center", justifyContent: "space-between", padding: 0, marginBottom: 18, cursor: "pointer", textAlign: "left" },
-  sectionToggleIcon: { fontSize: 22, lineHeight: 1, color: "var(--brand-accent)", fontWeight: 700, minWidth: 24, textAlign: "center" },
-  field: { display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 },
-  fieldWide: { display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 },
-  label: { fontSize: 12, fontWeight: 700, color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: 0.6 },
-  input: { border: "1px solid var(--input-border)", borderRadius: 12, padding: "12px 14px", fontSize: 14, outline: "none", background: "var(--input-bg)", color: "var(--input-text)", width: "100%", boxSizing: "border-box", transition: "border-color 0.2s ease, box-shadow 0.2s ease", boxShadow: "inset 0 1px 2px rgba(15, 23, 42, 0.02)" },
-  primaryBtn: { background: "var(--primary-btn)", color: "var(--primary-btn-text)", border: "none", padding: "12px 18px", borderRadius: 14, cursor: "pointer", fontWeight: 700, boxShadow: "0 10px 24px rgba(38, 177, 196, 0.22)" },
-  outlineBtn: { background: "var(--outline-bg)", color: "var(--outline-text)", border: "1px solid var(--outline-border)", padding: "11px 14px", borderRadius: 14, cursor: "pointer", fontWeight: 700, boxShadow: "var(--shadow-main)" },
-  outlineDarkBtn: { background: "var(--outline-bg)", color: "var(--outline-text)", border: "1px solid var(--outline-border)", padding: "11px 14px", borderRadius: 14, cursor: "pointer", fontWeight: 700, boxShadow: "var(--shadow-main)" },
-  errorBox: { marginBottom: 12, padding: 12, background: "rgba(254, 226, 226, 0.9)", color: "var(--danger-text)", borderRadius: 12, border: "1px solid var(--danger-border)" },
-  separator: { height: 1, background: "var(--border-soft)", margin: "12px 0 18px" },
-  previewBox: { maxHeight: 460, overflowY: "auto", border: "1px solid var(--border-soft)", borderRadius: 18, padding: 12, background: "var(--card-bg-alt)" },
-  previewItem: { border: "1px solid var(--border-soft)", borderRadius: 16, padding: "12px 14px", marginBottom: 10, display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap", background: "var(--card-bg-soft)" },
-  infoRow: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 },
-  infoPill: { background: "var(--info-pill-bg)", border: "1px solid var(--status-border)", borderRadius: 999, padding: "8px 12px", fontSize: 13, fontWeight: 700, color: "var(--info-pill-text)" },
-  helpText: { fontSize: 12, color: "var(--brand-accent)" },
-  errorText: { fontSize: 12, color: "#dc2626" },
-  row: { display: "flex", gap: 10 },
-  listItem: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, border: "1px solid var(--border-soft)", background: "var(--card-bg-soft)", borderRadius: 16, padding: 14, marginBottom: 10, boxShadow: "var(--shadow-main)" },
-  homeHero: { marginBottom: 22 },
-  homeGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 },
-  homeCard: { background: "linear-gradient(135deg, #26b1c4, #229aad)", border: "none", borderRadius: 24, padding: "26px 24px", minHeight: 126, cursor: "pointer", textAlign: "left", boxShadow: "0 18px 34px rgba(38, 177, 196, 0.22)", display: "flex", alignItems: "center", gap: 18, color: "#ffffff" },
-  homeCardIcon: { width: 62, height: 62, borderRadius: 18, background: "rgba(255,255,255,0.16)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, color: "#ffffff", flexShrink: 0 },
-  homeCardTitle: { fontSize: 18, fontWeight: 800, color: "#ffffff", marginBottom: 6, letterSpacing: 0.8 },
-  homeCardText: { fontSize: 14, color: "rgba(255,255,255,0.9)", lineHeight: 1.5 },
-  homePanels: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginBottom: 16 },
-  homePanel: { background: "rgba(255,255,255,0.92)", borderRadius: 24, padding: 22, boxShadow: "var(--shadow-main)", border: "1px solid var(--border-soft)" },
-  homePanelTitle: { marginTop: 0, marginBottom: 16, color: "var(--text-main)", fontSize: 22 },
-  homeListItem: { background: "var(--outline-bg)", borderRadius: 16, padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 12, boxShadow: "var(--shadow-main)", border: "1px solid var(--border-soft)" },
-  homeListSub: { fontSize: 13, color: "var(--text-muted)", marginTop: 4 },
-  miniActionBtn: { background: "var(--primary-btn)", color: "#FFFFFF", border: "none", borderRadius: 12, padding: "10px 14px", fontWeight: 700, cursor: "pointer" },
-  progressRow: { background: "var(--outline-bg)", borderRadius: 16, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 10, boxShadow: "var(--shadow-main)", border: "1px solid var(--border-soft)" },
-  progressName: { fontWeight: 700, color: "var(--text-soft)" },
-  progressBadge: { background: "var(--info-pill-bg)", color: "var(--brand-accent)", borderRadius: 999, padding: "8px 12px", fontSize: 12, fontWeight: 700 },
-  homeLinkRow: { marginTop: 12, color: "var(--text-soft)", fontSize: 14 },
-  moduleCard: { background: "var(--module-bg)", borderRadius: 24, padding: 24, boxShadow: "var(--shadow-main)", marginBottom: 24, border: "1px solid var(--border-soft)" },
-  moduleHeader: { display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 22 },
-  moduleTitle: { margin: 0, color: "var(--text-main)", fontSize: 28, fontWeight: 800 },
-  moduleSub: { margin: "6px 0 0", color: "var(--text-muted)", fontSize: 14 },
-  modulePlaceholder: { background: "var(--card-bg-alt)", borderRadius: 22, padding: 28, minHeight: 220, display: "flex", flexDirection: "column", justifyContent: "center", border: "1px solid var(--border-soft)" },
-  modulePlaceholderTitle: { color: "var(--text-main)", fontSize: 24, fontWeight: 800, marginBottom: 10 },
-  modulePlaceholderText: { color: "var(--text-muted)", fontSize: 15, lineHeight: 1.6, maxWidth: 780 },
-  searchRow: { display: "flex", gap: 12, marginBottom: 14 },
-  recordsList: { display: "flex", flexDirection: "column", gap: 14 },
-  recordCard: { background: "var(--card-bg-soft)", border: "1px solid var(--border-soft)", borderRadius: 20, padding: 20, boxShadow: "var(--shadow-main)" },
-  recordTop: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12, flexWrap: "wrap" },
-  recordNumber: { fontSize: 12, fontWeight: 700, color: "var(--brand-accent)", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.8 },
-  recordName: { fontSize: 20, fontWeight: 800, color: "var(--text-main)", marginBottom: 4 },
-  recordMeta: { fontSize: 13, color: "var(--text-muted)" },
-  recordGrid: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, color: "var(--text-soft)", fontSize: 14, marginBottom: 14 },
-  recordActions: { display: "flex", gap: 10, flexWrap: "wrap" },
-  statusBadge: { background: "var(--status-bg)", color: "var(--status-text)", border: "1px solid var(--status-border)", borderRadius: 999, padding: "8px 12px", fontSize: 12, fontWeight: 700 },
-  outlineDangerBtn: { background: "var(--outline-bg)", color: "var(--danger-text)", border: "1px solid var(--danger-border)", padding: "11px 14px", borderRadius: 14, cursor: "pointer", fontWeight: 700 },
-  operationalCard: { background: "var(--card-bg-soft)", border: "1px solid var(--border-soft)", borderRadius: 20, padding: 20, boxShadow: "var(--shadow-main)" },
-  operationalHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 10 },
-  operationGrid: { display: "grid", gap: 12 },
-  operationRow: { background: "var(--card-bg-alt)", border: "1px solid var(--border-soft)", borderRadius: 18, padding: 16, display: "grid", gridTemplateColumns: "minmax(180px, 1.1fr) minmax(140px, 0.8fr) minmax(260px, 1.2fr) auto", gap: 12, alignItems: "center" },
-  operationMain: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" },
-  operationName: { color: "var(--text-main)", fontSize: 16, fontWeight: 800 },
-  operationStatusBase: { borderRadius: 999, padding: "8px 12px", fontWeight: 700, fontSize: 12, border: "1px solid transparent" },
-  operationStatusWaiting: { background: "#f3f4f6", color: "#6b7280", borderColor: "#e5e7eb" },
-  operationStatusRunning: { background: "rgba(38, 177, 196, 0.12)", color: "#1d7f8f", borderColor: "rgba(38, 177, 196, 0.2)" },
-  operationStatusDone: { background: "rgba(34, 197, 94, 0.12)", color: "#15803d", borderColor: "rgba(34, 197, 94, 0.18)" },
-  operationTimes: { display: "grid", gap: 4, color: "var(--text-muted)", fontSize: 13 },
-  operationTransportGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, alignItems: "end" },
-  operationResponsibleGrid: { display: "grid", gridTemplateColumns: "1fr", gap: 10, alignItems: "end" },
-  operationActions: { display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" },
-  acompanhamentoWrap: { display: "grid", gap: 16 },
-  acompanhamentoHero: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, padding: 18, borderRadius: 20, background: "var(--card-bg-alt)", border: "1px solid var(--border-soft)", flexWrap: "wrap" },
-  acompanhamentoInfoGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, background: "var(--card-bg-soft)", border: "1px solid var(--border-soft)", borderRadius: 18, padding: 18 },
-  acompanhamentoStages: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 14 },
-  acompanhamentoStageCard: { background: "var(--card-bg-soft)", border: "1px solid var(--border-soft)", borderRadius: 18, padding: 18, display: "grid", gap: 10, boxShadow: "var(--shadow-main)" },
-  acompanhamentoTimes: { display: "grid", gap: 4, color: "var(--text-soft)", fontSize: 14 },
-  acompanhamentoExtra: { display: "grid", gap: 4, color: "var(--text-main)", fontSize: 14, paddingTop: 6, borderTop: "1px solid var(--border-soft)" },
-  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.5)", padding: 20, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 },
-  modalBox: { width: "100%", maxWidth: 1150, maxHeight: "90vh", overflowY: "auto", background: "var(--card-bg-soft)", borderRadius: 24, padding: 22, boxShadow: "0 24px 64px rgba(15, 23, 42, 0.16)", border: "1px solid var(--border-soft)" },
-  modalHead: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 16 },
-  servicesGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 },
-  serviceCard: { border: "1px solid var(--border-soft)", borderRadius: 18, padding: 16, background: "var(--card-bg-alt)", boxShadow: "var(--shadow-main)" },
-  serviceTop: { marginBottom: 12 },
-  previewOverlay: { position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.62)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 },
-  previewModal: { width: "100%", maxWidth: 1100, height: "90vh", background: "var(--card-bg)", border: "1px solid var(--border-soft)", borderRadius: 24, boxShadow: "0 28px 80px rgba(15, 23, 42, 0.24)", display: "flex", flexDirection: "column", overflow: "hidden" },
-  previewHeader: { padding: 16, borderBottom: "1px solid var(--border-soft)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" },
-  previewFrame: { width: "100%", height: "100%", border: "none", background: "#fff" },
+  page: {
+    minHeight: "100vh",
+    background: "var(--page-bg)",
+    fontFamily: "Arial, sans-serif",
+    padding: 20,
+    color: "var(--text-main)",
+  },
+  loginPage: {
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "var(--login-bg)",
+    padding: 20,
+    fontFamily: "Arial, sans-serif",
+  },
+  loginCard: {
+    width: "100%",
+    maxWidth: 430,
+    background: "var(--card-bg-soft)",
+    borderRadius: 18,
+    padding: 30,
+    boxShadow: "var(--shadow-main)",
+  },
+  loginBrandWrap: {
+    textAlign: "center",
+    marginBottom: 18,
+  },
+  loginLogo: {
+    width: 220,
+    maxWidth: "100%",
+    display: "block",
+    margin: "0 auto 14px",
+    objectFit: "contain",
+  },
+  loginTitle: {
+    textAlign: "center",
+    margin: 0,
+    color: "var(--brand-accent)",
+  },
+  loginSub: {
+    textAlign: "center",
+    marginTop: 8,
+    color: "var(--text-muted)",
+    marginBottom: 20,
+  },
+  header: {
+    background: "var(--header-bg)",
+    borderRadius: 18,
+    padding: 22,
+    color: "var(--brand-text)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 20,
+    marginBottom: 16,
+    boxShadow: "var(--shadow-main)",
+  },
+  headerBrand: {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+  },
+  headerLogo: {
+    width: 84,
+    height: "auto",
+    display: "block",
+    objectFit: "contain",
+  },
+  brandTop: {
+    fontSize: 30,
+    fontWeight: 700,
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  pageTitle: {
+    margin: 0,
+    fontSize: 28,
+  },
+  brandSub: {
+    fontSize: 15,
+    opacity: 0.96,
+  },
+  userBox: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    background: "var(--header-box-bg)",
+    borderRadius: 14,
+    padding: "10px 12px",
+  },
+  tabs: {
+    display: "flex",
+    gap: 10,
+    marginBottom: 16,
+    flexWrap: "wrap",
+  },
+  tab: {
+    padding: "10px 16px",
+    borderRadius: 12,
+    border: "1px solid var(--tab-border)",
+    background: "var(--card-bg-soft)",
+    cursor: "pointer",
+    fontWeight: 700,
+    color: "var(--info-pill-text)",
+  },
+  tabActive: {
+    padding: "10px 16px",
+    borderRadius: 12,
+    border: "1px solid var(--tab-active-bg)",
+    background: "var(--primary-btn)",
+    cursor: "pointer",
+    fontWeight: 700,
+    color: "var(--brand-text)",
+  },
+  grid2: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 16,
+    marginBottom: 16,
+  },
+  grid2Simple: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+  },
+  grid3: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
+    gap: 12,
+  },
+  card: {
+    background: "var(--card-bg-soft)",
+    borderRadius: 18,
+    padding: 18,
+    boxShadow: "var(--shadow-main)",
+    border: "1px solid var(--border-soft)",
+    marginBottom: 16,
+  },
+  cardTitle: {
+    marginTop: 0,
+    color: "var(--brand-accent)",
+    marginBottom: 16,
+  },
+  sectionToggle: {
+    width: "100%",
+    border: "none",
+    background: "transparent",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 0,
+    marginBottom: 16,
+    cursor: "pointer",
+    textAlign: "left",
+  },
+  sectionToggleIcon: {
+    fontSize: 22,
+    lineHeight: 1,
+    color: "var(--brand-accent)",
+    fontWeight: 700,
+    minWidth: 24,
+    textAlign: "center",
+  },
+  field: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+    marginBottom: 12,
+  },
+  fieldWide: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: "var(--text-soft)",
+  },
+  input: {
+    border: "1px solid var(--input-border)",
+    borderRadius: 10,
+    padding: "10px 12px",
+    fontSize: 14,
+    outline: "none",
+    background: "var(--card-bg-soft)",
+    color: "var(--text-main)",
+    caretColor: "#17313A",
+    width: "100%",
+    boxSizing: "border-box",
+  },
+  primaryBtn: {
+    background: "var(--primary-btn)",
+    color: "var(--primary-btn-text)",
+    border: "none",
+    padding: "11px 16px",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontWeight: 700,
+  },
+  outlineBtn: {
+    background: "var(--outline-bg)",
+    color: "var(--brand-accent)",
+    border: "none",
+    padding: "10px 14px",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontWeight: 700,
+  },
+  outlineDarkBtn: {
+    background: "var(--outline-bg)",
+    color: "var(--brand-accent)",
+    border: "1px solid #0B7285",
+    padding: "10px 14px",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontWeight: 700,
+  },
+  errorBox: {
+    marginBottom: 12,
+    padding: 10,
+    background: "#FFE7E7",
+    color: "var(--danger-text)",
+    borderRadius: 10,
+  },
+  separator: {
+    height: 1,
+    background: "#E2EDF0",
+    margin: "10px 0 16px",
+  },
+  previewBox: {
+    maxHeight: 460,
+    overflowY: "auto",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 14,
+    padding: 10,
+    background: "var(--card-bg-alt)",
+  },
+  previewItem: {
+    border: "1px solid",
+    borderRadius: 12,
+    padding: "10px 12px",
+    marginBottom: 8,
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 10,
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  infoRow: {
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+    marginBottom: 14,
+  },
+  infoPill: {
+    background: "var(--info-pill-bg)",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 999,
+    padding: "8px 12px",
+    fontSize: 13,
+    fontWeight: 700,
+    color: "var(--info-pill-text)",
+  },
+  helpText: {
+    fontSize: 12,
+    color: "var(--brand-accent)",
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#C0392B",
+  },
+  row: {
+    display: "flex",
+    gap: 10,
+  },
+  listItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    border: "1px solid var(--border-soft)",
+    background: "var(--card-bg-soft)",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+  },
+  homeHero: {
+    marginBottom: 20,
+  },
+  homeGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 18,
+  },
+  homeCard: {
+    background: "var(--outline-bg)",
+    border: "none",
+    borderRadius: 24,
+    padding: "30px 26px",
+    minHeight: 150,
+    cursor: "pointer",
+    textAlign: "left",
+    boxShadow: "var(--shadow-main)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+  homeCardTitle: {
+    fontSize: 24,
+    fontWeight: 700,
+    color: "var(--brand-accent)",
+    marginBottom: 10,
+  },
+  homeCardText: {
+    fontSize: 16,
+    color: "var(--text-muted)",
+  },
+  homePanels: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 18,
+    marginBottom: 16,
+  },
+  homePanel: {
+    background: "rgba(255,255,255,0.92)",
+    borderRadius: 24,
+    padding: 22,
+    boxShadow: "var(--shadow-main)",
+  },
+  homePanelTitle: {
+    marginTop: 0,
+    marginBottom: 16,
+    color: "var(--brand-accent)",
+    fontSize: 24,
+  },
+  homeListItem: {
+    background: "var(--outline-bg)",
+    borderRadius: 16,
+    padding: "16px 18px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 12,
+    boxShadow: "0 8px 18px rgba(0,0,0,0.10)",
+  },
+  homeListSub: {
+    fontSize: 13,
+    color: "var(--text-muted)",
+    marginTop: 4,
+  },
+  miniActionBtn: {
+    background: "var(--primary-btn)",
+    color: "#FFFFFF",
+    border: "none",
+    borderRadius: 12,
+    padding: "10px 14px",
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+  progressRow: {
+    background: "var(--outline-bg)",
+    borderRadius: 16,
+    padding: "14px 16px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 10,
+    boxShadow: "0 8px 18px rgba(0,0,0,0.10)",
+  },
+  progressName: {
+    fontWeight: 700,
+    color: "var(--text-soft)",
+  },
+  progressBadge: {
+    background: "var(--info-pill-bg)",
+    color: "var(--brand-accent)",
+    borderRadius: 999,
+    padding: "8px 12px",
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  homeLinkRow: {
+    marginTop: 12,
+    color: "var(--text-soft)",
+    fontSize: 14,
+  },
+
+
+  moduleCard: {
+    background: "var(--module-bg)",
+    borderRadius: 28,
+    padding: 28,
+    boxShadow: "var(--shadow-main)",
+    marginBottom: 24,
+  },
+  moduleHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 16,
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginBottom: 22,
+  },
+  moduleTitle: {
+    margin: 0,
+    color: "#0C7FA3",
+    fontSize: 34,
+    fontWeight: 800,
+  },
+  moduleSub: {
+    margin: "6px 0 0",
+    color: "var(--text-soft)",
+    fontSize: 15,
+  },
+  modulePlaceholder: {
+    background: "var(--outline-bg)",
+    borderRadius: 24,
+    padding: 28,
+    minHeight: 220,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    boxShadow: "inset 0 0 0 1px rgba(12,127,163,0.08)",
+  },
+  modulePlaceholderTitle: {
+    color: "var(--text-main)",
+    fontSize: 28,
+    fontWeight: 800,
+    marginBottom: 10,
+  },
+  modulePlaceholderText: {
+    color: "var(--text-muted)",
+    fontSize: 16,
+    lineHeight: 1.6,
+    maxWidth: 780,
+  },
+
+  searchRow: {
+    display: "flex",
+    gap: 12,
+    marginBottom: 14,
+  },
+  recordsList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+  },
+  recordCard: {
+    background: "var(--outline-bg)",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 18,
+    padding: 18,
+    boxShadow: "0 10px 20px rgba(0,0,0,0.10)",
+  },
+  recordTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 12,
+    flexWrap: "wrap",
+  },
+  recordNumber: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: "var(--brand-accent)",
+    marginBottom: 4,
+  },
+  recordName: {
+    fontSize: 20,
+    fontWeight: 700,
+    color: "var(--text-main)",
+    marginBottom: 4,
+  },
+  recordMeta: {
+    fontSize: 13,
+    color: "#6A7D87",
+  },
+  recordGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 10,
+    color: "var(--text-soft)",
+    fontSize: 14,
+    marginBottom: 14,
+  },
+  recordActions: {
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  statusBadge: {
+    background: "var(--info-pill-bg)",
+    color: "var(--brand-accent)",
+    border: "1px solid #CDEBF1",
+    borderRadius: 999,
+    padding: "8px 12px",
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  outlineDangerBtn: {
+    background: "var(--outline-bg)",
+    color: "var(--danger-text)",
+    border: "1px solid var(--danger-border)",
+    padding: "10px 14px",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontWeight: 700,
+  },
+
+  operationalCard: {
+    background: "var(--outline-bg)",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 18,
+    padding: 18,
+    boxShadow: "0 10px 20px rgba(0,0,0,0.10)",
+  },
+  operationalHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
+    marginBottom: 10,
+  },
+  operationGrid: {
+    display: "grid",
+    gap: 12,
+  },
+  operationRow: {
+    background: "var(--card-bg-alt)",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 16,
+    padding: 14,
+    display: "grid",
+    gridTemplateColumns:
+      "minmax(180px, 1.1fr) minmax(140px, 0.8fr) minmax(260px, 1.2fr) auto",
+    gap: 12,
+    alignItems: "center",
+  },
+  operationMain: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  operationName: {
+    color: "var(--text-main)",
+    fontSize: 16,
+    fontWeight: 800,
+  },
+  operationStatusBase: {
+    borderRadius: 999,
+    padding: "8px 12px",
+    fontWeight: 700,
+    fontSize: 12,
+    border: "1px solid transparent",
+  },
+  operationStatusWaiting: {
+    background: "#F2F5F7",
+    color: "#6B7B83",
+    borderColor: "#D7E0E5",
+  },
+  operationStatusRunning: {
+    background: "#E6F7FD",
+    color: "#0C7FA3",
+    borderColor: "#BEE5F0",
+  },
+  operationStatusDone: {
+    background: "#E7F7EC",
+    color: "#237A45",
+    borderColor: "#C5E7D0",
+  },
+  operationTimes: {
+    display: "grid",
+    gap: 4,
+    color: "var(--text-muted)",
+    fontSize: 13,
+  },
+  operationTransportGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 10,
+    alignItems: "end",
+  },
+  operationResponsibleGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: 10,
+    alignItems: "end",
+  },
+  operationActions: {
+    display: "flex",
+    gap: 8,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+  },
+
+  acompanhamentoWrap: {
+    display: "grid",
+    gap: 16,
+  },
+  acompanhamentoHero: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    padding: 18,
+    borderRadius: 18,
+    background: "var(--card-bg-alt)",
+    border: "1px solid var(--border-soft)",
+    flexWrap: "wrap",
+  },
+  acompanhamentoInfoGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 12,
+    background: "var(--card-bg-soft)",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 16,
+    padding: 16,
+  },
+  acompanhamentoStages: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+    gap: 14,
+  },
+  acompanhamentoStageCard: {
+    background: "var(--card-bg-soft)",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 16,
+    padding: 16,
+    display: "grid",
+    gap: 10,
+  },
+  acompanhamentoTimes: {
+    display: "grid",
+    gap: 4,
+    color: "var(--text-soft)",
+    fontSize: 14,
+  },
+  acompanhamentoExtra: {
+    display: "grid",
+    gap: 4,
+    color: "var(--text-main)",
+    fontSize: 14,
+    paddingTop: 6,
+    borderTop: "1px solid #E6F0F4",
+  },
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(8, 22, 28, 0.55)",
+    padding: 20,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalBox: {
+    width: "100%",
+    maxWidth: 1150,
+    maxHeight: "90vh",
+    overflowY: "auto",
+    background: "var(--card-bg-soft)",
+    borderRadius: 18,
+    padding: 18,
+    boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+  },
+  modalHead: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 16,
+  },
+  servicesGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 14,
+  },
+  serviceCard: {
+    border: "1px solid",
+    borderRadius: 14,
+    padding: 14,
+  },
+  serviceTop: {
+    marginBottom: 12,
+  },
+  previewOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.6)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+    padding: 20,
+  },
+
+  previewModal: {
+    width: "100%",
+    maxWidth: 1100,
+    height: "90vh",
+    background: "var(--card-bg)",
+    border: "1px solid var(--border-soft)",
+    borderRadius: 18,
+    boxShadow: "var(--shadow-main)",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+  },
+
+  previewHeader: {
+    padding: 16,
+    borderBottom: "1px solid var(--border-soft)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+
+  previewFrame: {
+    width: "100%",
+    height: "100%",
+    border: "none",
+    background: "#fff",
+  },
 };
