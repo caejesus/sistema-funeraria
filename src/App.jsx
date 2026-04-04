@@ -1811,7 +1811,8 @@ openPdfPreview(doc, filename, "Pré-visualização da Ficha");
       funeraria: form.velorioTipo === "funeraria",
       residencia: form.velorioTipo === "residencia",
       igreja: form.velorioTipo === "igreja",
-      interior: !["funeraria", "residencia", "igreja"].includes(form.velorioTipo),
+      viagem: form.velorioTipo === "viagem",
+      interior: form.velorioTipo === "interior",
     };
 
     let modeloUrnaTexto = upper(form.modeloUrna);
@@ -1945,7 +1946,7 @@ openPdfPreview(doc, filename, "Pré-visualização da Ficha");
     checkboxOption(48, y, localVelorioMarcacao.funeraria, "funerária");
     checkboxOption(86, y, localVelorioMarcacao.residencia, "residência");
     checkboxOption(128, y, localVelorioMarcacao.igreja, "igreja");
-    checkboxOption(158, y, localVelorioMarcacao.interior, "interior");
+    checkboxOption(158, y, localVelorioMarcacao.viagem, "vai viajar");
 
     y += 8;
     writeLineValue("· Sala:", upper(form.velorioSala), left, y, 26, 92, { valueX: 27.5 });
@@ -2793,13 +2794,28 @@ function printPreviewPdf() {
                   style={styles.input}
                   value={form.velorioTipo}
                   onChange={(e) => {
-                    updateForm("velorioTipo", e.target.value);
-                    if (e.target.value !== "funeraria") {
+                    const value = e.target.value;
+                    updateForm("velorioTipo", value);
+
+                    if (value !== "funeraria") {
                       updateForm("velorioUnidade", "");
                       updateForm("velorioSala", "");
                     }
-                    if (e.target.value !== "igreja") {
+
+                    if (value !== "igreja") {
                       updateForm("velorioNomeLocal", "");
+                    }
+
+                    if (value !== "residencia" && value !== "igreja") {
+                      updateForm("velorioCep", "");
+                      updateForm("velorioEndereco", "");
+                      updateForm("velorioNumero", "");
+                      updateForm("velorioBairro", "");
+                    }
+
+                    if (value !== "viagem") {
+                      updateForm("cidadeDestino", "");
+                      updateForm("embarque", "");
                     }
                   }}
                 >
@@ -2849,7 +2865,7 @@ function printPreviewPdf() {
                 </>
               )}
 
-              {form.velorioTipo !== "funeraria" && (
+              {(form.velorioTipo === "residencia" || form.velorioTipo === "igreja") && (
                 <>
                   {form.velorioTipo === "igreja" && (
                     <div style={styles.fieldWide}>
@@ -2903,6 +2919,35 @@ function printPreviewPdf() {
                       value={form.velorioBairro}
                       onChange={(e) => updateForm("velorioBairro", e.target.value)}
                     />
+                  </div>
+                </>
+              )}
+
+              {form.velorioTipo === "viagem" && (
+                <>
+                  <div style={styles.fieldWide}>
+                    <label style={styles.label}>Cidade de destino</label>
+                    <input
+                      style={styles.input}
+                      value={form.cidadeDestino}
+                      onChange={(e) => updateForm("cidadeDestino", e.target.value)}
+                    />
+                  </div>
+
+                  <div style={styles.field}>
+                    <label style={styles.label}>Embarque</label>
+                    <select
+                      style={styles.input}
+                      value={form.embarque}
+                      onChange={(e) => updateForm("embarque", e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {settings.embarques.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </>
               )}
