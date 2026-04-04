@@ -4,6 +4,7 @@ import { supabase } from "./lib/supabaseClient.js";
 import Equipe from "./pages/Equipe.jsx";
 import AcompanhamentoPublico from "./AcompanhamentoPublico.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import "./styles/app-modern-clean.css";
 
 const STORAGE_KEYS = {
   users: "sf_users_v3",
@@ -14,7 +15,7 @@ const STORAGE_KEYS = {
 };
 
 const OPERATION_STAGES = [
-  { key: "atendimento", label: "Atendimento" },
+  { key: "atendimento", label: "Serviço" },
   { key: "remocao", label: "Remoção" },
   { key: "procedimentoClinico", label: "Procedimento Clínico" },
   { key: "ornamentacao", label: "Ornamentação" },
@@ -389,6 +390,19 @@ function getThemeVars(isDark) {
   };
 }
 
+
+
+function normalizeRole(role = "") {
+  return role === "OPERADOR" ? "ATENDENTE" : role;
+}
+
+function getRoleUiLabel(role = "") {
+  const normalized = normalizeRole(role);
+  if (normalized === "ADM") return "ADM";
+  if (normalized === "EQUIPE") return "EQUIPE";
+  return "ATENDENTE";
+}
+
 function getInitials(name = "") {
   return String(name)
     .trim()
@@ -465,7 +479,7 @@ useEffect(() => {
     name: "",
     login: "",
     password: "",
-    role: "OPERADOR",
+    role: "ATENDENTE",
   });
 
   const [theme, setTheme] = useState(() =>
@@ -495,7 +509,7 @@ const [pdfPreview, setPdfPreview] = useState({
   useEffect(() => {
     const savedSession = loadStorage(STORAGE_KEYS.session, null);
     if (savedSession) {
-      setSession(savedSession);
+      setSession({ ...savedSession, role: normalizeRole(savedSession?.role) });
     }
   }, []);
 
@@ -703,7 +717,7 @@ const [pdfPreview, setPdfPreview] = useState({
               name: user.name || "",
               login: user.login || "",
               password: user.password || "",
-              role: user.role || "OPERADOR",
+              role: normalizeRole(user.role || "ATENDENTE"),
             })
           );
 
@@ -749,11 +763,11 @@ const [pdfPreview, setPdfPreview] = useState({
           });
         }
 
-        setUsers(finalUsers);
+        setUsers((finalUsers || []).map((user) => ({ ...user, role: normalizeRole(user.role) })));
         setSettings(finalSettings);
       } catch (error) {
         console.error("Erro ao carregar usuários/configurações:", error);
-        setUsers(localUsers || DEFAULT_USERS);
+        setUsers((localUsers || DEFAULT_USERS).map((user) => ({ ...user, role: normalizeRole(user.role) })));
         setSettings(localSettings || DEFAULT_SETTINGS);
         alert("Não foi possível sincronizar usuários e configurações com o banco. O sistema usará os dados locais deste navegador.");
       } finally {
@@ -824,8 +838,9 @@ const [pdfPreview, setPdfPreview] = useState({
       return;
     }
 
-    setSession(user);
-    saveStorage(STORAGE_KEYS.session, user);
+    const normalizedUser = { ...user, role: normalizeRole(user.role) };
+    setSession(normalizedUser);
+    saveStorage(STORAGE_KEYS.session, normalizedUser);
     setLoginError("");
   }
 
@@ -1370,7 +1385,7 @@ const [pdfPreview, setPdfPreview] = useState({
       name: "",
       login: "",
       password: "",
-      role: "OPERADOR",
+      role: "ATENDENTE",
     });
   }
 
@@ -1822,7 +1837,8 @@ openPdfPreview(doc, filename, "Pré-visualização da Ficha");
       funeraria: form.velorioTipo === "funeraria",
       residencia: form.velorioTipo === "residencia",
       igreja: form.velorioTipo === "igreja",
-      interior: !["funeraria", "residencia", "igreja"].includes(form.velorioTipo),
+      viagem: form.velorioTipo === "viagem",
+      interior: form.velorioTipo === "interior",
     };
 
     let modeloUrnaTexto = upper(form.modeloUrna);
@@ -1956,7 +1972,7 @@ openPdfPreview(doc, filename, "Pré-visualização da Ficha");
     checkboxOption(48, y, localVelorioMarcacao.funeraria, "funerária");
     checkboxOption(86, y, localVelorioMarcacao.residencia, "residência");
     checkboxOption(128, y, localVelorioMarcacao.igreja, "igreja");
-    checkboxOption(158, y, localVelorioMarcacao.interior, "interior");
+    checkboxOption(158, y, localVelorioMarcacao.viagem, "vai viajar");
 
     y += 8;
     writeLineValue("· Sala:", upper(form.velorioSala), left, y, 26, 92, { valueX: 27.5 });
@@ -2066,7 +2082,7 @@ function printPreviewPdf() {
     );
   }
 
-  if (session && session.role === "EQUIPE") {
+  if (session && normalizeRole(session.role) === "EQUIPE") {
     return renderEquipeContainer();
   }
 
@@ -2089,7 +2105,7 @@ function printPreviewPdf() {
         </div>
 
         <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Atendimento Finalizado</h2>
+          <h2 style={styles.cardTitle}>Serviço Finalizado</h2>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <button
@@ -2106,7 +2122,7 @@ function printPreviewPdf() {
                 setActiveTab("atendimentos");
               }}
             >
-              <><i className="fa-solid fa-rectangle-list" style={styles.buttonIcon} /> Atendimentos</>
+              <><i className="fa-solid fa-rectangle-list" style={styles.buttonIcon} /> Serviços</>
             </button>
 
             <button style={styles.primaryBtn} onClick={gerarFichaPDF}>
@@ -2219,54 +2235,56 @@ function printPreviewPdf() {
   }
 
   return (
-    <div style={{ ...styles.page, ...themeVars }}>
-      <header style={styles.header}>
-        <div style={styles.headerBrand}>
-          <img
-            src="/logo.png"
-            alt="Logo Grupo São Francisco"
-            style={styles.headerLogo}
-          />
-          <div>
-            <div style={styles.brandTop}>GRUPO SÃO FRANCISCO</div>
-            <div style={styles.brandSub}>Assistência e cuidado em todos os momentos</div>
-          </div>
-        </div>
-
-        <div style={styles.headerTools}>
-          <div style={styles.headerSearch}>
-            <i className="fa-solid fa-magnifying-glass" style={styles.searchIcon} />
-            <input
-              style={styles.headerSearchInput}
-              placeholder="Buscar atendimento, responsável ou número"
-              value={attendanceSearch}
-              onChange={(e) => setAttendanceSearch(e.target.value)}
+    <div className="app-shell" style={themeVars}>
+      {activeTab === "home" && (
+        <header className="home-header">
+          <div className="home-brand">
+            <img
+              src="/logo.png"
+              alt="Logo Grupo São Francisco"
+              className="home-brand-logo"
             />
-          </div>
-
-          <button style={styles.notificationBtn} type="button" title="Notificações">
-            <i className="fa-solid fa-bell" />
-          </button>
-
-          <div style={styles.userBox}>
-            <div style={styles.userAvatar}>{getInitials(session.name)}</div>
-            <div style={styles.userMeta}>
-              <div style={styles.userName}>{session.name}</div>
-              <div style={styles.userRole}>{session.role}</div>
+            <div className="home-brand-copy">
+              <div className="home-brand-title">GRUPO SÃO FRANCISCO</div>
+              <div className="home-brand-subtitle">Assistência e cuidado em todos os momentos</div>
             </div>
           </div>
 
-          <button
-            style={styles.outlineBtn}
-            onClick={() => setTheme(isDark ? "light" : "dark")}
-          >
-            {isDark ? <><i className="fa-solid fa-sun" style={styles.buttonIcon} /> Claro</> : <><i className="fa-solid fa-moon" style={styles.buttonIcon} /> Escuro</>}
-          </button>
-          <button style={styles.outlineBtn} onClick={handleLogout}>
-            <i className="fa-solid fa-right-from-bracket" style={styles.buttonIcon} /> Sair
-          </button>
-        </div>
-      </header>
+          <div className="home-actions">
+            <div className="user-pill">
+              <div className="user-pill-avatar">
+                {getInitials(session?.name || "U")}
+              </div>
+              <div className="user-pill-copy">
+                <span className="user-pill-label">{session?.name}</span>
+                <span className="user-pill-sublabel">{getRoleUiLabel(session?.role)}</span>
+              </div>
+            </div>
+
+            {normalizeRole(session?.role) === "ADM" && (
+              <button
+                className="home-utility-button"
+                onClick={() => setActiveTab("config")}
+                title="Configurações"
+              >
+                <i className="fa-solid fa-gear" />
+              </button>
+            )}
+
+            <button
+              className="home-utility-button"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              title={isDark ? "Claro" : "Escuro"}
+            >
+              <i className={`fa-solid ${isDark ? "fa-sun" : "fa-moon"}`} />
+            </button>
+
+            <button className="home-utility-button" onClick={handleLogout} title="Sair">
+              <i className="fa-solid fa-right-from-bracket" />
+            </button>
+          </div>
+        </header>
+      )}
 
       {activeTab !== "home" && (
         <div style={styles.tabs}>
@@ -2281,21 +2299,21 @@ function printPreviewPdf() {
             style={activeTab === "atendimento" ? styles.tabActive : styles.tab}
             onClick={() => setActiveTab("atendimento")}
           >
-            Novo Atendimento
+            Novo Serviço
           </button>
 
           <button
             style={activeTab === "atendimentos" ? styles.tabActive : styles.tab}
             onClick={() => setActiveTab("atendimentos")}
           >
-            Atendimentos
+            Serviços
           </button>
 
           <button
             style={activeTab === "operacional" ? styles.tabActive : styles.tab}
             onClick={() => setActiveTab("operacional")}
           >
-            Painel Operacional
+            Gestão de Etapas
           </button>
 
           <button
@@ -2305,7 +2323,7 @@ function printPreviewPdf() {
             Equipe
           </button>
 
-          {session.role === "ADM" && (
+          {normalizeRole(session?.role) === "ADM" && (
             <button
               style={activeTab === "config" ? styles.tabActive : styles.tab}
               onClick={() => setActiveTab("config")}
@@ -2317,73 +2335,65 @@ function printPreviewPdf() {
       )}
 
       {activeTab === "home" && (
-        <>
-          <section style={styles.homeHero}>
-            <div style={styles.homeGrid}>
-              <button
-                style={styles.homeCard}
-                onClick={() => {
-                  resetAtendimento();
-                  setFinalizado(false);
-                  setActiveTab("atendimento");
-                }}
-              >
-                <div style={styles.homeCardIcon}><i className="fa-solid fa-circle-plus" /></div>
-                <div>
-                  <div style={styles.homeCardTitle}>NOVO ATENDIMENTO</div>
-                  <div style={styles.homeCardText}>Iniciar novo registro</div>
-                </div>
-              </button>
+        <section className="home-screen">
+          <div className="home-cards-grid">
+            <button
+              className="home-action-card"
+              onClick={() => {
+                resetAtendimento();
+                setFinalizado(false);
+                setActiveTab("atendimento");
+              }}
+            >
+              <div className="home-action-icon">
+                <i className="fa-solid fa-circle-plus" />
+              </div>
+              <div className="home-action-content">
+                <div className="home-action-title">NOVO SERVIÇO</div>
+                <div className="home-action-text">Iniciar novo serviço</div>
+              </div>
+            </button>
 
-              <button
-                style={styles.homeCard}
-                onClick={() => setActiveTab("atendimentos")}
-              >
-                <div style={styles.homeCardIcon}><i className="fa-solid fa-file-invoice" /></div>
-                <div>
-                  <div style={styles.homeCardTitle}>ATENDIMENTOS</div>
-                  <div style={styles.homeCardText}>Consultar, editar e reabrir registros</div>
-                </div>
-              </button>
+            <button
+              className="home-action-card"
+              onClick={() => setActiveTab("atendimentos")}
+            >
+              <div className="home-action-icon">
+                <i className="fa-solid fa-file-lines" />
+              </div>
+              <div className="home-action-content">
+                <div className="home-action-title">SERVIÇOS</div>
+                <div className="home-action-text">Consultar, editar e reabrir registros</div>
+              </div>
+            </button>
 
-              <button
-                style={styles.homeCard}
-                onClick={() => setActiveTab("operacional")}
-              >
-                <div style={styles.homeCardIcon}><i className="fa-solid fa-chart-line" /></div>
-                <div>
-                  <div style={styles.homeCardTitle}>PAINEL OPERACIONAL</div>
-                  <div style={styles.homeCardText}>Acompanhar serviços em andamento</div>
-                </div>
-              </button>
+            <button
+              className="home-action-card"
+              onClick={() => setActiveTab("operacional")}
+            >
+              <div className="home-action-icon">
+                <i className="fa-solid fa-diagram-project" />
+              </div>
+              <div className="home-action-content">
+                <div className="home-action-title">GESTÃO DE ETAPAS</div>
+                <div className="home-action-text">Acompanhar etapas e serviços em andamento</div>
+              </div>
+            </button>
+          </div>
 
-              <button
-                style={styles.homeCard}
-                onClick={() =>
-                  session.role === "ADM"
-                    ? setActiveTab("config")
-                    : alert("Somente administradores acessam as configurações.")
-                }
-              >
-                <div style={styles.homeCardIcon}><i className="fa-solid fa-gear" /></div>
-                <div>
-                  <div style={styles.homeCardTitle}>CONFIGURAÇÕES</div>
-                  <div style={styles.homeCardText}>Gerenciar cadastros do sistema</div>
-                </div>
-              </button>
-            </div>
-          </section>
-
-        </>
+          <footer className="home-footer">
+            © 2026 Caetano Digital System. All Rights Reserved.
+          </footer>
+        </section>
       )}
 
       {activeTab === "atendimentos" && (
         <section style={styles.moduleCard}>
           <div style={styles.moduleHeader}>
             <div>
-              <h2 style={styles.moduleTitle}>Atendimentos</h2>
+              <h2 style={styles.moduleTitle}>Serviços</h2>
               <p style={styles.moduleSub}>
-                Consulte os atendimentos salvos, abra novamente para PDF e edite quando precisar.
+                Consulte os serviços salvos, abra novamente para PDF e edite quando precisar.
               </p>
             </div>
             <button
@@ -2394,13 +2404,13 @@ function printPreviewPdf() {
                 setActiveTab("atendimento");
               }}
             >
-              Novo Atendimento
+              Novo Serviço
             </button>
           </div>
 
           <div style={styles.searchRow}>
             <div style={{ ...styles.field, marginBottom: 0, flex: 1 }}>
-              <label style={styles.label}>Buscar atendimento</label>
+              <label style={styles.label}>Buscar serviço</label>
               <input
                 style={styles.input}
                 placeholder="Buscar por número, falecido, responsável, unidade, cemitério..."
@@ -2497,7 +2507,7 @@ function printPreviewPdf() {
         <section style={styles.moduleCard}>
           <div style={styles.moduleHeader}>
             <div>
-              <h2 style={styles.moduleTitle}>Painel Operacional</h2>
+              <h2 style={styles.moduleTitle}>Gestão de Etapas</h2>
               <p style={styles.moduleSub}>
                 Controle o início e o fim de cada etapa do atendimento.
               </p>
@@ -2714,7 +2724,7 @@ function printPreviewPdf() {
                                 stage.key !== "procedimentoClinico" &&
                                 stage.key !== "ornamentacao" && <div />}
 
-                              {(session?.role === "ADM" || session?.role === "OPERADOR") && (
+                              {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE") && (
                                 <div style={{ marginTop: 10, display: "grid", gap: 6 }}>
                                   <div style={styles.infoRow}>
                                     <div style={styles.infoPill}>
@@ -2755,7 +2765,6 @@ function printPreviewPdf() {
           )}
 
           <div style={styles.moduleFooterNote}>
-            Depois podemos liberar um link só para visualização do andamento.
           </div>
         </section>
       )}
@@ -2778,7 +2787,7 @@ function printPreviewPdf() {
               style={styles.sectionToggle}
               onClick={() => toggleSection("atendimentoParte1")}
             >
-              <span style={styles.cardTitle}>Parte 1 — Atendimento</span>
+              <span style={styles.cardTitle}>Parte 1 — Serviço</span>
               <span style={styles.sectionToggleIcon}>
                 {collapsedSections.atendimentoParte1 ? "＋" : "−"}
               </span>
@@ -2834,13 +2843,24 @@ function printPreviewPdf() {
                   style={styles.input}
                   value={form.velorioTipo}
                   onChange={(e) => {
-                    updateForm("velorioTipo", e.target.value);
-                    if (e.target.value !== "funeraria") {
+                    const value = e.target.value;
+                    updateForm("velorioTipo", value);
+                    if (value !== "funeraria") {
                       updateForm("velorioUnidade", "");
                       updateForm("velorioSala", "");
                     }
-                    if (e.target.value !== "igreja") {
+                    if (value !== "igreja") {
                       updateForm("velorioNomeLocal", "");
+                    }
+                    if (value !== "residencia" && value !== "igreja") {
+                      updateForm("velorioCep", "");
+                      updateForm("velorioEndereco", "");
+                      updateForm("velorioNumero", "");
+                      updateForm("velorioBairro", "");
+                    }
+                    if (value !== "viagem") {
+                      updateForm("cidadeDestino", "");
+                      updateForm("embarque", "");
                     }
                   }}
                 >
@@ -2890,7 +2910,7 @@ function printPreviewPdf() {
                 </>
               )}
 
-              {form.velorioTipo !== "funeraria" && (
+              {(form.velorioTipo === "residencia" || form.velorioTipo === "igreja") && (
                 <>
                   {form.velorioTipo === "igreja" && (
                     <div style={styles.fieldWide}>
@@ -2948,6 +2968,35 @@ function printPreviewPdf() {
                 </>
               )}
 
+              {form.velorioTipo === "viagem" && (
+                <>
+                  <div style={styles.fieldWide}>
+                    <label style={styles.label}>Cidade de destino</label>
+                    <input
+                      style={styles.input}
+                      value={form.cidadeDestino}
+                      onChange={(e) => updateForm("cidadeDestino", e.target.value)}
+                    />
+                  </div>
+
+                  <div style={styles.field}>
+                    <label style={styles.label}>Local de embarque</label>
+                    <select
+                      style={styles.input}
+                      value={form.embarque}
+                      onChange={(e) => updateForm("embarque", e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {settings.embarques.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
               <div style={styles.field}>
                 <label style={styles.label}>Data/Falecimento</label>
                 <input
@@ -2989,7 +3038,7 @@ function printPreviewPdf() {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Hora/Atendimento</label>
+                <label style={styles.label}>Hora/Serviço</label>
                 <input
                   type="time"
                   style={styles.input}
@@ -2999,7 +3048,7 @@ function printPreviewPdf() {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Data/Atendimento</label>
+                <label style={styles.label}>Data/Serviço</label>
                 <input
                   type="date"
                   style={styles.input}
@@ -3641,7 +3690,7 @@ function printPreviewPdf() {
               }}
             >
               <button style={styles.primaryBtn} onClick={finalizarAtendimento}>
-                Finalizar Atendimento
+                Finalizar Serviço
               </button>
             </div>
               </>
@@ -3650,7 +3699,7 @@ function printPreviewPdf() {
         </>
       )}
 
-      {activeTab === "config" && session.role === "ADM" && (
+      {activeTab === "config" && normalizeRole(session.role) === "ADM" && (
         <div style={styles.grid2}>
           <section style={styles.card}>
             <h2 style={styles.cardTitle}>Usuários</h2>
@@ -3699,7 +3748,7 @@ function printPreviewPdf() {
                   }
                 >
                   <option value="ADM">ADM</option>
-                  <option value="OPERADOR">Operador</option>
+                  <option value="ATENDENTE">Atendente</option>
                   <option value="EQUIPE">Equipe</option>
                 </select>
               </div>
