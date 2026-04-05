@@ -15,12 +15,12 @@
 .home-header {
   width: 100%;
   max-width: var(--home-max-width);
-  margin: 0 auto 28px;
+  margin: 0 auto 24px;
   background: var(--header-box-bg, #ffffff);
   border: 1px solid var(--border-soft, #e5ecea);
   border-radius: var(--home-header-radius);
   box-shadow: var(--shadow-main, 0 10px 30px rgba(0, 0, 0, 0.05));
-  padding: 20px 24px;
+  padding: 18px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -148,16 +148,20 @@
   width: 100%;
   max-width: var(--home-max-width);
   margin: 0 auto;
-  min-height: calc(100vh - 180px);
+  min-height: calc(100vh - 160px);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 24px;
 }
 
 .home-cards-grid,
 .home-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
   gap: 22px;
   align-items: stretch;
 }
@@ -165,10 +169,10 @@
 .home-action-card,
 .home-card-button {
   width: 100%;
-  min-height: 132px;
+  min-height: 110px;
   border: 0;
   border-radius: var(--home-card-radius);
-  padding: 24px 22px;
+  padding: 18px 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -223,7 +227,9 @@
 .home-footer {
   width: 100%;
   max-width: var(--home-max-width);
-  margin: 34px auto 0;
+  margin: 0 auto;
+  margin-top: auto;
+  padding-top: 24px;
   text-align: center;
   font-size: 0.86rem;
   color: var(--text-muted, #666666);
@@ -275,6 +281,7 @@
   .home-cards-grid,
   .home-cards {
     grid-template-columns: 1fr;
+    max-width: 100%;
   }
 }
 
@@ -318,8 +325,8 @@
 
   .home-action-card,
   .home-card-button {
-    min-height: 118px;
-    padding: 20px;
+    min-height: 104px;
+    padding: 18px;
   }
 
   .home-action-title,
