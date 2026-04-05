@@ -1,74 +1,74 @@
-/* 1. IMPORTAÇÃO DA FONTE MODERNA */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* 2. RESET E ESTILO GLOBAL */
+:root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+  background: #f4f7f6;
+  color: #17313a;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 * {
   box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
 }
 
 body {
-  margin: 0;
+  min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f4f7f6; /* O cinza claro da imagem */
+  background: #f4f7f6;
   color: #17313a;
-  -webkit-font-smoothing: antialiased;
 }
 
-/* 3. BARRA DE ROLAGEM PERSONALIZADA (Estilo Software Moderno) */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #edf2f1;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #26b1c4; /* Azul Turquesa */
-  border-radius: 10px;
+  background: #26b1c4;
+  border-radius: 999px;
+  border: 2px solid #edf2f1;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #1e8ea0;
+  background: #1f95a6;
 }
 
-/* 4. ANIMAÇÕES NOS CARDS E BOTÕES */
-button, .card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-/* Efeito de "Levitar" ao passar o rato nos botões da Home */
-button:hover {
-  transform: translateY(-4px);
-  filter: brightness(1.05);
-  box-shadow: 0 12px 24px rgba(38, 177, 196, 0.25) !important;
-}
-
-button:active {
-  transform: translateY(0);
-}
-
-/* 5. AJUSTE DE INPUTS (Formulários) */
-input, select, textarea {
-  font-family: 'Inter', sans-serif !important;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-input:focus, select:focus {
-  border-color: #26b1c4 !important;
-  box-shadow: 0 0 0 3px rgba(38, 177, 196, 0.1) !important;
-  outline: none;
-}
-
-/* 6. ESTILO PARA O TEXTO DO USER PILL (Header) */
-header span {
-  letter-spacing: -0.2px;
-}
-
-/* 7. CLASSES AUXILIARES PARA DAR BRILHO AO DESIGN */
 .glass-effect {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
