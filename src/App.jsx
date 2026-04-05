@@ -4,7 +4,7 @@ import { supabase } from "./lib/supabaseClient.js";
 import Equipe from "./pages/Equipe.jsx";
 import AcompanhamentoPublico from "./AcompanhamentoPublico.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import "./styles/app-modern-clean.css";
+import "./App.css";
 
 const STORAGE_KEYS = {
   users: "sf_users_v3",
