@@ -1449,321 +1449,178 @@ const [pdfPreview, setPdfPreview] = useState({
     "Fones: (092) 3633-8095 / 3234-4499 / 3308-3966 / 3308-3966  CEP: 69065-000",
     105,
     y + 18.2,
-    {
-      align: "center",
-    }
+    { align: "center" }
   );
   doc.text(
     "Avenida Carvalho Leal, N°1.000 – Cachoeirinha / Manaus – AM",
     105,
     y + 22.4,
-    {
-      align: "center",
-    }
+    { align: "center" }
   );
 
   y += 26;
 
+  // 🔹 BLOCO INICIAL
   drawCell(doc, left, y, 200, 6.2, `FALECIDO: ${form.falecido}`, {
     bold: true,
-    fontSize: 9.8,
+    fontSize: 10.5,
   });
   y += 6.2;
 
-  drawCell(doc, left, y, 150, 6.1, `LOCAL DO ÓBITO: ${form.localObito}`, {
+  drawCell(doc, left, y, 150, 6.0, `LOCAL DO ÓBITO: ${form.localObito}`, {
     bold: true,
-    fontSize: 8.9,
+    fontSize: 9.5,
   });
-  drawCell(
-    doc,
-    155,
-    y,
-    50,
-    6.1,
-    `DATA/SAÍDA: ${formatDateBR(form.dataSaida)}`,
-    {
-      bold: true,
-      fontSize: 8.9,
-    }
-  );
-  y += 6.1;
-
-  drawCell(doc, left, y, 150, 6.1, `CEMITÉRIO: ${form.cemiterio}`, {
+  drawCell(doc, 155, y, 50, 6.0, `DATA/SAÍDA: ${formatDateBR(form.dataSaida)}`, {
     bold: true,
-    fontSize: 8.9,
+    fontSize: 9.5,
   });
-  drawCell(doc, 155, y, 50, 6.1, `HORA/SAÍDA: ${form.horaSaida}`, {
+  y += 6.0;
+
+  drawCell(doc, left, y, 150, 6.0, `CEMITÉRIO: ${form.cemiterio}`, {
     bold: true,
-    fontSize: 8.9,
+    fontSize: 9.5,
   });
-  y += 6.1;
-
-  drawCell(doc, left, y, 200, 6.1, `HORA/ATEND: ${form.horaAtendimento}`, {
+  drawCell(doc, 155, y, 50, 6.0, `HORA/SAÍDA: ${form.horaSaida}`, {
     bold: true,
-    fontSize: 8.8,
+    fontSize: 9.5,
   });
-  y += 6.1;
+  y += 6.0;
 
-  drawCell(
-    doc,
-    left,
-    y,
-    60,
-    6.1,
-    `DATA/ATEND: ${formatDateBR(form.dataAtendimento)}`,
-    {
-      bold: true,
-      fontSize: 8.6,
-    }
-  );
-  drawCell(
-    doc,
-    65,
-    y,
-    95,
-    6.1,
-    `CHEGOU NA CLÍNICA ÀS: ${form.chegouClinica}`,
-    {
-      bold: true,
-      fontSize: 8.3,
-    }
-  );
-  drawCell(doc, 160, y, 45, 6.1, `INÍCIO ÀS: ${form.inicioAs}`, {
-    bold: true,
-    fontSize: 8.6,
-  });
-  y += 6.1;
-
-  if (form.tipoPlano === "socio") {
-    drawCell(doc, left, y, 55, 6.1, `PLANO: ${form.plano}`, {
-      fontSize: 8.6,
-    });
-    drawCell(doc, 60, y, 45, 6.1, `CÓDIGO: ${form.codigo}`, {
-      fontSize: 8.6,
-    });
-    drawCell(doc, 105, y, 100, 6.1, `DEPENDENTE: ${form.dependente}`, {
-      fontSize: 8.6,
-    });
-  } else {
-    drawCell(doc, left, y, 200, 6.1, `PLANO: SERVIÇO PARTICULAR`, {
-      fontSize: 8.6,
-    });
-  }
-  y += 6.8;
-
-  drawCell(doc, left, y, 200, 6.0, "SERVIÇOS PRESTADOS", {
+  drawCell(doc, left, y, 200, 6.0, `HORA/ATEND: ${form.horaAtendimento}`, {
     bold: true,
     fontSize: 9.3,
-    align: "center",
   });
   y += 6.0;
 
-  drawCell(doc, left, y, 8, 5.4, "", {});
-  drawCell(doc, 13, y, 152, 5.4, "", {});
-  drawCell(doc, 165, y, 20, 5.4, "QUANT.", {
-    fontSize: 8.1,
-    align: "center",
-  });
-  drawCell(doc, 185, y, 20, 5.4, "VALOR:", {
-    fontSize: 8.1,
-    align: "center",
-  });
-  y += 5.4;
-
-  services.forEach((item) => {
-    let label = item.name;
-
-    if (item.name === "COROA DE FLORES" && item.note) {
-      label += `     FRASE: ${item.note}`;
-    }
-
-    if (item.name === "OUTRAS DESPESAS" && item.note) {
-      label += ` ${item.note}`;
-    }
-
-    drawCell(doc, left, y, 8, 5.0, item.checked ? "X" : "", {
-      fontSize: 8.6,
-      bold: true,
-      align: "center",
-      offsetY: 1.1,
-    });
-
-    drawCell(doc, 13, y, 152, 5.0, label, {
-      fontSize: item.name === "COROA DE FLORES" ? 7.4 : 8.2,
-      paddingLeft: 1.5,
-    });
-
-    drawCell(doc, 165, y, 20, 5.0, item.qty || "", {
-      fontSize: 7.9,
-      align: "center",
-    });
-
-    drawCell(
-      doc,
-      185,
-      y,
-      20,
-      5.0,
-      item.value ? formatMoney(item.value) : "",
-      {
-        fontSize: 7.9,
-        align: "center",
-      }
-    );
-
-    y += 5.0;
-  });
-
-  drawCell(doc, left, y, 180, 5.8, "VALOR TOTAL:", {
-    bold: true,
-    fontSize: 8.5,
-  });
-  drawCell(doc, 185, y, 20, 5.8, formatMoney(totalValue), {
-    bold: true,
-    fontSize: 8.2,
-    align: "center",
-  });
-  y += 7.0;
-
-  drawCell(doc, left, y, 200, 6.0, "DADOS DO RESPONSÁVEL", {
+  drawCell(doc, left, y, 60, 6.0, `DATA/ATEND: ${formatDateBR(form.dataAtendimento)}`, {
     bold: true,
     fontSize: 9.2,
-    align: "center",
+  });
+  drawCell(doc, 65, y, 95, 6.0, `CHEGOU NA CLÍNICA ÀS: ${form.chegouClinica}`, {
+    bold: true,
+    fontSize: 9.0,
+  });
+  drawCell(doc, 160, y, 45, 6.0, `INÍCIO ÀS: ${form.inicioAs}`, {
+    bold: true,
+    fontSize: 9.2,
   });
   y += 6.0;
 
-  drawCell(doc, left, y, 145, 6.1, `NOME: ${form.responsavelNome}`, {
-    fontSize: 8.4,
+  // 🔹 SERVIÇOS
+  drawCell(doc, left, y, 200, 5.5, "SERVIÇOS PRESTADOS", {
+    bold: true,
+    fontSize: 10,
+    align: "center",
   });
-  drawCell(doc, 150, y, 55, 6.1, `CPF: ${form.responsavelCpf}`, {
-    fontSize: 8.4,
-  });
-  y += 6.1;
+  y += 5.5;
 
-  drawCell(doc, left, y, 200, 6.1, `RG: ${form.responsavelRg}`, {
-    fontSize: 8.4,
-  });
-  y += 6.1;
-
-  drawCell(doc, left, y, 160, 6.1, `ENDEREÇO: ${form.responsavelEndereco}`, {
-    fontSize: 8.0,
-  });
-  drawCell(doc, 165, y, 40, 6.1, `CEP: ${form.responsavelCep}`, {
-    fontSize: 8.0,
-  });
-  y += 6.1;
-
-  drawCell(doc, left, y, 75, 6.1, `BAIRRO: ${form.responsavelBairro}`, {
-    fontSize: 8.0,
-  });
-  drawCell(doc, 80, y, 60, 6.1, `CELULAR: ${form.responsavelCelular1}`, {
-    fontSize: 8.0,
-  });
-  drawCell(doc, 140, y, 65, 6.1, `CELULAR: ${form.responsavelCelular2}`, {
-    fontSize: 8.0,
-  });
-  y += 6.1;
-
-  const velorioTexto =
-    form.velorioTipo === "funeraria"
-      ? [form.velorioUnidade, form.velorioSala].filter(Boolean).join(" - ")
-      : [
-          form.velorioNomeLocal,
-          form.velorioEndereco,
-          form.velorioNumero,
-          form.velorioBairro,
-        ]
-          .filter(Boolean)
-          .join(", ");
-
-  drawCell(doc, left, y, 200, 6.2, `LOCAL DO VELÓRIO: ${velorioTexto}`, {
-    fontSize: 8.0,
-  });
-  y += 7.0;
-
-  function drawFinalBlock(titulo, atendente, motorista, carro, showDetails = false) {
-    drawCell(
-      doc,
-      left,
-      y,
-      70,
-      5.8,
-      showDetails ? `ATENDENTE: ${atendente || ""}` : "",
-      {
-        bold: true,
-        fontSize: 7.9,
-      }
-    );
-    drawCell(
-      doc,
-      75,
-      y,
-      80,
-      5.8,
-      showDetails ? `${titulo} ${motorista || ""}` : titulo,
-      {
-        bold: true,
-        fontSize: 7.9,
-      }
-    );
-    drawCell(
-      doc,
-      155,
-      y,
-      50,
-      5.8,
-      showDetails ? `CARRO: ${carro || ""}` : "",
-      {
-        bold: true,
-        fontSize: 7.9,
-      }
-    );
-    y += 5.8;
-
-    drawCell(doc, left, y, 70, 5.8, "", {});
-    drawCell(doc, 75, y, 80, 5.8, "ASSINATURA:", {
+  services.forEach((item) => {
+    drawCell(doc, left, y, 8, 4.8, item.checked ? "X" : "", {
+      fontSize: 10,
       bold: true,
-      fontSize: 7.9,
+      align: "center",
     });
-    drawCell(doc, 155, y, 50, 5.8, "", {});
-    y += 5.8;
+
+    drawCell(doc, 13, y, 152, 4.8, item.name, {
+      fontSize: 9.2,
+    });
+
+    drawCell(doc, 165, y, 20, 4.8, item.qty || "", {
+      fontSize: 9,
+      align: "center",
+    });
+
+    drawCell(doc, 185, y, 20, 4.8, item.value || "", {
+      fontSize: 9,
+      align: "center",
+    });
+
+    y += 4.8;
+  });
+
+  // 🔹 RESPONSÁVEL
+  drawCell(doc, left, y, 200, 5.5, "DADOS DO RESPONSÁVEL", {
+    bold: true,
+    fontSize: 10,
+    align: "center",
+  });
+  y += 5.5;
+
+  drawCell(doc, left, y, 145, 5.5, `NOME: ${form.responsavelNome}`, {
+    fontSize: 9.5,
+  });
+  drawCell(doc, 150, y, 55, 5.5, `CPF: ${form.responsavelCpf}`, {
+    fontSize: 9.5,
+  });
+  y += 5.5;
+
+  drawCell(doc, left, y, 200, 5.5, `RG: ${form.responsavelRg}`, {
+    fontSize: 9.5,
+  });
+  y += 5.5;
+
+  drawCell(doc, left, y, 160, 5.5, `ENDEREÇO: ${form.responsavelEndereco}`, {
+    fontSize: 9,
+  });
+  drawCell(doc, 165, y, 40, 5.5, `CEP: ${form.responsavelCep}`, {
+    fontSize: 9,
+  });
+  y += 5.5;
+
+  drawCell(doc, left, y, 75, 5.5, `BAIRRO: ${form.responsavelBairro}`, {
+    fontSize: 9,
+  });
+  drawCell(doc, 80, y, 60, 5.5, `CELULAR: ${form.responsavelCelular1}`, {
+    fontSize: 9,
+  });
+  drawCell(doc, 140, y, 65, 5.5, `CELULAR: ${form.responsavelCelular2}`, {
+    fontSize: 9,
+  });
+  y += 5.5;
+
+  // 🔹 BLOCO FINAL AJUSTADO
+  function drawFinalBlock(titulo, atendente, motorista, carro) {
+    const h = 4.8;
+
+    drawCell(doc, left, y, 70, h, `ATENDENTE: ${atendente || ""}`, {
+      bold: true,
+      fontSize: 9,
+    });
+
+    drawCell(doc, 75, y, 80, h, `${titulo} ${motorista || ""}`, {
+      bold: true,
+      fontSize: 9,
+    });
+
+    drawCell(doc, 155, y, 50, h, `CARRO: ${carro || ""}`, {
+      bold: true,
+      fontSize: 9,
+    });
+
+    y += h;
+
+    drawCell(doc, left, y, 70, h, "", {});
+    drawCell(doc, 75, y, 80, h, "ASSINATURA:", {
+      bold: true,
+      fontSize: 9,
+    });
+    drawCell(doc, 155, y, 50, h, "", {});
+    y += h;
   }
 
-  drawFinalBlock(
-    "REMOÇÃO:",
-    form.atendenteRemocao,
-    form.Remocao,
-    form.carroRemocao,
-    true
-  );
+  drawFinalBlock("REMOÇÃO:", form.atendenteRemocao, form.Remocao, form.carroRemocao);
+  drawFinalBlock("ENTREGA:", form.atendenteEntrega, form.Entrega, form.carroEntrega);
+  drawFinalBlock("SEPULTAMENTO:", form.atendenteSepultamento, form.Sepultamento, form.carroSepultamento);
 
-  drawFinalBlock(
-    "ENTREGA:",
-    form.atendenteEntrega,
-    form.Entrega,
-    form.carroEntrega,
-    false
-  );
-
-  drawFinalBlock(
-    "SEPULTAMENTO:",
-    form.atendenteSepultamento,
-    form.Sepultamento,
-    form.carroSepultamento,
-    false
-  );
-
-  const assinaturaY = Math.min(y + 22, 287);
+  // 🔹 ASSINATURA FINAL CORRIGIDA
+  const assinaturaY = Math.min(y + 12, 287);
   doc.setFont("times", "bold");
-  doc.setFontSize(8.8);
-  doc.text("Responsável:", 45, assinaturaY + 0.5);
-  doc.line(70, assinaturaY, 145, assinaturaY);
+  doc.setFontSize(9.5);
+  doc.text("Responsável:", 45, assinaturaY);
+  doc.line(70, assinaturaY - 1, 145, assinaturaY - 1);
 
-  const filename = `ficha-${(form.falecido || "atendimento")
-    .replace(/\s+/g, "-")
-    .toLowerCase()}.pdf`;
-
-  openPdfPreview(doc, filename, "Pré-visualização da Ficha");
+  openPdfPreview(doc, "ficha.pdf", "Pré-visualização da Ficha");
 }
 
   function gerarTermoPDF() {
