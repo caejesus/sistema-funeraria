@@ -15,16 +15,17 @@
 .home-header {
   width: 100%;
   max-width: var(--home-max-width);
-  margin: 0 auto 24px;
-  background: var(--header-box-bg, #ffffff);
-  border: 1px solid var(--border-soft, #e5ecea);
-  border-radius: var(--home-header-radius);
-  box-shadow: var(--shadow-main, 0 10px 30px rgba(0, 0, 0, 0.05));
-  padding: 18px 22px;
+  margin: 0 auto 12px;
+  padding: 18px 4px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .home-brand {
@@ -94,7 +95,7 @@
   font-size: 1.05rem;
   font-weight: 800;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--brand-accent, #26b1c4), #1f8fa1);
+  background: linear-gradient(135deg, var(--brand-accent, #00FFEF), #1f8fa1);
 }
 
 .user-pill-copy {
@@ -148,20 +149,27 @@
   width: 100%;
   max-width: var(--home-max-width);
   margin: 0 auto;
-  min-height: calc(100vh - 160px);
+
+  min-height: calc(100vh - 140px);
+
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 24px;
+
+  gap: 32px;
+  padding-top: 60px;
 }
 
 .home-cards-grid,
 .home-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+
   max-width: 900px;
   width: 100%;
-  margin: 0 auto;
+
+  margin: 40px auto 0;
+
   gap: 22px;
   align-items: stretch;
 }
@@ -169,18 +177,23 @@
 .home-action-card,
 .home-card-button {
   width: 100%;
-  min-height: 110px;
+  min-height: 95px;
   border: 0;
   border-radius: var(--home-card-radius);
-  padding: 18px 20px;
+
+  padding: 16px 18px;
+
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 18px;
+
   text-align: left;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--brand-accent, #26b1c4), #2498aa);
+
+  background: linear-gradient(135deg, var(--brand-accent, #00ffef), #2498aa);
   box-shadow: 0 16px 36px rgba(38, 177, 196, 0.24);
+
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
@@ -262,7 +275,7 @@
 }
 
 .internal-tab--active {
-  background: var(--tab-active-bg, #26b1c4);
+  background: var(--tab-active-bg, #00ffef);
   color: var(--tab-active-text, #ffffff);
   border-color: transparent;
   box-shadow: 0 12px 26px rgba(38, 177, 196, 0.25);
