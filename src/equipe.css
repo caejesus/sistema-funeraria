@@ -1,0 +1,66 @@
+:root {
+  --bg: #f4f7f6;
+  --card: #ffffff;
+  --primary: #26b1c4;
+  --text: #333;
+  --muted: #666;
+}
+
+.equipe-page {
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 16px;
+  font-family: Arial, sans-serif;
+}
+
+.equipe-header {
+  margin-bottom: 16px;
+}
+
+.equipe-header h2 {
+  color: var(--primary);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.status {
+  background: #eee;
+  padding: 6px 10px;
+  border-radius: 12px;
+}
+
+.card-body {
+  margin-top: 12px;
+}
+
+.stage {
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.stage.em_andamento {
+  border-left: 4px solid var(--primary);
+}
+
+button {
+  margin-top: 8px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
