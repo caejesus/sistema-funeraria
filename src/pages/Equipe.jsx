@@ -14,7 +14,7 @@ function normalizeChoice(value) {
   if (value === false) return "nao";
   const normalized = String(value || "").trim().toLowerCase();
 
-  if (["sim", "s", "yes", "true", "1"].includes(normalized)) return "sim";
+  if (["sim", "s", "yes", "true", "1", "checked"].includes(normalized)) return "sim";
   if (
     ["nao", "não", "n", "no", "false", "0", "cancelado", "nenhum"].includes(
       normalized
@@ -26,17 +26,95 @@ function normalizeChoice(value) {
   return "";
 }
 
-function getTanatoValue(form = {}) {
+function normalizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function hasCheckedValue(value) {
   return (
+    value === true ||
+    value === 1 ||
+    value === "1" ||
+    value === "true" ||
+    value === "sim" ||
+    value === "checked" ||
+    value?.checked === true ||
+    value?.selecionado === true ||
+    value?.ativo === true
+  );
+}
+
+function getTanatoValue(form = {}, item = {}) {
+  const direto =
     normalizeChoice(form.tanato) ||
     normalizeChoice(form.tanatopraxia) ||
     normalizeChoice(form.conservacao) ||
-    normalizeChoice(form.procedimentoClinico)
-  );
+    normalizeChoice(form.procedimentoClinico);
+
+  if (direto) return direto;
+
+  const possibleSources = [
+    form.servicos,
+    form.itens,
+    form.servicosSelecionados,
+    form.servicosExtras,
+    item.servicos,
+    item.itens,
+    item.dados?.servicos,
+    item.dados?.itens,
+    item.dados?.form?.servicos,
+    item.dados?.form?.itens,
+  ];
+
+  for (const source of possibleSources) {
+    if (Array.isArray(source)) {
+      const encontrou = source.some((entry) => {
+        const nome = normalizeText(
+          entry?.nome || entry?.descricao || entry?.titulo || entry
+        );
+        return (
+          nome.includes("tanatopraxia") || nome.includes("conservacao do corpo")
+        );
+      });
+
+      if (encontrou) return "sim";
+    }
+
+    if (source && typeof source === "object") {
+      const encontrou = Object.entries(source).some(([key, value]) => {
+        const chave = normalizeText(key);
+        return (
+          (chave.includes("tanatopraxia") ||
+            chave.includes("conservacao do corpo")) &&
+          hasCheckedValue(value)
+        );
+      });
+
+      if (encontrou) return "sim";
+    }
+  }
+
+  return "";
 }
 
 function getOrnamentacaoValue(form = {}) {
   return normalizeChoice(form.ornamentacao);
+}
+
+function getObservacaoValue(form = {}, item = {}) {
+  return (
+    form.observacaoTermo ||
+    item.observacoes ||
+    form.observacoes ||
+    form.observacao ||
+    form.obs ||
+    item.dados?.observacoes ||
+    item.dados?.form?.observacaoTermo ||
+    ""
+  );
 }
 
 function getVelorioLocal(form = {}) {
@@ -86,18 +164,6 @@ function getSepultamentoHorario(form = {}) {
   return [data, hora].filter(Boolean).join(" ");
 }
 
-function getSupportByStage(record, stageKey) {
-  const form = record?.form || {};
-  const stage = record?.operationalStages?.[stageKey] || {};
-
-  return (
-    stage.support ||
-    form[`apoio${stageKey.charAt(0).toUpperCase() + stageKey.slice(1)}`] ||
-    form.apoio ||
-    ""
-  );
-}
-
 function getDriverByStage(record, stageKey, fallbackField) {
   const form = record?.form || {};
   const stage = record?.operationalStages?.[stageKey] || {};
@@ -135,7 +201,7 @@ function getEffectiveStageStatus(item, stageKey) {
   const stage = item?.operationalStages?.[stageKey] || {};
   const baseStatus = stage.status || "nao_iniciado";
 
-  if (stageKey === "procedimentoClinico" && getTanatoValue(form) === "nao") {
+  if (stageKey === "procedimentoClinico" && getTanatoValue(form, item) === "nao") {
     return "cancelado";
   }
 
@@ -226,7 +292,11 @@ function SummaryLine({ label, value }) {
 
 function StageCard({ title, status, children, actions }) {
   return (
-    <div className={`stage-card ${getStatusClass(status)} ${status === "em_andamento" ? "is-active" : ""}`}>
+    <div
+      className={`stage-card ${getStatusClass(status)} ${
+        status === "em_andamento" ? "is-active" : ""
+      }`}
+    >
       <div className="stage-card-top">
         <h4>{title}</h4>
         <StatusBadge status={status} />
@@ -322,7 +392,11 @@ export default function Equipe({
         <div className="equipe-topbar">
           <div>
             <h2>Tela da equipe</h2>
-            <p>{audioLiberado ? "Alerta sonoro ativado" : "Toque na tela para liberar o alerta sonoro"}</p>
+            <p>
+              {audioLiberado
+                ? "Alerta sonoro ativado"
+                : "Toque na tela para liberar o alerta sonoro"}
+            </p>
           </div>
         </div>
 
@@ -332,12 +406,19 @@ export default function Equipe({
             const isViagem = form.velorioTipo === "viagem";
             const isOpen = expandedId === item.id;
             const isNovo = idsRecentes.includes(item.id);
+            const observacao = getObservacaoValue(form, item);
 
             const remocaoStatus = getEffectiveStageStatus(item, "remocao");
-            const procedimentoStatus = getEffectiveStageStatus(item, "procedimentoClinico");
+            const procedimentoStatus = getEffectiveStageStatus(
+              item,
+              "procedimentoClinico"
+            );
             const ornamentacaoStatus = getEffectiveStageStatus(item, "ornamentacao");
             const entregaStatus = getEffectiveStageStatus(item, "entrega");
-            const sepultamentoStatus = getEffectiveStageStatus(item, "sepultamento");
+            const sepultamentoStatus = getEffectiveStageStatus(
+              item,
+              "sepultamento"
+            );
 
             const remocaoMotorista = getDriverByStage(item, "remocao", "Remocao");
             const remocaoCarro = getCarByStage(item, "remocao", "carroRemocao");
@@ -345,8 +426,16 @@ export default function Equipe({
             const entregaMotorista = getDriverByStage(item, "entrega", "Entrega");
             const entregaCarro = getCarByStage(item, "entrega", "carroEntrega");
 
-            const sepultamentoMotorista = getDriverByStage(item, "sepultamento", "Sepultamento");
-            const sepultamentoCarro = getCarByStage(item, "sepultamento", "carroSepultamento");
+            const sepultamentoMotorista = getDriverByStage(
+              item,
+              "sepultamento",
+              "Sepultamento"
+            );
+            const sepultamentoCarro = getCarByStage(
+              item,
+              "sepultamento",
+              "carroSepultamento"
+            );
 
             const tecnico = getTechnician(item);
             const localPrincipal = form.localObito || item.localObito || "—";
@@ -360,7 +449,9 @@ export default function Equipe({
                 >
                   <div className="os-card-head">
                     <div className="os-card-title-wrap">
-                      <div className="os-number">{item.numero || "Ordem de serviço"}</div>
+                      <div className="os-number">
+                        {item.numero || "Ordem de serviço"}
+                      </div>
                       <div className="os-title">
                         {item.falecido || form.falecido || "Sem nome informado"}
                       </div>
@@ -368,13 +459,22 @@ export default function Equipe({
                     </div>
 
                     <div className="os-meta">
-                      <span className="os-status">{item.status || "Aguardando início"}</span>
+                      <span className="os-status">
+                        {item.status || "Aguardando início"}
+                      </span>
                     </div>
                   </div>
 
                   <div className="os-summary">
                     <SummaryLine label="Local principal" value={localPrincipal} />
                     <SummaryLine label="Próxima etapa" value={getNextStepLabel(item)} />
+
+                    {observacao ? (
+                      <div className="os-observacao">
+                        <span className="obs-label">Observação:</span>
+                        <span className="obs-text">{observacao}</span>
+                      </div>
+                    ) : null}
                   </div>
                 </button>
 
@@ -396,6 +496,10 @@ export default function Equipe({
                       <div className="stage-info-row">
                         <span className="stage-info-label">Local:</span>
                         <span>{form.localObito || item.localObito || "—"}</span>
+                      </div>
+                      <div className="stage-info-row">
+                        <span className="stage-info-label">Religião:</span>
+                        <span>{form.religiao || item.religiao || "—"}</span>
                       </div>
                       <div className="stage-info-row">
                         <span className="stage-info-label">Motorista:</span>
@@ -423,9 +527,9 @@ export default function Equipe({
                       <div className="stage-info-row">
                         <span className="stage-info-label">Tanatopraxia:</span>
                         <span>
-                          {getTanatoValue(form) === "sim"
+                          {getTanatoValue(form, item) === "sim"
                             ? "Sim"
-                            : getTanatoValue(form) === "nao"
+                            : getTanatoValue(form, item) === "nao"
                             ? "Não"
                             : "—"}
                         </span>
@@ -472,7 +576,9 @@ export default function Equipe({
                       <div className="stage-info-row">
                         <span className="stage-info-label">Urna:</span>
                         <span>
-                          {[form.modeloUrna, form.corUrna].filter(Boolean).join(" - ") || "—"}
+                          {[form.modeloUrna, form.corUrna]
+                            .filter(Boolean)
+                            .join(" - ") || "—"}
                         </span>
                       </div>
                     </StageCard>
@@ -491,11 +597,15 @@ export default function Equipe({
                       }
                     >
                       <div className="stage-info-row">
-                        <span className="stage-info-label">{getVelorioLabelLocal(form)}:</span>
+                        <span className="stage-info-label">
+                          {getVelorioLabelLocal(form)}:
+                        </span>
                         <span>{getVelorioLocal(form) || "—"}</span>
                       </div>
                       <div className="stage-info-row">
-                        <span className="stage-info-label">{getVelorioLabelHorario(form)}:</span>
+                        <span className="stage-info-label">
+                          {getVelorioLabelHorario(form)}:
+                        </span>
                         <span>{getVelorioHorario(form) || "—"}</span>
                       </div>
                       {isViagem ? (

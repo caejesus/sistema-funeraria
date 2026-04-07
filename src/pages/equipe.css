@@ -353,3 +353,25 @@
     flex-direction: column;
   }
 }
+.os-observacao {
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: rgba(38, 177, 196, 0.08);
+  border-left: 4px solid #26b1c4;
+  border-radius: 12px;
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+.obs-label {
+  display: inline-block;
+  margin-right: 6px;
+  font-weight: 800;
+  color: #26b1c4;
+}
+
+.obs-text {
+  color: inherit;
+  font-weight: 500;
+  word-break: break-word;
+}
