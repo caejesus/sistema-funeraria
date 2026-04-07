@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from "react";
 import notificationSound from "../assets/notificacao.mp3";
 
@@ -85,9 +86,50 @@ function getTechnician(record) {
   return stage.technician || form.tecnico || "";
 }
 
+function getTanatoValue(form = {}) {
+  const raw =
+    form.tanato ??
+    form.tanatopraxia ??
+    form.conservacao ??
+    form.procedimentoClinico ??
+    "";
+
+  const normalized = String(raw).trim().toLowerCase();
+
+  if (["sim", "s", "yes", "true", "1"].includes(normalized)) return "Sim";
+  if (["nao", "não", "n", "no", "false", "0"].includes(normalized)) return "Não";
+
+  return "";
+}
+
+function getOrnamentacaoValue(form = {}) {
+  const raw = form.ornamentacao ?? "";
+  const normalized = String(raw).trim().toLowerCase();
+
+  if (["sim", "s", "yes", "true", "1"].includes(normalized)) return "Sim";
+  if (["nao", "não", "n", "no", "false", "0"].includes(normalized)) return "Não";
+
+  return "";
+}
+
+function normalizeStageStatus(status) {
+  if (status === "cancelado") return "cancelado";
+  if (status === "em_andamento") return "em_andamento";
+  if (status === "finalizado") return "finalizado";
+  return "nao_iniciado";
+}
+
+function getStageDisplayStatus(status, options = {}) {
+  const normalized = normalizeStageStatus(status);
+
+  if (options.forceCancelled) return "cancelado";
+  return normalized;
+}
+
 function getStatusLabel(status) {
   if (status === "em_andamento") return "Em andamento";
   if (status === "finalizado") return "Finalizado";
+  if (status === "cancelado") return "Cancelado";
   return "Aguardando início";
 }
 
@@ -95,17 +137,20 @@ function getNextStepLabel(item) {
   const stages = item?.operationalStages || {};
   const form = item?.form || {};
   const isViagem = form.velorioTipo === "viagem";
+  const tanatoValue = getTanatoValue(form);
+  const ornamentacaoValue = getOrnamentacaoValue(form);
 
   const order = [
-    ["remocao", "Remoção"],
-    ["procedimentoClinico", "Procedimento"],
-    ["ornamentacao", "Ornamentação"],
-    ["entrega", isViagem ? "Viagem" : "Entrega"],
-    ...(!isViagem ? [["sepultamento", "Sepultamento"]] : []),
+    ["remocao", "Remoção", false],
+    ["procedimentoClinico", "Procedimento", tanatoValue === "Não"],
+    ["ornamentacao", "Ornamentação", ornamentacaoValue === "Não"],
+    ["entrega", isViagem ? "Viagem" : "Entrega", false],
+    ...(!isViagem ? [["sepultamento", "Sepultamento", false]] : []),
   ];
 
-  for (const [key, label] of order) {
-    const status = stages[key]?.status || "nao_iniciado";
+  for (const [key, label, skip] of order) {
+    if (skip) continue;
+    const status = normalizeStageStatus(stages[key]?.status);
     if (status !== "finalizado") return label;
   }
 
@@ -113,16 +158,18 @@ function getNextStepLabel(item) {
 }
 
 const colors = {
+  pageBg: "#08111f",
   cardBg: "#0b1830",
   blockBg: "#0d1b34",
   border: "#29415f",
+  activeBorder: "#26b1c4",
   title: "#f8fafc",
   text: "#e5eefc",
   muted: "#c3d3ea",
   accent: "#7dd3fc",
   badgeBg: "#0b2244",
   badgeText: "#8fdcff",
-  buttonBg: "#1d4ed8",
+  buttonBg: "#26b1c4",
   buttonText: "#ffffff",
   waitingBg: "#1f2937",
   waitingText: "#d1d5db",
@@ -130,6 +177,8 @@ const colors = {
   runningText: "#fde68a",
   doneBg: "#123c2f",
   doneText: "#86efac",
+  cancelledBg: "#3f1d1d",
+  cancelledText: "#fca5a5",
   newCardBorder: "#38bdf8",
   newCardGlow: "rgba(56,189,248,0.18)",
   newTagBg: "#0ea5e9",
@@ -139,13 +188,14 @@ const colors = {
 const styles = {
   page: {
     padding: 12,
-    maxWidth: 820,
+    maxWidth: 860,
     margin: "0 auto",
     color: colors.text,
     minHeight: "100vh",
+    background: colors.pageBg,
   },
   header: {
-    marginBottom: 12,
+    marginBottom: 14,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -155,6 +205,7 @@ const styles = {
   headerTitle: {
     color: colors.accent,
     fontWeight: 800,
+    fontSize: 20,
   },
   headerHint: {
     fontSize: 12,
@@ -264,6 +315,11 @@ const styles = {
     borderRadius: 16,
     padding: 14,
     background: colors.blockBg,
+    transition: "all 0.2s ease",
+  },
+  blockActive: {
+    border: `1px solid ${colors.activeBorder}`,
+    boxShadow: "0 0 0 2px rgba(38,177,196,0.18)",
   },
   blockHeader: {
     display: "flex",
@@ -279,6 +335,13 @@ const styles = {
     color: colors.title,
   },
   row: {
+    marginBottom: 9,
+    lineHeight: 1.45,
+    fontSize: 15,
+    wordBreak: "break-word",
+    color: colors.text,
+  },
+  inlineLine: {
     marginBottom: 9,
     lineHeight: 1.45,
     fontSize: 15,
@@ -305,6 +368,17 @@ const styles = {
     fontSize: 15,
     width: "100%",
   },
+  btnDisabled: {
+    borderRadius: 12,
+    padding: "14px 16px",
+    border: `1px solid ${colors.border}`,
+    background: "#14243f",
+    color: colors.muted,
+    cursor: "default",
+    fontWeight: 800,
+    fontSize: 15,
+    width: "100%",
+  },
 };
 
 function InfoRow({ label, value }) {
@@ -314,6 +388,10 @@ function InfoRow({ label, value }) {
       <span>{value || "—"}</span>
     </div>
   );
+}
+
+function InlineInfo({ value }) {
+  return <div style={styles.inlineLine}>{value || "—"}</div>;
 }
 
 function StatusBadge({ status }) {
@@ -330,6 +408,11 @@ function StatusBadge({ status }) {
   if (normalized === "finalizado") {
     bg = colors.doneBg;
     text = colors.doneText;
+  }
+
+  if (normalized === "cancelado") {
+    bg = colors.cancelledBg;
+    text = colors.cancelledText;
   }
 
   return (
@@ -351,15 +434,26 @@ function StatusBadge({ status }) {
   );
 }
 
-function StageButtons({ itemId, stageKey, stageLabel, status, updateOperationalStage }) {
+function StageButtons({
+  itemId,
+  stageKey,
+  stageLabel,
+  status,
+  updateOperationalStage,
+}) {
   if (typeof updateOperationalStage !== "function") return null;
 
-  if (status === "finalizado") return null;
+  if (status === "cancelado") return null;
+
+  if (status === "finalizado") {
+    return <button style={styles.btnDisabled}>Etapa concluída</button>;
+  }
 
   return (
     <div style={styles.stageActions}>
       {status !== "em_andamento" && (
         <button
+          type="button"
           style={styles.btn}
           onClick={() => updateOperationalStage(itemId, stageKey, "start")}
         >
@@ -369,6 +463,7 @@ function StageButtons({ itemId, stageKey, stageLabel, status, updateOperationalS
 
       {status === "em_andamento" && (
         <button
+          type="button"
           style={styles.btn}
           onClick={() => updateOperationalStage(itemId, stageKey, "finish")}
         >
@@ -474,20 +569,25 @@ export default function Equipe({
         const isOpen = expandedId === item.id;
         const isNovo = idsRecentes.includes(item.id);
 
+        const tanatoValue = getTanatoValue(form);
+        const ornamentacaoValue = getOrnamentacaoValue(form);
+
+        const procedimentoStatus = getStageDisplayStatus(procedimento.status, {
+          forceCancelled: tanatoValue === "Não",
+        });
+
+        const ornamentacaoStatus = getStageDisplayStatus(ornamentacao.status, {
+          forceCancelled: ornamentacaoValue === "Não",
+        });
+
         const remocaoMotorista = getDriverByStage(item, "remocao", "Remocao");
         const remocaoCarro = getCarByStage(item, "remocao", "carroRemocao");
-        const remocaoApoio = getSupportByStage(item, "remocao");
 
         const entregaMotorista = getDriverByStage(item, "entrega", "Entrega");
         const entregaCarro = getCarByStage(item, "entrega", "carroEntrega");
-        const entregaApoio = getSupportByStage(item, "entrega");
 
         const sepultamentoMotorista = getDriverByStage(item, "sepultamento", "Sepultamento");
-        const sepultamentoCarro = getCarByStage(item, "sepultamento", "carroSepultamento");
-        const sepultamentoApoio = getSupportByStage(item, "sepultamento");
-
         const tecnico = getTechnician(item);
-        const apoioOrnamentacao = getSupportByStage(item, "ornamentacao");
 
         const localPrincipal = form.localObito || item.localObito || "—";
         const horarioPrincipal = isViagem
@@ -534,113 +634,136 @@ export default function Equipe({
             {isOpen && (
               <div style={styles.details}>
                 <div style={styles.grid}>
-                  <div style={styles.block}>
+                  <div
+                    style={{
+                      ...styles.block,
+                      ...(remocao.status === "em_andamento" ? styles.blockActive : {}),
+                    }}
+                  >
                     <div style={styles.blockHeader}>
-                      <div style={styles.blockTitle}>Óbito / Remoção</div>
-                      <StatusBadge status={remocao.status} />
+                      <div style={styles.blockTitle}>Remoção</div>
+                      <StatusBadge status={normalizeStageStatus(remocao.status)} />
                     </div>
 
-                    <InfoRow label="Local" value={form.localObito || item.localObito} />
-                    <InfoRow label="Responsável" value={form.responsavelNome || item.responsavelNome} />
-                    <InfoRow label="Contato" value={form.responsavelCelular1 || form.responsavelCelular2} />
-                    <InfoRow label="Religião" value={form.religiao} />
-                    <InfoRow label="Motorista" value={remocaoMotorista} />
-                    <InfoRow label="Carro" value={remocaoCarro} />
-                    <InfoRow label="Apoio" value={remocaoApoio} />
+                    <InfoRow label="Local do óbito" value={form.localObito || item.localObito} />
+                    <InlineInfo value={[remocaoMotorista, remocaoCarro].filter(Boolean).join(" - ")} />
 
                     <StageButtons
                       itemId={item.id}
                       stageKey="remocao"
                       stageLabel="Remoção"
-                      status={remocao.status}
+                      status={normalizeStageStatus(remocao.status)}
                       updateOperationalStage={updateOperationalStage}
                     />
                   </div>
 
-                  <div style={styles.block}>
+                  <div
+                    style={{
+                      ...styles.block,
+                      ...(procedimentoStatus === "em_andamento" ? styles.blockActive : {}),
+                    }}
+                  >
                     <div style={styles.blockHeader}>
                       <div style={styles.blockTitle}>Procedimento</div>
-                      <StatusBadge status={procedimento.status} />
+                      <StatusBadge status={procedimentoStatus} />
                     </div>
 
+                    <InfoRow label="Tanatopraxia" value={tanatoValue} />
                     <InfoRow label="Técnico" value={tecnico} />
 
                     <StageButtons
                       itemId={item.id}
                       stageKey="procedimentoClinico"
                       stageLabel="Procedimento"
-                      status={procedimento.status}
+                      status={procedimentoStatus}
                       updateOperationalStage={updateOperationalStage}
                     />
                   </div>
 
-                  <div style={styles.block}>
+                  <div
+                    style={{
+                      ...styles.block,
+                      ...(ornamentacaoStatus === "em_andamento" ? styles.blockActive : {}),
+                    }}
+                  >
                     <div style={styles.blockHeader}>
                       <div style={styles.blockTitle}>Ornamentação</div>
-                      <StatusBadge status={ornamentacao.status} />
+                      <StatusBadge status={ornamentacaoStatus} />
                     </div>
 
-                    <InfoRow
-                      label="Ornamentação"
-                      value={form.ornamentacao === "sim" ? "Sim" : form.ornamentacao === "nao" ? "Não" : ""}
-                    />
+                    <InfoRow label="Ornamentação" value={ornamentacaoValue} />
                     <InfoRow
                       label="Tipo"
-                      value={form.tipoFlor === "naturais" ? "Natural" : form.tipoFlor === "artificiais" ? "Artificial" : ""}
+                      value={
+                        form.tipoFlor === "naturais"
+                          ? "Natural"
+                          : form.tipoFlor === "artificiais"
+                            ? "Artificial"
+                            : ""
+                      }
                     />
-                    <InfoRow label="Modelo da urna" value={form.modeloUrna} />
-                    <InfoRow label="Cor da urna" value={form.corUrna} />
-                    <InfoRow label="Apoio" value={apoioOrnamentacao} />
+                    <InfoRow
+                      label="Urna"
+                      value={[form.modeloUrna, form.corUrna].filter(Boolean).join(" - ")}
+                    />
 
                     <StageButtons
                       itemId={item.id}
                       stageKey="ornamentacao"
                       stageLabel="Ornamentação"
-                      status={ornamentacao.status}
+                      status={ornamentacaoStatus}
                       updateOperationalStage={updateOperationalStage}
                     />
                   </div>
 
-                  <div style={styles.block}>
+                  <div
+                    style={{
+                      ...styles.block,
+                      ...(entrega.status === "em_andamento" ? styles.blockActive : {}),
+                    }}
+                  >
                     <div style={styles.blockHeader}>
-                      <div style={styles.blockTitle}>{getVelorioTitulo(form)}</div>
-                      <StatusBadge status={entrega.status} />
+                      <div style={styles.blockTitle}>{isViagem ? "Entrega / Viagem" : "Entrega"}</div>
+                      <StatusBadge status={normalizeStageStatus(entrega.status)} />
                     </div>
 
                     <InfoRow label={getVelorioLabelLocal(form)} value={getVelorioLocal(form)} />
                     <InfoRow label={getVelorioLabelHorario(form)} value={getVelorioHorario(form)} />
                     {isViagem ? <InfoRow label="Embarque" value={form.embarque} /> : null}
-                    <InfoRow label="Motorista" value={entregaMotorista} />
-                    <InfoRow label="Carro" value={entregaCarro} />
-                    <InfoRow label="Apoio" value={entregaApoio} />
+                    <InlineInfo value={[entregaMotorista, entregaCarro].filter(Boolean).join(" - ")} />
 
                     <StageButtons
                       itemId={item.id}
                       stageKey="entrega"
                       stageLabel={isViagem ? "Viagem" : "Entrega"}
-                      status={entrega.status}
+                      status={normalizeStageStatus(entrega.status)}
                       updateOperationalStage={updateOperationalStage}
                     />
                   </div>
 
                   {!isViagem && (
-                    <div style={styles.block}>
+                    <div
+                      style={{
+                        ...styles.block,
+                        ...(sepultamento.status === "em_andamento" ? styles.blockActive : {}),
+                      }}
+                    >
                       <div style={styles.blockHeader}>
                         <div style={styles.blockTitle}>Sepultamento</div>
-                        <StatusBadge status={sepultamento.status} />
+                        <StatusBadge status={normalizeStageStatus(sepultamento.status)} />
                       </div>
 
-                      <InfoRow label="Local" value={form.cemiterio || item.cemiterio} />
-                      <InfoRow label="Horário" value={getSepultamentoHorario(form)} />
-                      <InfoRow label="Motorista" value={sepultamentoMotorista} />
-                      <InfoRow label="Carro" value={sepultamentoCarro} />
-                      <InfoRow label="Apoio" value={sepultamentoApoio} />
+                      <InfoRow label="Cemitério" value={form.cemiterio || item.cemiterio} />
+                      <InfoRow label="Hora de saída" value={getSepultamentoHorario(form)} />
+                      {sepultamentoMotorista ? (
+                        <InfoRow label="Motorista" value={sepultamentoMotorista} />
+                      ) : null}
 
                       <StageButtons
                         itemId={item.id}
                         stageKey="sepultamento"
                         stageLabel="Sepultamento"
-                        status={sepultamento.status}
+                        status={normalizeStageStatus(sepultamento.status)}
                         updateOperationalStage={updateOperationalStage}
                       />
                     </div>
