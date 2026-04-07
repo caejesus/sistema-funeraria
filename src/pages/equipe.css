@@ -1,66 +1,355 @@
 :root {
   --bg: #f4f7f6;
   --card: #ffffff;
+  --line: #e6eceb;
   --primary: #26b1c4;
-  --text: #333;
-  --muted: #666;
+  --primary-soft: rgba(38, 177, 196, 0.12);
+  --text: #27323a;
+  --muted: #6b7a86;
+  --waiting-bg: #eef2f4;
+  --waiting-text: #66727d;
+  --running-bg: rgba(38, 177, 196, 0.12);
+  --running-text: #16889a;
+  --done-bg: #eaf7ee;
+  --done-text: #1f8b4c;
+  --cancelled-bg: #fff1f1;
+  --cancelled-text: #c24d4d;
+  --shadow: 0 12px 30px rgba(16, 24, 40, 0.06);
 }
 
 .equipe-page {
-  background: var(--bg);
+  width: 100%;
   min-height: 100vh;
-  padding: 16px;
-  font-family: Arial, sans-serif;
+  background: var(--bg);
+  padding: 24px 16px 32px;
+  color: var(--text);
 }
 
-.equipe-header {
-  margin-bottom: 16px;
+.equipe-shell {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-.equipe-header h2 {
-  color: var(--primary);
-}
-
-.card {
-  background: var(--card);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-}
-
-.card-header {
+.equipe-topbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.equipe-topbar h2 {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.equipe-topbar p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+
+.cards-list {
+  display: grid;
+  gap: 16px;
+}
+
+.os-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.os-card.is-new {
+  border-color: rgba(38, 177, 196, 0.35);
+  box-shadow: 0 0 0 3px rgba(38, 177, 196, 0.08), var(--shadow);
+}
+
+.os-card-toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 20px;
   cursor: pointer;
+  text-align: left;
 }
 
-.status {
-  background: #eee;
-  padding: 6px 10px;
-  border-radius: 12px;
+.os-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.card-body {
+.os-card-title-wrap {
+  min-width: 0;
+  flex: 1;
+}
+
+.os-number {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.os-title {
+  margin: 0;
+  font-size: 1.8rem;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  word-break: break-word;
+}
+
+.os-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.os-status,
+.new-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.os-status {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.new-badge {
   margin-top: 12px;
-}
-
-.stage {
-  border-top: 1px solid #eee;
-  padding-top: 10px;
-  margin-top: 10px;
-}
-
-.stage.em_andamento {
-  border-left: 4px solid var(--primary);
-}
-
-button {
-  margin-top: 8px;
   background: var(--primary);
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
+  color: #fff;
+}
+
+.os-summary {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.summary-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.summary-label {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.os-card-body {
+  display: none;
+  padding: 0 20px 20px;
+}
+
+.os-card-body.open {
+  display: block;
+}
+
+.stages-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stage-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  background: #fff;
+}
+
+.stage-card.is-active {
+  border-color: rgba(38, 177, 196, 0.4);
+  box-shadow: 0 0 0 3px rgba(38, 177, 196, 0.08);
+}
+
+.stage-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.stage-card-top h4 {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.stage-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.stage-status.waiting {
+  background: var(--waiting-bg);
+  color: var(--waiting-text);
+}
+
+.stage-status.running {
+  background: var(--running-bg);
+  color: var(--running-text);
+}
+
+.stage-status.done {
+  background: var(--done-bg);
+  color: var(--done-text);
+}
+
+.stage-status.cancelled {
+  background: var(--cancelled-bg);
+  color: var(--cancelled-text);
+}
+
+.stage-card-body {
+  display: grid;
+  gap: 8px;
+}
+
+.stage-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.97rem;
+  line-height: 1.4;
+}
+
+.stage-info-label {
+  min-width: 84px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.stage-card-actions {
+  margin-top: 14px;
+}
+
+.stage-button {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
   cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.stage-button:hover {
+  transform: translateY(-1px);
+}
+
+.stage-button.done {
+  background: #dcefee;
+  color: #2193a3;
+  cursor: default;
+}
+
+.stage-button:disabled {
+  opacity: 1;
+}
+
+.empty-state {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 22px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .stages-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .equipe-page {
+    padding: 18px 12px 28px;
+  }
+
+  .equipe-topbar h2 {
+    font-size: 1.55rem;
+  }
+
+  .os-card-toggle {
+    padding: 16px;
+  }
+
+  .os-card-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .os-meta {
+    justify-content: flex-start;
+  }
+
+  .os-title {
+    font-size: 1.22rem;
+    line-height: 1.12;
+  }
+
+  .summary-line,
+  .stage-info-row {
+    font-size: 0.93rem;
+  }
+
+  .stage-info-row {
+    display: block;
+  }
+
+  .stage-info-label {
+    display: inline-block;
+    min-width: auto;
+    margin-right: 4px;
+  }
+
+  .stage-card {
+    padding: 14px;
+  }
+
+  .stage-card-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
