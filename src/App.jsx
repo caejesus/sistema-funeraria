@@ -7,7 +7,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
 import { gerarFichaPdf } from "./pdf/gerarFichaPDF";
 import { drawCell } from "./pdf/pdfHelpers";
-import { gerarTermoPdf } from "./pdf/gerarTermoPdf";
+import { gerarTermoPdf } from "./pdf/gerarTermoPDF";
 
 const STORAGE_KEYS = {
   users: "sf_users_v3",
