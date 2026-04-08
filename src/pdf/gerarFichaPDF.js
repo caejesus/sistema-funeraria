@@ -77,13 +77,13 @@ export function gerarFichaPdf({
       });
       drawCell(doc, 155, y, 50, 5.9, `HORA/SAÍDA: ${form.horaSaida}`, {
         bold: true,
-        fontSize: 8.2,
+        fontSize: 12,
       });
       y += 5.9;
   
       drawCell(doc, left, y, 200, 5.9, `HORA/ATEND: ${form.horaAtendimento}`, {
         bold: true,
-        fontSize: 8.2,
+        fontSize: 12,
       });
       y += 5.9;
   
@@ -113,23 +113,23 @@ export function gerarFichaPdf({
       );
       drawCell(doc, 160, y, 45, 5.9, `INÍCIO ÀS: ${form.inicioAs}`, {
         bold: true,
-        fontSize: 8,
+        fontSize: 12,
       });
       y += 5.9;
   
       if (form.tipoPlano === "socio") {
         drawCell(doc, left, y, 55, 5.9, `PLANO: ${form.plano}`, {
-          fontSize: 8,
+          fontSize: 12,
         });
         drawCell(doc, 60, y, 45, 5.9, `CÓDIGO: ${form.codigo}`, {
-          fontSize: 8,
+          fontSize: 12,
         });
         drawCell(doc, 105, y, 100, 5.9, `DEPENDENTE: ${form.dependente}`, {
-          fontSize: 8,
+          fontSize: 12,
         });
       } else {
         drawCell(doc, left, y, 200, 5.9, `PLANO: SERVIÇO PARTICULAR`, {
-          fontSize: 8,
+          fontSize: 12,
         });
       }
       y += 6.6;
@@ -216,34 +216,34 @@ export function gerarFichaPdf({
       y += 5.9;
   
       drawCell(doc, left, y, 145, 5.9, `NOME: ${form.responsavelNome}`, {
-        fontSize: 7.7,
+        fontSize: 14,
       });
       drawCell(doc, 150, y, 55, 5.9, `CPF: ${form.responsavelCpf}`, {
-        fontSize: 7.7,
+        fontSize: 14,
       });
       y += 5.9;
   
       drawCell(doc, left, y, 200, 5.9, `RG: ${form.responsavelRg}`, {
-        fontSize: 7.7,
+        fontSize: 14,
       });
       y += 5.9;
   
       drawCell(doc, left, y, 160, 5.9, `ENDEREÇO: ${form.responsavelEndereco}`, {
-        fontSize: 7.4,
+        fontSize: 14,
       });
       drawCell(doc, 165, y, 40, 5.9, `CEP: ${form.responsavelCep}`, {
-        fontSize: 7.4,
+        fontSize: 14,
       });
       y += 5.9;
   
       drawCell(doc, left, y, 75, 5.9, `BAIRRO: ${form.responsavelBairro}`, {
-        fontSize: 7.4,
+        fontSize: 14,
       });
       drawCell(doc, 80, y, 60, 5.9, `CELULAR: ${form.responsavelCelular1}`, {
-        fontSize: 7.4,
+        fontSize: 14,
       });
       drawCell(doc, 140, y, 65, 5.9, `CELULAR: ${form.responsavelCelular2}`, {
-        fontSize: 7.4,
+        fontSize: 14,
       });
       y += 5.9;
   
@@ -260,7 +260,7 @@ export function gerarFichaPdf({
               .join(", ");
   
       drawCell(doc, left, y, 200, 6, `LOCAL DO VELÓRIO: ${velorioTexto}`, {
-        fontSize: 7.4,
+        fontSize: 16,
       });
       y += 6.8;
   
@@ -336,7 +336,7 @@ export function gerarFichaPdf({
         false
       );
   
-      const assinaturaY = Math.min(y + 24, 287);
+      const assinaturaY = Math.min(y + 40, 287);
       doc.setFont("times", "bold");
       doc.setFontSize(8.2);
       doc.text("Responsável:", 45, assinaturaY + 0.5);
