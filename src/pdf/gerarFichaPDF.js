@@ -49,13 +49,13 @@ export function gerarFichaPdf({
   
       drawCell(doc, left, y, 200, 5.9, `FALECIDO: ${form.falecido}`, {
         bold: true,
-        fontSize: 8.6,
+        fontSize: 12,
       });
       y += 5.9;
   
       drawCell(doc, left, y, 150, 5.9, `LOCAL DO ÓBITO: ${form.localObito}`, {
         bold: true,
-        fontSize: 8.2,
+        fontSize: 12,
       });
       drawCell(
         doc,
@@ -66,14 +66,14 @@ export function gerarFichaPdf({
         `DATA/SAÍDA: ${formatDateBR(form.dataSaida)}`,
         {
           bold: true,
-          fontSize: 8.2,
+          fontSize: 12,
         }
       );
       y += 5.9;
   
       drawCell(doc, left, y, 150, 5.9, `CEMITÉRIO: ${form.cemiterio}`, {
         bold: true,
-        fontSize: 8.2,
+        fontSize: 12,
       });
       drawCell(doc, 155, y, 50, 5.9, `HORA/SAÍDA: ${form.horaSaida}`, {
         bold: true,
@@ -96,7 +96,7 @@ export function gerarFichaPdf({
         `DATA/ATEND: ${formatDateBR(form.dataAtendimento)}`,
         {
           bold: true,
-          fontSize: 8,
+          fontSize: 12,
         }
       );
       drawCell(
@@ -165,19 +165,19 @@ export function gerarFichaPdf({
         }
   
         drawCell(doc, left, y, 8, 4.8, item.checked ? "X" : "", {
-          fontSize: 8,
+          fontSize: 12,
           bold: true,
           align: "center",
           offsetY: 1.1,
         });
   
         drawCell(doc, 13, y, 152, 4.8, label, {
-          fontSize: item.name === "COROA DE FLORES" ? 6.8 : 7.6,
+          fontSize: item.name === "COROA DE FLORES" ? 12 : 9.8,
           paddingLeft: 1.5,
         });
   
         drawCell(doc, 165, y, 20, 4.8, item.qty || "", {
-          fontSize: 7.3,
+          fontSize: 12,
           align: "center",
         });
   
@@ -189,7 +189,7 @@ export function gerarFichaPdf({
           4.8,
           item.value ? formatMoney(item.value) : "",
           {
-            fontSize: 7.3,
+            fontSize: 12,
             align: "center",
           }
         );
@@ -199,7 +199,7 @@ export function gerarFichaPdf({
   
       drawCell(doc, left, y, 180, 5.6, "VALOR TOTAL:", {
         bold: true,
-        fontSize: 7.8,
+        fontSize: 12,
       });
       drawCell(doc, 185, y, 20, 5.6, formatMoney(totalValue), {
         bold: true,
@@ -216,34 +216,34 @@ export function gerarFichaPdf({
       y += 5.9;
   
       drawCell(doc, left, y, 145, 5.9, `NOME: ${form.responsavelNome}`, {
-        fontSize: 14,
+        fontSize: 12,
       });
       drawCell(doc, 150, y, 55, 5.9, `CPF: ${form.responsavelCpf}`, {
-        fontSize: 14,
+        fontSize: 12,
       });
       y += 5.9;
   
       drawCell(doc, left, y, 200, 5.9, `RG: ${form.responsavelRg}`, {
-        fontSize: 14,
+        fontSize: 12,
       });
       y += 5.9;
   
       drawCell(doc, left, y, 160, 5.9, `ENDEREÇO: ${form.responsavelEndereco}`, {
-        fontSize: 14,
+        fontSize: 12,
       });
       drawCell(doc, 165, y, 40, 5.9, `CEP: ${form.responsavelCep}`, {
-        fontSize: 14,
+        fontSize: 12,
       });
       y += 5.9;
   
       drawCell(doc, left, y, 75, 5.9, `BAIRRO: ${form.responsavelBairro}`, {
-        fontSize: 14,
+        fontSize: 12,
       });
       drawCell(doc, 80, y, 60, 5.9, `CELULAR: ${form.responsavelCelular1}`, {
-        fontSize: 14,
+        fontSize: 12,
       });
       drawCell(doc, 140, y, 65, 5.9, `CELULAR: ${form.responsavelCelular2}`, {
-        fontSize: 14,
+        fontSize: 12,
       });
       y += 5.9;
   
@@ -260,7 +260,7 @@ export function gerarFichaPdf({
               .join(", ");
   
       drawCell(doc, left, y, 200, 6, `LOCAL DO VELÓRIO: ${velorioTexto}`, {
-        fontSize: 16,
+        fontSize: 12,
       });
       y += 6.8;
   
