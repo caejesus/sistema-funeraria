@@ -1619,7 +1619,7 @@ function printPreviewPdf() {
         <div style={styles.loginCard}>
           <div style={styles.loginBrandWrap}>
             <img
-              src="/logo.png"
+              src="/logosf.png"
               alt="Logo Grupo São Francisco"
               style={styles.loginLogo}
             />
@@ -1664,7 +1664,7 @@ function printPreviewPdf() {
         <header className="home-header">
           <div className="home-brand">
             <img
-              src="/logo.png"
+              src="/logosf.png"
               alt="Logo Grupo São Francisco"
               className="home-brand-logo"
             />
