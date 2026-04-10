@@ -1597,7 +1597,7 @@ function printPreviewPdf() {
         <div style={styles.loginCard}>
           <div style={styles.loginBrandWrap}>
             <img
-              src="/logo.png"
+              src="/logosf.png"
               alt="Logo Grupo São Francisco"
               style={styles.loginLogo}
             />
