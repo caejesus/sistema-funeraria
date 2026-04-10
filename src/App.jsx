@@ -18,7 +18,7 @@ const STORAGE_KEYS = {
 };
 
 const OPERATION_STAGES = [
-  { key: "atendimento", label: "Serviço" },
+  { key: "atendimento", label: "Atendimento" },
   { key: "remocao", label: "Remoção" },
   { key: "procedimentoClinico", label: "Procedimento Clínico" },
   { key: "ornamentacao", label: "Ornamentação" },
@@ -111,6 +111,18 @@ const SERVICE_NAMES = [
   "INVOL",
   "CAIXA DE VIAGEM",
   "OUTRAS DESPESAS",
+];
+
+const SERVICE_TYPE_OPTIONS = [
+  { value: "particular", label: "PARTICULAR" },
+  { value: "socio", label: "ASSOCIADO" },
+  { value: "seguradora", label: "SEGURADORA" },
+  { value: "orgao_publico", label: "ÓRGÃO PÚBLICO" },
+  { value: "prefeitura_conveniada", label: "PREFEITURA CONVENIADA" },
+  { value: "pm", label: "POLÍCIA MILITAR (DPS AM)" },
+  { value: "tokyo", label: "TOKYO MARINE (ASSEGURADORA)" },
+  { value: "casai", label: "CASAI (DSEI MANAUS)" },
+  { value: "autazes", label: "PREFEITURA DE AUTAZES" },
 ];
 
 const initialServices = SERVICE_NAMES.map((name) => ({
@@ -1529,7 +1541,7 @@ function printPreviewPdf() {
         </div>
 
         <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Serviço Finalizado</h2>
+          <h2 style={styles.cardTitle}>Atendimento Finalizado</h2>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <button
@@ -1662,13 +1674,38 @@ function printPreviewPdf() {
     <div className="app-shell" style={themeVars}>
       {activeTab === "home" && (
         <header className="home-header">
-          <div className="home-brand">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              flexWrap: "wrap",
+            }}
+          >
             <img
               src="/logosf.png"
               alt="Logo Grupo São Francisco"
-              className="home-brand-logo"
+              style={{
+                width: 72,
+                height: "auto",
+                display: "block",
+                objectFit: "contain",
+                background: "transparent",
+                boxShadow: "none",
+                border: "none",
+                padding: 0,
+                margin: 0,
+              }}
             />
-            <div className="home-brand-copy">
+            <div
+              className="home-brand-copy"
+              style={{
+                background: "transparent",
+                boxShadow: "none",
+                border: "none",
+                padding: 0,
+              }}
+            >
               <div className="home-brand-title">GRUPO SÃO FRANCISCO</div>
               <div className="home-brand-subtitle">Assistência e cuidado em todos os momentos</div>
             </div>
@@ -1723,7 +1760,7 @@ function printPreviewPdf() {
             style={activeTab === "atendimento" ? styles.tabActive : styles.tab}
             onClick={() => setActiveTab("atendimento")}
           >
-            Novo Serviço
+            Novo Atendimento
           </button>
 
           <button
@@ -1773,8 +1810,8 @@ function printPreviewPdf() {
                 <i className="fa-solid fa-circle-plus" />
               </div>
               <div className="home-action-content">
-                <div className="home-action-title">NOVO SERVIÇO</div>
-                <div className="home-action-text">Iniciar novo serviço</div>
+                <div className="home-action-title">NOVO ATENDIMENTO</div>
+                <div className="home-action-text">Iniciar novo atendimento</div>
               </div>
             </button>
 
@@ -1800,7 +1837,7 @@ function printPreviewPdf() {
               </div>
               <div className="home-action-content">
                 <div className="home-action-title">GESTÃO DE ETAPAS</div>
-                <div className="home-action-text">Acompanhar etapas e serviços em andamento</div>
+                <div className="home-action-text">Acompanhar etapas e atendimentos em andamento</div>
               </div>
             </button>
           </div>
@@ -1828,7 +1865,7 @@ function printPreviewPdf() {
                 setActiveTab("atendimento");
               }}
             >
-              Novo Serviço
+              Novo Atendimento
             </button>
           </div>
 
@@ -1851,9 +1888,9 @@ function printPreviewPdf() {
 
           {filteredAttendimentos.length === 0 ? (
             <div style={styles.modulePlaceholder}>
-              <div style={styles.modulePlaceholderTitle}>Nenhum atendimento salvo</div>
+              <div style={styles.modulePlaceholderTitle}>Nenhum serviço salvo</div>
               <div style={styles.modulePlaceholderText}>
-                Finalize um atendimento para ele aparecer aqui e ficar disponível para edição e geração de PDF.
+                Finalize um atendimento para ele aparecer aqui como serviço salvo e ficar disponível para edição e geração de PDF.
               </div>
             </div>
           ) : (
@@ -2211,7 +2248,7 @@ function printPreviewPdf() {
               style={styles.sectionToggle}
               onClick={() => toggleSection("atendimentoParte1")}
             >
-              <span style={styles.cardTitle}>Parte 1 — Serviço</span>
+              <span style={styles.cardTitle}>Parte 1 — Atendimento</span>
               <span style={styles.sectionToggleIcon}>
                 {collapsedSections.atendimentoParte1 ? "＋" : "−"}
               </span>
@@ -2462,7 +2499,7 @@ function printPreviewPdf() {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Hora/Serviço</label>
+                <label style={styles.label}>Hora do Atendimento</label>
                 <input
                   type="time"
                   style={styles.input}
@@ -2472,7 +2509,7 @@ function printPreviewPdf() {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Data/Serviço</label>
+                <label style={styles.label}>Data do Atendimento</label>
                 <input
                   type="date"
                   style={styles.input}
@@ -2505,18 +2542,17 @@ function printPreviewPdf() {
             <div style={styles.separator}></div>
 
             <div style={styles.field}>
-              <label style={styles.label}>Tipo do atendimento</label>
+              <label style={styles.label}>Tipo de serviço</label>
               <select
                 style={styles.input}
                 value={form.tipoPlano}
                 onChange={(e) => updateForm("tipoPlano", e.target.value)}
               >
-                <option value="particular">Serviço PARTICULAR</option>
-                <option value="socio">ASSOCIADO</option>
-                <option value="pm">POLICIA MILITAR (DPS AM)</option>
-  <option value="tokyo">TOKYO MARINE (ASSEGURADORA)</option>
-  <option value="casai">CASAI (DSEI MANAUS)</option>
-  <option value="autazes">PREFEITURA DE AUTAZES</option>
+                {SERVICE_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -3118,7 +3154,7 @@ function printPreviewPdf() {
               }}
             >
               <button style={styles.primaryBtn} onClick={finalizarAtendimento}>
-                Finalizar Serviço
+                Finalizar Atendimento
               </button>
             </div>
               </>
