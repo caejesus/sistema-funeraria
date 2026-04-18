@@ -177,7 +177,7 @@ export function gerarFichaPdf({
         });
   
         drawCell(doc, 165, y, 20, 4.8, item.qty || "", {
-          fontSize: 12,
+          fontSize: 8.5,
           align: "center",
         });
   
@@ -203,7 +203,7 @@ export function gerarFichaPdf({
       });
       drawCell(doc, 185, y, 20, 5.6, formatMoney(totalValue), {
         bold: true,
-        fontSize: 7.5,
+        fontSize: 10,
         align: "center",
       });
       y += 6.8;
@@ -336,7 +336,7 @@ export function gerarFichaPdf({
         false
       );
   
-      const assinaturaY = Math.min(y + 40, 287);
+      const assinaturaY = Math.min(y + 40, 297);
       doc.setFont("times", "bold");
       doc.setFontSize(8.2);
       doc.text("Responsável:", 45, assinaturaY + 0.5);
