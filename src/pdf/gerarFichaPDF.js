@@ -189,7 +189,7 @@ export function gerarFichaPdf({
           4.8,
           item.value ? formatMoney(item.value) : "",
           {
-            fontSize: 12,
+            fontSize: 7.7,
             align: "center",
           }
         );
@@ -210,7 +210,7 @@ export function gerarFichaPdf({
   
       drawCell(doc, left, y, 200, 5.9, "DADOS DO RESPONSÁVEL", {
         bold: true,
-        fontSize: 8.8,
+        fontSize: 10,
         align: "center",
       });
       y += 5.9;
@@ -274,7 +274,7 @@ export function gerarFichaPdf({
           showDetails ? `ATENDENTE: ${atendente || ""}` : "",
           {
             bold: true,
-            fontSize: 7.2,
+            fontSize: 10,
           }
         );
         drawCell(
@@ -286,7 +286,7 @@ export function gerarFichaPdf({
           showDetails ? `${titulo} ${motorista || ""}` : titulo,
           {
             bold: true,
-            fontSize: 7.2,
+            fontSize: 10,
           }
         );
         drawCell(
