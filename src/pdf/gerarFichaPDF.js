@@ -144,11 +144,11 @@ export function gerarFichaPdf({
       drawCell(doc, left, y, 8, 5.1, "", {});
       drawCell(doc, 13, y, 152, 5.1, "", {});
       drawCell(doc, 165, y, 20, 5.1, "QUANT.", {
-        fontSize: 7.6,
+        fontSize: 8.5,
         align: "center",
       });
       drawCell(doc, 185, y, 20, 5.1, "VALOR:", {
-        fontSize: 7.6,
+        fontSize: 8.5,
         align: "center",
       });
       y += 5.1;
@@ -172,7 +172,7 @@ export function gerarFichaPdf({
         });
   
         drawCell(doc, 13, y, 152, 4.8, label, {
-          fontSize: item.name === "COROA DE FLORES" ? 12 : 9.8,
+          fontSize: item.name === "COROA DE FLORES" ? 8.5 : 9.8,
           paddingLeft: 1.5,
         });
   
