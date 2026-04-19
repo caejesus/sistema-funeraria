@@ -95,14 +95,33 @@ export function gerarTermoPdf({ form, formatDateBR, openPdfPreview }) {
       doc.setFontSize(10);
   
       doc.text("Pelo presente eu,", left, y);
-      doc.text(upper(form.responsavelNome), 42, y);
-      line(42, y + 0.6, 104);
-      doc.text("RG:", 107, y);
-      doc.text(safeText(form.responsavelRg), 117, y);
-      line(117, y + 0.6, 145);
-      doc.text("CPF:", 148, y);
-      doc.text(safeText(form.responsavelCpf), 159, y);
-      line(159, y + 0.6, 196);
+
+// Nome
+let x = left + doc.getTextWidth("Pelo presente eu, ") + 2;
+doc.text(upper(form.responsavelNome), x, y);
+
+let nomeWidth = doc.getTextWidth(upper(form.responsavelNome));
+line(x, y + 0.6, x + nomeWidth + 2);
+
+// RG
+x = x + nomeWidth + 6;
+doc.text("RG:", x, y);
+
+x += doc.getTextWidth("RG: ");
+doc.text(safeText(form.responsavelRg), x, y);
+
+let rgWidth = doc.getTextWidth(safeText(form.responsavelRg));
+line(x, y + 0.6, x + rgWidth + 2);
+
+// CPF
+x = x + rgWidth + 6;
+doc.text("CPF:", x, y);
+
+x += doc.getTextWidth("CPF: ");
+doc.text(safeText(form.responsavelCpf), x, y);
+
+let cpfWidth = doc.getTextWidth(safeText(form.responsavelCpf));
+line(x, y + 0.6, x + cpfWidth + 2);
   
       y += 7;
       doc.text("Representante legal do falecido:", left, y);
