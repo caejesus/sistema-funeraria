@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import notificationSound from "../assets/notificacao.mp3";
 import "./equipe.css";
+import {
+  servicoAtivo,
+  tipoServico,
+  getLocalVelorio,
+  getTipoTransladoLabel,
+  getServiceTypeLabel,
+} from "../components/ServicosDoDia";
 
 function formatDateBR(date) {
   if (!date) return "";
@@ -281,6 +288,21 @@ function StageButtons({
   );
 }
 
+function MapsButton({ address }) {
+  if (!address || address === "—") return null;
+  const query = encodeURIComponent(`${address}, Manaus, AM`);
+  return (
+    <a
+      href={`https://www.google.com/maps/search/?api=1&query=${query}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="maps-btn"
+    >
+      📍 Maps
+    </a>
+  );
+}
+
 function SummaryLine({ label, value }) {
   return (
     <div className="summary-line">
@@ -307,9 +329,248 @@ function StageCard({ title, status, children, actions }) {
   );
 }
 
+const TIPO_SD_BADGE = {
+  sepultamento: { label: "SEPULTAMENTO", bg: "rgba(34,197,94,0.14)",  color: "#15803d" },
+  cremacao:     { label: "CREMAÇÃO",     bg: "rgba(249,115,22,0.14)", color: "#c2410c" },
+  translado:    { label: "TRANSLADO",    bg: "rgba(59,130,246,0.14)", color: "#1d4ed8" },
+};
+
+function ServicosDoDiaEquipe({ servicos = [] }) {
+  if (!servicos.length) return null;
+
+  const sepultamentos = servicos.filter((i) => tipoServico(i) === "sepultamento");
+  const cremacoes     = servicos.filter((i) => tipoServico(i) === "cremacao");
+  const translados    = servicos.filter((i) => tipoServico(i) === "translado");
+  const ordenados     = [...sepultamentos, ...cremacoes, ...translados];
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ fontSize: "1rem", fontWeight: 800, color: "var(--primary)", marginBottom: 10 }}>
+        SERVIÇOS DO DIA ({servicos.length})
+      </div>
+      <div style={{ display: "grid", gap: 10 }}>
+        {ordenados.map((item, idx) => {
+          const form = item.form || {};
+          const tipo = tipoServico(item);
+          const badge = TIPO_SD_BADGE[tipo];
+          const localVelorio = getLocalVelorio(form);
+          const temOnibus = servicoAtivo(item.services, "ÔNIBUS");
+
+          const cemOuTipo =
+            tipo === "cremacao" ? "CREMAÇÃO" :
+            tipo === "translado" ? getTipoTransladoLabel(item.services) :
+            (form.cemiterio || "—");
+
+          return (
+            <div
+              key={item.id}
+              style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 16, padding: 14, boxShadow: "var(--shadow)" }}
+            >
+              {/* Type badges */}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                <span style={{ background: badge.bg, color: badge.color, borderRadius: 999, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 800, whiteSpace: "nowrap" }}>
+                  {badge.label}
+                </span>
+                {temOnibus && (
+                  <span style={{ background: "rgba(139,92,246,0.14)", color: "#7c3aed", borderRadius: 999, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 800 }}>
+                    🚌 ÔNIBUS
+                  </span>
+                )}
+                {form.tipoPlano && (
+                  <span style={{ background: "rgba(38,177,196,0.12)", color: "#16889a", borderRadius: 999, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 800 }}>
+                    {getServiceTypeLabel(form.tipoPlano)}
+                  </span>
+                )}
+                <span style={{ marginLeft: "auto", color: "var(--muted)", fontSize: "0.78rem", fontWeight: 700 }}>
+                  {idx + 1}º
+                </span>
+              </div>
+
+              {/* Local */}
+              {localVelorio && (
+                <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--primary)", marginBottom: 4 }}>
+                  {localVelorio}
+                </div>
+              )}
+
+              {/* Falecido */}
+              <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text)", textTransform: "uppercase", marginBottom: 8 }}>
+                {form.falecido || "Sem nome informado"}
+              </div>
+
+              {/* Details */}
+              <div style={{ display: "grid", gap: 3, fontSize: "0.88rem", color: "var(--muted)" }}>
+                <div><strong style={{ color: "var(--text)" }}>Cemitério:</strong> {cemOuTipo}</div>
+                {form.horaSaida && (
+                  <div style={{ fontWeight: 800, color: "var(--primary)", fontSize: "0.92rem" }}>
+                    ⏰ SAINDO ÀS {form.horaSaida}
+                  </div>
+                )}
+                {form.motorista && (
+                  <div><strong style={{ color: "var(--text)" }}>Motorista:</strong> {form.motorista}</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function OsAtivasSection({ ordens = [], atualizarStatus }) {
+  if (!ordens.length) return null;
+
+  const canUpdate = typeof atualizarStatus === "function";
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ fontSize: "1rem", fontWeight: 800, color: "var(--primary)", marginBottom: 10 }}>
+        Ordens de Serviço ativas ({ordens.length})
+      </div>
+      <div style={{ display: "grid", gap: 10 }}>
+        {ordens.map((os) => {
+          const cor = OS_STATUS_COLORS[os.status] || OS_STATUS_COLORS.cancelada;
+          const urgente = os.prioridade === "urgente";
+          const d = os.dados || {};
+          const isSvo = (os.local_obito || "").toUpperCase() === "SVO";
+
+          const clean = (v) => v && String(v).trim();
+          const mapsAddress = isSvo
+            ? [os.endereco, d.numero, d.complemento, "Manaus, AM"].filter(clean).join(", ")
+            : [os.local_obito, "Manaus, AM"].filter(clean).join(", ");
+          const hasLocation = isSvo ? !!clean(os.endereco) : !!clean(os.local_obito);
+          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsAddress)}`;
+
+          const telBruto = d.responsavel_telefone || "";
+          const telLimpo = telBruto.replace(/\D/g, "");
+
+          const localLabel = isSvo
+            ? ["SVO", os.endereco, d.numero].filter(Boolean).join(" — ")
+            : (os.local_obito || "");
+
+          return (
+            <div
+              key={os.record_id}
+              style={{
+                background: "var(--card)",
+                border: urgente ? "2px solid #f59e0b" : "1px solid var(--line)",
+                borderRadius: 16,
+                padding: 14,
+                boxShadow: "var(--shadow)",
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 8 }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.82rem", fontWeight: 700, color: "var(--muted)", marginBottom: 4 }}>
+                    {os.numero}
+                    {urgente && (
+                      <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#b45309", background: "rgba(245,158,11,0.1)", borderRadius: 999, padding: "2px 8px" }}>
+                        ⚡ URGENTE
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text)" }}>
+                    {os.falecido || "Sem nome informado"}
+                  </div>
+                </div>
+                <span style={{ background: cor.bg, color: cor.color, borderRadius: 999, padding: "4px 10px", fontSize: "0.75rem", fontWeight: 800, whiteSpace: "nowrap", flexShrink: 0 }}>
+                  {OS_STATUS_LABELS[os.status] || os.status}
+                </span>
+              </div>
+
+              {/* Info */}
+              <div style={{ display: "grid", gap: 4, fontSize: "0.88rem", color: "var(--muted)", marginBottom: 12 }}>
+                {localLabel && (
+                  <div><strong style={{ color: "var(--text)" }}>Local:</strong> {localLabel}</div>
+                )}
+                {os.motorista && (
+                  <div>
+                    <strong style={{ color: "var(--text)" }}>Motorista:</strong> {os.motorista}
+                    {os.carro ? ` • ${os.carro}` : ""}
+                  </div>
+                )}
+                {d.responsavel_nome && (
+                  <div><strong style={{ color: "var(--text)" }}>Responsável:</strong> {d.responsavel_nome}</div>
+                )}
+              </div>
+
+              {/* Buttons row */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {/* Status action */}
+                {canUpdate && os.status === "aguardando_remocao" && (
+                  <button type="button" className="os-action-btn" onClick={() => atualizarStatus(os.record_id, "equipe_deslocando")}>
+                    Iniciar deslocamento
+                  </button>
+                )}
+                {canUpdate && os.status === "equipe_deslocando" && (
+                  <button type="button" className="os-action-btn" onClick={() => atualizarStatus(os.record_id, "aguardando_local")}>
+                    Aguardando no local
+                  </button>
+                )}
+                {canUpdate && os.status === "aguardando_local" && (
+                  <button type="button" className="os-action-btn" onClick={() => atualizarStatus(os.record_id, "em_remocao")}>
+                    Iniciar remoção
+                  </button>
+                )}
+                {canUpdate && os.status === "em_remocao" && (
+                  <button type="button" className="os-action-btn" onClick={() => atualizarStatus(os.record_id, "finalizada")}>
+                    Finalizar remoção
+                  </button>
+                )}
+
+                {/* Maps */}
+                {hasLocation && (
+                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="os-contact-btn">
+                    📍 Abrir localização
+                  </a>
+                )}
+
+                {/* Contact */}
+                {telLimpo && (
+                  <>
+                    <a href={`tel:${telLimpo}`} className="os-contact-btn">
+                      📞 Ligar
+                    </a>
+                    <a href={`https://wa.me/55${telLimpo}`} target="_blank" rel="noopener noreferrer" className="os-contact-btn">
+                      💬 WhatsApp
+                    </a>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const OS_STATUS_LABELS = {
+  aguardando_remocao: "Aguardando remoção",
+  equipe_deslocando:  "Equipe deslocando",
+  aguardando_local:   "Aguardando no local",
+  em_remocao:         "Em remoção",
+  finalizada:         "Finalizada",
+  cancelada:          "Cancelada",
+};
+
+const OS_STATUS_COLORS = {
+  aguardando_remocao: { bg: "rgba(245,158,11,0.13)",  color: "#b45309" },
+  equipe_deslocando:  { bg: "rgba(59,130,246,0.13)",  color: "#1d4ed8" },
+  aguardando_local:   { bg: "rgba(139,92,246,0.13)",  color: "#7c3aed" },
+  em_remocao:         { bg: "rgba(249,115,22,0.13)",  color: "#c2410c" },
+  finalizada:         { bg: "rgba(34,197,94,0.13)",   color: "#15803d" },
+  cancelada:          { bg: "rgba(148,163,184,0.13)", color: "#64748b" },
+};
+
 export default function Equipe({
   atendimentos = [],
   updateOperationalStage,
+  ordensAtivas = [],
+  atualizarStatusOs,
+  servicosDoDia = [],
 }) {
   const ativos = useMemo(() => {
     const lista = Array.isArray(atendimentos) ? atendimentos.filter(Boolean) : [];
@@ -325,6 +586,7 @@ export default function Equipe({
   const [idsVistos, setIdsVistos] = useState([]);
   const [idsRecentes, setIdsRecentes] = useState([]);
   const [audioLiberado, setAudioLiberado] = useState(false);
+  const [abaAtiva, setAbaAtiva] = useState("operacional");
 
   useEffect(() => {
     const liberarAudio = () => setAudioLiberado(true);
@@ -365,27 +627,6 @@ export default function Equipe({
     return () => window.clearTimeout(timer);
   }, [ativos, idsVistos, audioLiberado]);
 
-  if (!ativos.length) {
-    return (
-      <div className="equipe-page">
-        <div className="equipe-shell">
-          <div className="equipe-topbar">
-            <div>
-              <h2>Tela da equipe</h2>
-              <p>
-                {audioLiberado
-                  ? "Alerta sonoro ativado"
-                  : "Toque na tela para liberar o alerta sonoro"}
-              </p>
-            </div>
-          </div>
-
-          <div className="empty-state">Nenhuma ordem de serviço ativa.</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="equipe-page">
       <div className="equipe-shell">
@@ -400,7 +641,31 @@ export default function Equipe({
           </div>
         </div>
 
-        <div className="cards-list">
+        <div className="equipe-tabs">
+          <button
+            type="button"
+            className={`equipe-tab${abaAtiva === "operacional" ? " equipe-tab--active" : ""}`}
+            onClick={() => setAbaAtiva("operacional")}
+          >
+            Operacional
+          </button>
+          <button
+            type="button"
+            className={`equipe-tab${abaAtiva === "servicos_dia" ? " equipe-tab--active" : ""}`}
+            onClick={() => setAbaAtiva("servicos_dia")}
+          >
+            Serviços do Dia
+          </button>
+        </div>
+
+        {abaAtiva === "operacional" && (
+          <>
+            <OsAtivasSection ordens={ordensAtivas} atualizarStatus={atualizarStatusOs} />
+            {ativos.length === 0 && (
+              <div className="empty-state">Nenhuma ordem de serviço ativa.</div>
+            )}
+            {ativos.length > 0 && (
+            <div className="cards-list">
           {ativos.map((item) => {
             const form = item.form || {};
             const isViagem = form.velorioTipo === "viagem";
@@ -496,6 +761,7 @@ export default function Equipe({
                       <div className="stage-info-row">
                         <span className="stage-info-label">Local:</span>
                         <span>{form.localObito || item.localObito || "—"}</span>
+                        <MapsButton address={form.localObito || item.localObito} />
                       </div>
                       <div className="stage-info-row">
                         <span className="stage-info-label">Religião:</span>
@@ -601,6 +867,7 @@ export default function Equipe({
                           {getVelorioLabelLocal(form)}:
                         </span>
                         <span>{getVelorioLocal(form) || "—"}</span>
+                        <MapsButton address={getVelorioLocal(form)} />
                       </div>
                       <div className="stage-info-row">
                         <span className="stage-info-label">
@@ -641,6 +908,7 @@ export default function Equipe({
                         <div className="stage-info-row">
                           <span className="stage-info-label">Cemitério:</span>
                           <span>{form.cemiterio || item.cemiterio || "—"}</span>
+                          <MapsButton address={form.cemiterio || item.cemiterio} />
                         </div>
                         <div className="stage-info-row">
                           <span className="stage-info-label">Saída:</span>
@@ -661,7 +929,14 @@ export default function Equipe({
               </div>
             );
           })}
-        </div>
+            </div>
+            )}
+          </>
+        )}
+
+        {abaAtiva === "servicos_dia" && (
+          <ServicosDoDiaEquipe servicos={servicosDoDia} />
+        )}
       </div>
     </div>
   );

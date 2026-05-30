@@ -52,7 +52,22 @@ export function gerarFichaPdf({
         fontSize: 12,
       });
       y += 5.9;
-  
+
+      const extraInfoFalecido = [
+        form.sexo ? `SEXO: ${form.sexo}` : null,
+        form.dataNascimento ? `NASC.: ${formatDateBR(form.dataNascimento)}` : null,
+        form.peso ? `PESO: ${form.peso}` : null,
+        form.altura ? `ALTURA: ${form.altura}` : null,
+      ].filter(Boolean).join("     ");
+
+      if (extraInfoFalecido) {
+        drawCell(doc, left, y, 200, 5.9, extraInfoFalecido, {
+          bold: false,
+          fontSize: 10,
+        });
+        y += 5.9;
+      }
+
       drawCell(doc, left, y, 150, 5.9, `LOCAL DO ÓBITO: ${form.localObito}`, {
         bold: true,
         fontSize: 12,
