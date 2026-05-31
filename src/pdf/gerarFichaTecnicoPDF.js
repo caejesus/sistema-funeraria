@@ -1,178 +1,266 @@
 import jsPDF from "jspdf";
-import { drawCell } from "./pdfHelpers";
 
 export function gerarFichaTecnicoPdf({ form, services, numero, openPdfPreview }) {
   const doc = new jsPDF("p", "mm", "a4");
   doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.22);
+  doc.setTextColor(0, 0, 0);
+  doc.setLineWidth(0.2);
 
-  const left = 5;
-  const W = 200;
-  const ROW_H = 5.9;
-  let y = 5;
+  const left = 15;
+  let y = 18;
 
-  // ─── CABEÇALHO ─────────────────────────────────────────────────────────────
+  // ─── Helpers (mesmo padrão do gerarTermoPDF.js) ──────────────────────────
+
+  function safeText(value) {
+    return String(value || "");
+  }
+
+  function upper(value) {
+    return safeText(value).toUpperCase();
+  }
+
+  function line(x1, yy, x2) {
+    doc.line(x1, yy, x2, yy);
+  }
+
+  function writeLineValue(label, value, x, yy, xLineStart, xLineEnd, options = {}) {
+    const valueX = options.valueX ?? xLineStart + 1.5;
+    doc.text(label, x, yy);
+    const text = safeText(value);
+    if (text) doc.text(text, valueX, yy);
+    line(xLineStart, yy + 0.6, xLineEnd);
+  }
+
+  function drawCheckbox(x, yy, checked) {
+    const boxTop = yy - 3.1;
+    doc.rect(x, boxTop, 3.3, 3.3);
+    if (checked) {
+      doc.setFont("times", "bold");
+      doc.setFontSize(9);
+      doc.text("X", x + 0.85, yy - 0.25);
+      doc.setFont("times", "normal");
+      doc.setFontSize(10);
+    }
+  }
+
+  function checkboxOption(x, yy, checked, label) {
+    drawCheckbox(x, yy, checked);
+    doc.text(label, x + 5, yy);
+  }
+
+  function sep() {
+    y += 3;
+    doc.setLineWidth(0.3);
+    line(left, y, 196);
+    doc.setLineWidth(0.2);
+    y += 5;
+  }
+
+  function sectionTitle(txt) {
+    doc.setFont("times", "bold");
+    doc.setFontSize(10);
+    doc.text(txt, left, y);
+    y += 7;
+    doc.setFont("times", "normal");
+  }
+
+  function formatValor(val) {
+    if (!val) return "—";
+    const n = Number(String(val).replace(/\./g, "").replace(",", "."));
+    if (isNaN(n)) return String(val);
+    return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // ─── Data automática ─────────────────────────────────────────────────────
+
+  const dataAtual = new Date();
+  const dia = String(dataAtual.getDate()).padStart(2, "0");
+  const ano = dataAtual.getFullYear();
+  const meses = [
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+  ];
+  const mes = meses[dataAtual.getMonth()];
+
+  // ─── CABEÇALHO ───────────────────────────────────────────────────────────
+
   doc.setFont("times", "bold");
-  doc.setFontSize(13);
-  doc.text("FUNERÁRIA SÃO FRANCISCO DE ASSIS", 105, y + 5, { align: "center" });
-  y += 7;
-
-  doc.setFontSize(11);
-  doc.text("FICHA TÉCNICA — PREPARO DO CORPO", 105, y + 5, { align: "center" });
+  doc.setFontSize(12);
+  doc.text("FICHA TÉCNICA — PREPARO DO CORPO", 105, y, { align: "center" });
   y += 8;
 
+  doc.setFont("times", "normal");
+  doc.setFontSize(10);
+
   doc.setLineWidth(0.5);
-  doc.line(left, y, 205, y);
-  doc.setLineWidth(0.22);
-  y += 5;
+  line(left, y, 196);
+  doc.setLineWidth(0.2);
+  y += 8;
 
-  // ─── Helpers ───────────────────────────────────────────────────────────────
+  // ─── IDENTIFICAÇÃO ───────────────────────────────────────────────────────
 
-  function titulo(txt) {
-    doc.setFont("times", "bold");
-    doc.setFontSize(9.5);
-    doc.text(txt, left, y + 3.5);
-    y += 5.5;
-  }
+  // Nº Atendimento + Falecido (mesma linha)
+  writeLineValue("Nº Atendimento:", safeText(numero), left, y, left + 37, 103);
+  writeLineValue("Falecido:", upper(form.falecido), 106, y, 121, 196, { valueX: 122.5 });
+  y += 7;
 
-  function separador() {
-    y += 2;
-    doc.setLineWidth(0.3);
-    doc.line(left, y, 205, y);
-    doc.setLineWidth(0.22);
-    y += 4;
-  }
+  // Sexo + Peso + Altura
+  writeLineValue("Sexo:", upper(form.sexo), left, y, left + 13, 65);
+  writeLineValue("Peso:", safeText(form.peso), 68, y, 79, 118);
+  writeLineValue("Altura:", safeText(form.altura), 121, y, 132, 196);
+  y += 7;
 
-  function cel(x, w, texto, bold = false) {
-    drawCell(doc, x, y, w, ROW_H, texto, { fontSize: 9, bold });
-  }
+  // Chegou na clínica + Início
+  writeLineValue("Chegou na clínica às:", safeText(form.chegouClinica), left, y, left + 48, 104);
+  writeLineValue("Início às:", safeText(form.inicioAs), 107, y, 120, 196, { valueX: 121.5 });
+  y += 4;
 
-  const c3 = Math.floor(W / 3); // ~66mm per third
+  sep();
 
-  // ─── BLOCO 1 — IDENTIFICAÇÃO ──────────────────────────────────────────────
-  titulo("IDENTIFICAÇÃO");
+  // ─── DO CORPO ────────────────────────────────────────────────────────────
 
-  cel(left,       55,  `Nº ATENDIMENTO: ${numero || ""}`, true);
-  cel(left + 55,  145, `FALECIDO: ${form.falecido || ""}`, true);
-  y += ROW_H;
+  sectionTitle("DO CORPO");
 
-  cel(left,           c3,         `SEXO: ${form.sexo || "—"}`);
-  cel(left + c3,      c3,         `PESO: ${form.peso || "—"}`);
-  cel(left + c3 * 2,  W - c3 * 2, `ALTURA: ${form.altura || "—"}`);
-  y += ROW_H;
+  // Condições do corpo
+  doc.text("· Condições do corpo:", left, y);
+  checkboxOption(72, y, form.necropsia === "sim", "Necropsiado");
+  checkboxOption(118, y, form.necropsia !== "sim", "Não Necropsiado");
+  y += 7;
 
-  separador();
-
-  // ─── BLOCO 2 — CHEGADA E INÍCIO ──────────────────────────────────────────
-  titulo("CHEGADA E INÍCIO");
-
-  cel(left,       130, `CHEGOU NA CLÍNICA ÀS: ${form.chegouClinica || "—"}`);
-  cel(left + 130,  70, `INÍCIO ÀS: ${form.inicioAs || "—"}`);
-  y += ROW_H;
-
-  separador();
-
-  // ─── BLOCO 3 — DO CORPO ───────────────────────────────────────────────────
-  titulo("DO CORPO");
-
-  const condicoes = form.necropsia === "sim" ? "Necropsiado" : "Não necropsiado";
-  cel(left,       100, `CONDIÇÕES: ${condicoes}`);
-  cel(left + 100, 100, `CHEGOU VESTIDO: ${form.veioVestido === "sim" ? "Sim" : "Não"}`);
-  y += ROW_H;
+  // Veio vestido
+  doc.text("· Falecido veio vestido:", left, y);
+  checkboxOption(72, y, form.veioVestido === "sim", "Sim");
+  checkboxOption(95, y, form.veioVestido !== "sim", "Não");
+  y += 7;
 
   if (form.veioVestido === "sim") {
-    const roupaLabel = form.roupaDestino === "devolver" ? "Devolver" : "Descartar";
-    cel(left,       100, `ROUPA: ${roupaLabel}`);
-    cel(left + 100, 100, `ROUPA ENTREGUE PARA: ${form.roupaEntreguePara || "—"}`);
-    y += ROW_H;
+    doc.text("· Roupa:", left, y);
+    checkboxOption(34, y, form.roupaDestino === "devolver", "Devolver");
+    checkboxOption(72, y, form.roupaDestino === "descartar", "Descartar");
+    y += 7;
+
+    writeLineValue("· Roupa entregue para:", upper(form.roupaEntreguePara), left, y, 63, 196, { valueX: 64.5 });
+    y += 7;
   }
 
-  const joiasLabel = form.joias === "sim"
-    ? `Sim${form.joiasQuais ? " — " + form.joiasQuais : ""}`
-    : "Não";
-  cel(left,       130, `JOIAS: ${joiasLabel}`);
-  cel(left + 130,  70, `RETIRAR ESMALTE: ${form.retirarEsmalte === "sim" ? "Sim" : "Não"}`);
-  y += ROW_H;
+  // Joias
+  doc.text("· Joias:", left, y);
+  checkboxOption(30, y, form.joias === "sim", "Sim");
+  checkboxOption(48, y, form.joias !== "sim", "Não");
+  writeLineValue("Quais:", safeText(form.joiasQuais), 66, y, 80, 196, { valueX: 81.5 });
+  y += 7;
 
-  separador();
+  // Retirar esmalte
+  doc.text("· Retirar esmalte:", left, y);
+  checkboxOption(55, y, form.retirarEsmalte === "sim", "Sim");
+  checkboxOption(78, y, form.retirarEsmalte !== "sim", "Não");
+  y += 4;
 
-  // ─── BLOCO 4 — DA ESTÉTICA ────────────────────────────────────────────────
-  titulo("DA ESTÉTICA");
+  sep();
 
-  cel(left,           c3,         `BARBEAR: ${form.barbear === "sim" ? "Sim" : "Não"}`);
-  cel(left + c3,      c3,         `BIGODE: ${form.bigode === "sim" ? "Sim" : "Não"}`);
-  cel(left + c3 * 2,  W - c3 * 2, `CAVANHAQUE: ${form.cavanhaque === "sim" ? "Sim" : "Não"}`);
-  y += ROW_H;
+  // ─── DA ESTÉTICA ─────────────────────────────────────────────────────────
 
-  const maquiagemLabel = form.maquiagem === "sim"
-    ? `Sim${form.maquiagemTipo ? " — " + form.maquiagemTipo : ""}`
-    : "Não";
-  const ornamentacaoLabel = form.ornamentacao === "sim"
-    ? `Sim${form.tipoFlor ? " — " + form.tipoFlor : ""}`
-    : "Não";
-  cel(left,       100, `MAQUIAGEM: ${maquiagemLabel}`);
-  cel(left + 100, 100, `ORNAMENTAÇÃO: ${ornamentacaoLabel}`);
-  y += ROW_H;
+  sectionTitle("DA ESTÉTICA");
 
-  separador();
+  doc.text("· Barbear:", left, y);
+  checkboxOption(38, y, form.barbear === "sim", "Sim");
+  checkboxOption(61, y, form.barbear !== "sim", "Não");
+  y += 7;
 
-  // ─── BLOCO 5 — DA URNA ───────────────────────────────────────────────────
-  titulo("DA URNA");
+  doc.text("· Bigode:", left, y);
+  checkboxOption(36, y, form.bigode === "sim", "Sim");
+  checkboxOption(59, y, form.bigode !== "sim", "Não");
+  y += 7;
 
-  const modeloLabel = form.modeloUrna
-    ? `${form.modeloUrna}${form.refUrna ? " — REF: " + form.refUrna : ""}`
-    : "—";
-  cel(left,       130, `MODELO: ${modeloLabel}`);
-  cel(left + 130,  70, `COR: ${form.corUrna || "—"}`);
-  y += ROW_H;
+  doc.text("· Cavanhaque:", left, y);
+  checkboxOption(46, y, form.cavanhaque === "sim", "Sim");
+  checkboxOption(69, y, form.cavanhaque !== "sim", "Não");
+  y += 7;
 
-  separador();
+  doc.text("· Maquiagem:", left, y);
+  checkboxOption(44, y, form.maquiagem === "sim", "Sim");
+  checkboxOption(67, y, form.maquiagem !== "sim", "Não");
+  doc.text("—", 90, y);
+  checkboxOption(96, y, form.maquiagemTipo === "leve",    "Leve");
+  checkboxOption(118, y, form.maquiagemTipo === "natural", "Natural");
+  checkboxOption(144, y, form.maquiagemTipo === "forte",   "Forte");
+  y += 7;
 
-  // ─── BLOCO 6 — TANATOPRAXIA (conditional) ────────────────────────────────
-  const temTanato = (services || []).some(
+  doc.text("· Ornamentação:", left, y);
+  checkboxOption(52, y, form.ornamentacao === "sim", "Sim");
+  checkboxOption(75, y, form.ornamentacao !== "sim", "Não");
+  doc.text("—", 98, y);
+  checkboxOption(104, y, form.tipoFlor === "naturais",    "Naturais");
+  checkboxOption(138, y, form.tipoFlor === "artificiais", "Artificiais");
+  y += 4;
+
+  sep();
+
+  // ─── DA URNA ─────────────────────────────────────────────────────────────
+
+  sectionTitle("DA URNA");
+
+  let modeloTexto = upper(form.modeloUrna);
+  if (form.modeloUrna === "luxo" && form.refUrna) {
+    modeloTexto = `LUXO — REF: ${upper(form.refUrna)}`;
+  }
+  writeLineValue("· Modelo:", modeloTexto, left, y, left + 22, 115, { valueX: left + 23.5 });
+  writeLineValue("Cor:", upper(form.corUrna), 118, y, 128, 196, { valueX: 129.5 });
+  y += 4;
+
+  sep();
+
+  // ─── TANATOPRAXIA (conditional) ──────────────────────────────────────────
+
+  const tanatoService = (services || []).find(
     (s) => s.name === "TANATOPRAXIA (CONSERVAÇÃO DO CORPO)" && s.checked
   );
 
-  if (temTanato) {
-    titulo("TANATOPRAXIA");
-    cel(left, W, "TANATOPRAXIA: Sim", true);
-    y += ROW_H;
-    separador();
+  if (tanatoService) {
+    sectionTitle("TANATOPRAXIA");
+
+    doc.text("· Tanatopraxia:", left, y);
+    checkboxOption(52, y, true, "Sim");
+    y += 7;
+
+    writeLineValue(
+      "· Valor:",
+      tanatoService.value ? `R$ ${formatValor(tanatoService.value)}` : "—",
+      left, y, left + 19, 100,
+      { valueX: left + 20.5 }
+    );
+    y += 4;
+
+    sep();
   }
 
-  // ─── BLOCO 7 — OBSERVAÇÕES ───────────────────────────────────────────────
-  titulo("OBSERVAÇÕES");
+  // ─── OBSERVAÇÕES ─────────────────────────────────────────────────────────
 
-  doc.setFont("times", "normal");
-  doc.setFontSize(9);
+  sectionTitle("OBSERVAÇÕES");
+
   for (let i = 0; i < 3; i++) {
-    doc.line(left, y + 6, 205, y + 6);
-    y += 9;
+    line(left, y + 5, 196);
+    y += 8;
   }
 
-  separador();
+  sep();
 
-  // ─── BLOCO 8 — ASSINATURA ────────────────────────────────────────────────
-  titulo("ASSINATURA");
+  // ─── ASSINATURA ──────────────────────────────────────────────────────────
 
-  const tecnicoNome = form.tecnico ? form.tecnico : "___________________________";
-  cel(left, W, `TÉCNICO RESPONSÁVEL: ${tecnicoNome}`);
-  y += ROW_H + 8;
+  sectionTitle("ASSINATURA");
 
-  doc.setFont("times", "normal");
-  doc.setFontSize(9);
-  doc.line(left + 10, y, left + 110, y);
+  writeLineValue("· Técnico responsável:", upper(form.tecnico), left, y, left + 50, 196, { valueX: left + 51.5 });
+  y += 15;
+
+  doc.line(65, y, 140, y);
   y += 5;
-  doc.text("ASSINATURA: ______________________________", left, y);
+  doc.text("Técnico", 102, y, { align: "center" });
 
-  y += 8;
-  const hoje = new Date();
-  const dia = String(hoje.getDate()).padStart(2, "0");
-  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-  const ano = hoje.getFullYear();
-  doc.text(`DATA: ${dia} / ${mes} / ${ano}`, left, y);
+  y += 10;
+  doc.text(`Manaus, ${dia} de ${mes} de ${ano}`, 105, y, { align: "center" });
 
   // ─── Preview ─────────────────────────────────────────────────────────────
+
   const filename = `ficha-tecnica-${(form.falecido || "preparo")
     .replace(/\s+/g, "-")
     .toLowerCase()}.pdf`;
