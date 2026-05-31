@@ -117,6 +117,32 @@ export function gerarFichaTecnicoPdf({ form, services, numero, openPdfPreview })
 
   sep();
 
+  // ─── DO SERVIÇO ──────────────────────────────────────────────────────────
+
+  sectionTitle("DO SERVIÇO");
+
+  writeLineValue("· Local do óbito:", upper(form.localObito), left, y, left + 39, 196, { valueX: left + 40.5 });
+  y += 7;
+
+  let localVelorioTexto = "";
+  if (form.velorioTipo === "funeraria") {
+    localVelorioTexto = [upper(form.velorioUnidade), upper(form.velorioSala)]
+      .filter(Boolean).join(" — ");
+  } else if (form.velorioTipo === "residencia") {
+    localVelorioTexto = [form.velorioEndereco, form.velorioNumero, form.velorioBairro]
+      .filter(Boolean).join(", ");
+  } else if (form.velorioTipo === "igreja") {
+    localVelorioTexto = [form.velorioNomeLocal, form.velorioEndereco, form.velorioNumero, form.velorioBairro]
+      .filter(Boolean).join(", ");
+  } else if (form.velorioTipo === "viagem") {
+    localVelorioTexto = "Translado — " + safeText(form.cidadeDestino);
+  }
+
+  writeLineValue("· Local do velório:", upper(localVelorioTexto), left, y, left + 41, 196, { valueX: left + 42.5 });
+  y += 4;
+
+  sep();
+
   // ─── DO CORPO ────────────────────────────────────────────────────────────
 
   sectionTitle("DO CORPO");
@@ -221,14 +247,6 @@ export function gerarFichaTecnicoPdf({ form, services, numero, openPdfPreview })
 
     doc.text("· Tanatopraxia:", left, y);
     checkboxOption(52, y, true, "Sim");
-    y += 7;
-
-    writeLineValue(
-      "· Valor:",
-      tanatoService.value ? `R$ ${formatValor(tanatoService.value)}` : "—",
-      left, y, left + 19, 100,
-      { valueX: left + 20.5 }
-    );
     y += 4;
 
     sep();
