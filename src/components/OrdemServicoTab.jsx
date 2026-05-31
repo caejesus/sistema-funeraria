@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { OS_STATUS, OS_PRIORIDADE } from "../constants";
 import { styles } from "../styles/appStyles";
-import { formatCep } from "../utils/format";
+import { formatCep, formatPeso, formatAltura } from "../utils/format";
 
 const STATUS_COLORS = {
   aguardando_remocao: { bg: "rgba(245,158,11,0.12)",  text: "#b45309", border: "rgba(245,158,11,0.28)" },
@@ -248,11 +248,11 @@ export function OrdemServicoTab({ ordens, criarOrdem, atualizarStatus, cancelarO
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Peso (ex: 70kg)</label>
-              <input style={styles.input} value={novaOS.peso} placeholder="ex: 70kg" onChange={(e) => updateField("peso", e.target.value)} />
+              <input style={styles.input} value={novaOS.peso} placeholder="ex: 70kg" onChange={(e) => updateField("peso", e.target.value)} onBlur={(e) => updateField("peso", formatPeso(e.target.value))} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Altura (ex: 1.75m)</label>
-              <input style={styles.input} value={novaOS.altura} placeholder="ex: 1.75m" onChange={(e) => updateField("altura", e.target.value)} />
+              <input style={styles.input} value={novaOS.altura} placeholder="ex: 1.75m" onChange={(e) => updateField("altura", e.target.value)} onBlur={(e) => updateField("altura", formatAltura(e.target.value))} />
             </div>
 
             {/* Local do óbito */}

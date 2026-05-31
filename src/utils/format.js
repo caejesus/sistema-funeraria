@@ -37,6 +37,20 @@ export function moneyToNumber(value) {
   return Number.isNaN(n) ? 0 : n;
 }
 
+export function formatPeso(value) {
+  if (!value) return "";
+  const clean = String(value).replace(/[^0-9.,]/g, "").trim();
+  if (!clean) return "";
+  return clean.endsWith("kg") ? clean : `${clean}kg`;
+}
+
+export function formatAltura(value) {
+  if (!value) return "";
+  const clean = String(value).replace(/[^0-9.,]/g, "").trim();
+  if (!clean) return "";
+  return clean.endsWith("m") ? clean : `${clean}m`;
+}
+
 export function getCemiterioNome(value) {
   return value?.split("|")[0] || value || "";
 }

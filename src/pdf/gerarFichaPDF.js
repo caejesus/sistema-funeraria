@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { getCemiterioNome } from "../utils/format";
+import { getCemiterioNome, formatPeso, formatAltura } from "../utils/format";
 
 export function gerarFichaPdf({
   form,
@@ -57,8 +57,8 @@ export function gerarFichaPdf({
       const extraInfoFalecido = [
         form.sexo ? `SEXO: ${form.sexo}` : null,
         form.dataNascimento ? `NASC.: ${formatDateBR(form.dataNascimento)}` : null,
-        form.peso ? `PESO: ${form.peso}` : null,
-        form.altura ? `ALTURA: ${form.altura}` : null,
+        form.peso ? `PESO: ${formatPeso(form.peso)}` : null,
+        form.altura ? `ALTURA: ${formatAltura(form.altura)}` : null,
       ].filter(Boolean).join("     ");
 
       if (extraInfoFalecido) {
@@ -150,8 +150,7 @@ export function gerarFichaPdf({
       const isSocio = ["socio_especial", "socio_luxo", "socio_premium"].includes(form.tipoPlano);
 
       if (isSocio) {
-        drawCell(doc, left, y, 55, 5.9, `PLANO: ${form.plano}`, { fontSize: 12 });
-        drawCell(doc, 60, y, 45, 5.9, `CÓDIGO: ${form.codigo}`, { fontSize: 12 });
+        drawCell(doc, left, y, 100, 5.9, `CÓDIGO: ${form.codigo}`, { fontSize: 12 });
         drawCell(doc, 105, y, 100, 5.9, `DEPENDENTE: ${form.dependente}`, { fontSize: 12 });
       } else {
         const tipoLabel = TIPO_LABELS[form.tipoPlano] || "SERVIÇO PARTICULAR";

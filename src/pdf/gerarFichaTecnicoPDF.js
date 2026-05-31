@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { formatPeso, formatAltura } from "../utils/format";
 
 export function gerarFichaTecnicoPdf({ form, services, numero, openPdfPreview }) {
   const doc = new jsPDF("p", "mm", "a4");
@@ -106,8 +107,8 @@ export function gerarFichaTecnicoPdf({ form, services, numero, openPdfPreview })
 
   // Sexo + Peso + Altura
   writeLineValue("Sexo:", upper(form.sexo), left, y, left + 13, 65);
-  writeLineValue("Peso:", safeText(form.peso), 68, y, 79, 118);
-  writeLineValue("Altura:", safeText(form.altura), 121, y, 132, 196);
+  writeLineValue("Peso:", safeText(formatPeso(form.peso)), 68, y, 79, 118);
+  writeLineValue("Altura:", safeText(formatAltura(form.altura)), 121, y, 132, 196);
   y += 7;
 
   // Chegou na clínica + Início

@@ -9,7 +9,7 @@ import { gerarTermoPdf } from "./pdf/gerarTermoPDF";
 import { gerarFichaTecnicoPdf } from "./pdf/gerarFichaTecnicoPDF";
 
 import { STORAGE_KEYS, FUNERAL_UNITS, SERVICE_TYPE_OPTIONS, initialServices } from "./constants";
-import { formatDateBR, formatMoney, moneyToNumber } from "./utils/format";
+import { formatDateBR, formatMoney, moneyToNumber, formatPeso, formatAltura } from "./utils/format";
 import { normalizeRole, getRoleUiLabel, getInitials, getAttendanceOperationalStatus } from "./utils/attendance";
 import { loadStorage, saveStorage } from "./utils/storage";
 import { getInitialForm } from "./utils/initialForm";
@@ -691,11 +691,11 @@ export default function App() {
                   </div>
                   <div style={styles.field}>
                     <label style={styles.label}>Peso (ex: 70kg)</label>
-                    <input style={styles.input} value={form.peso} onChange={(e) => updateForm("peso", e.target.value)} placeholder="ex: 70kg" />
+                    <input style={styles.input} value={form.peso} onChange={(e) => updateForm("peso", e.target.value)} onBlur={(e) => updateForm("peso", formatPeso(e.target.value))} placeholder="ex: 70kg" />
                   </div>
                   <div style={styles.field}>
                     <label style={styles.label}>Altura (ex: 1.75m)</label>
-                    <input style={styles.input} value={form.altura} onChange={(e) => updateForm("altura", e.target.value)} placeholder="ex: 1.75m" />
+                    <input style={styles.input} value={form.altura} onChange={(e) => updateForm("altura", e.target.value)} onBlur={(e) => updateForm("altura", formatAltura(e.target.value))} placeholder="ex: 1.75m" />
                   </div>
                   <div style={styles.fieldWide}>
                     <label style={styles.label}>Local do óbito</label>
@@ -844,10 +844,6 @@ export default function App() {
 
                 {["socio_especial", "socio_luxo", "socio_premium"].includes(form.tipoPlano) && (
                   <div style={styles.grid3}>
-                    <div style={styles.field}>
-                      <label style={styles.label}>Plano</label>
-                      <input style={styles.input} value={form.plano} onChange={(e) => updateForm("plano", e.target.value)} />
-                    </div>
                     <div style={styles.field}>
                       <label style={styles.label}>Código</label>
                       <input style={styles.input} value={form.codigo} onChange={(e) => updateForm("codigo", e.target.value)} />
