@@ -601,7 +601,6 @@ export default function App() {
           openAttendance={openAttendance}
           onDelete={handleDeleteAttendance}
           toggleEquipeAcionada={toggleEquipeAcionada}
-          onNewAtendimento={() => { resetAtendimento(); setFinalizado(false); setActiveTab("atendimento"); }}
         />
       )}
 
