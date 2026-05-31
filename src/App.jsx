@@ -453,12 +453,19 @@ export default function App() {
                 <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>
                   Usuário
                 </label>
-                <input
-                  style={{ width: "100%", background: "#1d2939", border: "1px solid #314155", borderRadius: 12, padding: "13px 16px", fontSize: 14, color: "#f1f5f9", outline: "none", boxSizing: "border-box" }}
+                <select
+                  style={{ width: "100%", background: "#1d2939", border: "1px solid #314155", borderRadius: 12, padding: "13px 16px", fontSize: 14, color: login ? "#f1f5f9" : "#64748b", outline: "none", boxSizing: "border-box", cursor: "pointer" }}
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
-                  autoComplete="username"
-                />
+                  disabled={bootLoading}
+                >
+                  <option value="">{bootLoading ? "Carregando usuários..." : "Selecione seu usuário"}</option>
+                  {users.map((u) => (
+                    <option key={u.login} value={u.login}>
+                      {u.name} — {getRoleUiLabel(u.role)}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div style={{ marginBottom: 24 }}>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>
