@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import notificationSound from "../assets/notificacao.mp3";
-import { formatDateBR } from "../utils/format";
+import { formatDateBR, getCemiterioNome, getCemiterioEndereco } from "../utils/format";
 import { OPERATION_STAGES } from "../constants";
 import {
   servicoAtivo,
@@ -234,6 +234,16 @@ function StageCard({ item, stage, updateOperationalStage }) {
   const cfg = STAGE_CFG[status] || STAGE_CFG.nao_iniciado;
   const isTransport = TRANSPORT_KEYS.has(key);
 
+  const mapsLink = (() => {
+    if (key !== "sepultamento") return null;
+    const form = item?.form || {};
+    const nome = getCemiterioNome(form.cemiterio);
+    const addr = getCemiterioEndereco(form.cemiterio);
+    if (!nome && !addr) return null;
+    const query = encodeURIComponent(addr ? `${addr}, Manaus, AM` : `${nome}, Manaus, AM`);
+    return `https://www.google.com/maps/search/?api=1&query=${query}`;
+  })();
+
   return (
     <div style={{ border: `1px solid ${cfg.border}`, borderRadius: 12, padding: 12, marginBottom: 8, background: cfg.bg }}>
       {/* Stage header */}
@@ -284,6 +294,15 @@ function StageCard({ item, stage, updateOperationalStage }) {
             const person = st.attendant || st.technician || st.support || "";
             return person ? <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>Responsável: {person}</div> : null;
           })()}
+
+          {/* Maps button for sepultamento */}
+          {mapsLink && (
+            <a href={mapsLink} target="_blank" rel="noopener noreferrer"
+              style={{ ...outlineBtn("var(--border-soft)"), marginBottom: 6, fontSize: 12, gap: 6 }}>
+              <i className="fa-solid fa-map-pin" style={{ fontSize: 10 }} />
+              Abrir no Maps
+            </a>
+          )}
 
           {/* Action button */}
           {status !== "finalizado" && typeof updateOperationalStage === "function" && (
@@ -390,7 +409,7 @@ function ServicoCard({ item }) {
   const cemOuTipo =
     tipo === "cremacao" ? "CREMAÇÃO" :
     tipo === "translado" ? getTipoTransladoLabel(item.services) :
-    (form.cemiterio || "—");
+    (getCemiterioNome(form.cemiterio) || "—");
   const temOnibus = servicoAtivo(item.services, "ÔNIBUS");
 
   return (

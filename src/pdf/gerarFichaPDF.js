@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { getCemiterioNome } from "../utils/format";
 
 export function gerarFichaPdf({
   form,
@@ -86,7 +87,7 @@ export function gerarFichaPdf({
       );
       y += 5.9;
   
-      drawCell(doc, left, y, 150, 5.9, `CEMITÉRIO: ${form.cemiterio}`, {
+      drawCell(doc, left, y, 150, 5.9, `CEMITÉRIO: ${getCemiterioNome(form.cemiterio)}`, {
         bold: true,
         fontSize: 12,
       });

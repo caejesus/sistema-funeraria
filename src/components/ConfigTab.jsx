@@ -63,7 +63,7 @@ function FuncoesCheckboxes({ selected, onChange }) {
 
 const ACCORDIONS = [
   { key: "hospitals",    label: "Hospitais / Locais de Óbito", hasAddress: false },
-  { key: "cemeteries",   label: "Cemitérios",                  hasAddress: true  },
+  { key: "cemeteries",   label: "Cemitérios",                  hasAddress: true,  placeholder: "Nome do cemitério" },
   { key: "coffinColors", label: "Cores de Urna",               hasAddress: false, upper: true },
   { key: "cars",         label: "Carros",                      hasAddress: false, upper: true, placeholder: "Ex: STRADA - QWE1A23" },
 ];

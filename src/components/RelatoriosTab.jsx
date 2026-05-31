@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { styles } from "../styles/appStyles";
-import { formatMoney } from "../utils/format";
+import { formatMoney, getCemiterioNome } from "../utils/format";
 import { SERVICE_TYPE_OPTIONS } from "../constants";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -178,7 +178,7 @@ export function RelatoriosTab({ atendimentos }) {
 
   // ── Relatório 4 — Por cemitério ───────────────────────────────────────────
   const porCemiterio = useMemo(
-    () => agrupar(lista, (item) => item.form?.cemiterio || item.cemiterio || "Não informado"),
+    () => agrupar(lista, (item) => getCemiterioNome(item.form?.cemiterio || item.cemiterio) || "Não informado"),
     [lista]
   );
 

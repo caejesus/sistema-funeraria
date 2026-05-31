@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import { drawCell } from "../pdf/pdfHelpers";
 import { styles } from "../styles/appStyles";
 import { SERVICE_TYPE_OPTIONS } from "../constants";
-import { formatDateBR } from "../utils/format";
+import { formatDateBR, getCemiterioNome } from "../utils/format";
 
 // ─── Helpers (exported for reuse in Equipe.jsx) ──────────────────────────────
 
@@ -52,7 +52,7 @@ function getCemiterioOuTipo(item) {
   const tipo = tipoServico(item);
   if (tipo === "cremacao") return "CREMAÇÃO";
   if (tipo === "translado") return getTipoTransladoLabel(item.services);
-  return form.cemiterio || "—";
+  return getCemiterioNome(form.cemiterio) || "—";
 }
 
 function hoje() {

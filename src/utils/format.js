@@ -36,3 +36,11 @@ export function moneyToNumber(value) {
   const n = Number(clean);
   return Number.isNaN(n) ? 0 : n;
 }
+
+export function getCemiterioNome(value) {
+  return value?.split("|")[0] || value || "";
+}
+
+export function getCemiterioEndereco(value) {
+  return value?.split("|")[1] || "";
+}
