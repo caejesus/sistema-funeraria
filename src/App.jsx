@@ -563,11 +563,11 @@ export default function App() {
               background: "rgba(38,177,196,0.12)", border: "1px solid rgba(38,177,196,0.25)",
               color: "var(--brand-accent)", fontWeight: 700, fontSize: 14,
             }}>
-              <span>✅ {osConvertidaMensagem}</span>
+              <span><i className="fa-solid fa-circle-check" style={{ marginRight: 6 }} />{osConvertidaMensagem}</span>
               <button
                 onClick={() => setOsConvertidaMensagem("")}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "var(--brand-accent)", fontSize: 16, lineHeight: 1 }}
-              >✕</button>
+              ><i className="fa-solid fa-xmark" /></button>
             </div>
           )}
           <section style={styles.card}>

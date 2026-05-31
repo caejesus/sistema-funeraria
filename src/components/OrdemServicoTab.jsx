@@ -81,7 +81,7 @@ function OSCard({ os, atualizarStatus, onCancelar, onConverter, readOnly = false
               border: "1px solid rgba(245,158,11,0.3)",
               borderRadius: 999, padding: "3px 10px", fontSize: 11, fontWeight: 800,
             }}>
-              ⚡ URGENTE
+              <i className="fa-solid fa-bolt" style={{ marginRight: 5 }} /> URGENTE
             </span>
           )}
         </div>
@@ -112,7 +112,7 @@ function OSCard({ os, atualizarStatus, onCancelar, onConverter, readOnly = false
               border: "1px solid rgba(34,197,94,0.25)",
               borderRadius: 999, padding: "6px 14px", fontSize: 12, fontWeight: 700,
             }}>
-              ✓ Convertida em atendimento
+              <i className="fa-solid fa-check" style={{ marginRight: 5 }} /> Convertida em atendimento
             </span>
           ) : (
             <>

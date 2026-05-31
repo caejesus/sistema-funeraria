@@ -242,21 +242,21 @@ export function RelatoriosTab({ atendimentos }) {
       ) : (
         <>
           {/* Relatório 1 — Por Unidade/Local */}
-          <ReportCard title="Por Unidade / Local de Velório" icon="🏛️">
+          <ReportCard title="Por Unidade / Local de Velório" icon={<i className="fa-solid fa-building-columns" />}>
             {porLocal.map(([label, count]) => (
               <ProgressRow key={label} label={label} count={count} total={total} />
             ))}
           </ReportCard>
 
           {/* Relatório 2 — Por Tipo de Serviço */}
-          <ReportCard title="Por Tipo de Serviço" icon="📋">
+          <ReportCard title="Por Tipo de Serviço" icon={<i className="fa-solid fa-list-check" />}>
             {porTipo.map(([label, count]) => (
               <ProgressRow key={label} label={label} count={count} total={total} color="#6366f1" />
             ))}
           </ReportCard>
 
           {/* Relatório 3 — Financeiro */}
-          <ReportCard title="Resumo Financeiro" icon="💰">
+          <ReportCard title="Resumo Financeiro" icon={<i className="fa-solid fa-circle-dollar-to-slot" />}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
               <StatBox
                 label="Total arrecadado"
@@ -309,7 +309,7 @@ export function RelatoriosTab({ atendimentos }) {
           </ReportCard>
 
           {/* Relatório 4 — Por Cemitério */}
-          <ReportCard title="Por Cemitério" icon="⛪">
+          <ReportCard title="Por Cemitério" icon={<i className="fa-solid fa-cross" />}>
             {porCemiterio.map(([label, count]) => (
               <ProgressRow key={label} label={label} count={count} total={total} color="#22c55e" />
             ))}

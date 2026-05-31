@@ -298,7 +298,7 @@ function MapsButton({ address }) {
       rel="noopener noreferrer"
       className="maps-btn"
     >
-      📍 Maps
+      <i className="fa-solid fa-location-dot" style={{ marginRight: 6 }} /> Maps
     </a>
   );
 }
@@ -373,7 +373,7 @@ function ServicosDoDiaEquipe({ servicos = [] }) {
                 </span>
                 {temOnibus && (
                   <span style={{ background: "rgba(139,92,246,0.14)", color: "#7c3aed", borderRadius: 999, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 800 }}>
-                    🚌 ÔNIBUS
+                    <i className="fa-solid fa-bus" style={{ marginRight: 5 }} /> ÔNIBUS
                   </span>
                 )}
                 {form.tipoPlano && (
@@ -403,7 +403,7 @@ function ServicosDoDiaEquipe({ servicos = [] }) {
                 <div><strong style={{ color: "var(--text)" }}>Cemitério:</strong> {cemOuTipo}</div>
                 {form.horaSaida && (
                   <div style={{ fontWeight: 800, color: "var(--primary)", fontSize: "0.92rem" }}>
-                    ⏰ SAINDO ÀS {form.horaSaida}
+                    <i className="fa-regular fa-clock" style={{ marginRight: 5 }} /> SAINDO ÀS {form.horaSaida}
                   </div>
                 )}
                 {form.motorista && (
@@ -467,7 +467,7 @@ function OsAtivasSection({ ordens = [], atualizarStatus }) {
                     {os.numero}
                     {urgente && (
                       <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#b45309", background: "rgba(245,158,11,0.1)", borderRadius: 999, padding: "2px 8px" }}>
-                        ⚡ URGENTE
+                        <i className="fa-solid fa-bolt" style={{ marginRight: 5 }} /> URGENTE
                       </span>
                     )}
                   </div>
@@ -523,7 +523,7 @@ function OsAtivasSection({ ordens = [], atualizarStatus }) {
                 {/* Maps */}
                 {hasLocation && (
                   <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="os-contact-btn">
-                    📍 Abrir localização
+                    <i className="fa-solid fa-location-dot" style={{ marginRight: 6 }} /> Abrir localização
                   </a>
                 )}
 
@@ -531,10 +531,10 @@ function OsAtivasSection({ ordens = [], atualizarStatus }) {
                 {telLimpo && (
                   <>
                     <a href={`tel:${telLimpo}`} className="os-contact-btn">
-                      📞 Ligar
+                      <i className="fa-solid fa-phone" style={{ marginRight: 6 }} /> Ligar
                     </a>
                     <a href={`https://wa.me/55${telLimpo}`} target="_blank" rel="noopener noreferrer" className="os-contact-btn">
-                      💬 WhatsApp
+                      <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }} /> WhatsApp
                     </a>
                   </>
                 )}

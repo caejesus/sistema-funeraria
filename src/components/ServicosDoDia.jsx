@@ -205,7 +205,7 @@ function ServicoCard({ item, numero }) {
           </span>
           {temOnibus && (
             <span style={{ background: "rgba(139,92,246,0.12)", color: "#7c3aed", border: "1px solid rgba(139,92,246,0.22)", borderRadius: 999, padding: "5px 12px", fontSize: 11, fontWeight: 700 }}>
-              🚌 ÔNIBUS
+              <i className="fa-solid fa-bus" style={{ marginRight: 5 }} />ÔNIBUS
             </span>
           )}
         </div>
@@ -296,7 +296,7 @@ export function ServicosDoDia({ atendimentos }) {
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button style={styles.outlineDarkBtn} onClick={copiarWhatsApp} disabled={!servicosHoje.length}>
-            📱 Copiar para WhatsApp
+            <i className="fa-brands fa-whatsapp" style={{ marginRight: 6 }} />Copiar para WhatsApp
           </button>
           <button style={styles.primaryBtn} onClick={gerarPDF} disabled={!servicosHoje.length}>
             <i className="fa-solid fa-file-pdf" style={styles.buttonIcon} /> Gerar PDF Oficial

@@ -98,7 +98,7 @@ export function ServicosTab({
                     alert("Link da família copiado!");
                   }}
                 >
-                  📲 Copiar link da família
+                  <i className="fa-solid fa-share-nodes" style={{ marginRight: 6 }} />Copiar link da família
                 </button>
                 <button
                   style={item.equipeAcionada ? styles.outlineDarkBtn : styles.primaryBtn}
