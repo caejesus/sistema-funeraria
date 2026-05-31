@@ -51,16 +51,15 @@
 
 .home-brand-title {
   margin: 0;
-  font-size: clamp(1.75rem, 2.2vw, 2.5rem);
-  line-height: 1.05;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 500;
   color: var(--text-main, #333333);
 }
 
 .home-brand-subtitle {
-  margin-top: 8px;
-  font-size: 1.05rem;
+  margin-top: 3px;
+  font-size: 12px;
   color: var(--text-muted, #666666);
 }
 
@@ -147,53 +146,40 @@
 .home-screen,
 .home-main {
   width: 100%;
-  max-width: var(--home-max-width);
   margin: 0 auto;
-
-  min-height: calc(100vh - 140px);
-
+  min-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-
-  gap: 32px;
-  padding-top: 60px;
+  padding: 24px;
 }
 
 .home-cards-grid,
 .home-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-
-  max-width: 900px;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 860px;
   width: 100%;
-
-  margin: 40px auto 0;
-
-  gap: 22px;
+  gap: 16px;
   align-items: stretch;
 }
 
 .home-action-card,
 .home-card-button {
   width: 100%;
-  min-height: 95px;
+  min-height: 110px;
   border: 0;
-  border-radius: var(--home-card-radius);
-
-  padding: 16px 18px;
-
+  border-radius: 20px;
+  padding: 24px 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 18px;
-
+  gap: 16px;
   text-align: left;
   color: #ffffff;
-
-  background: linear-gradient(135deg, var(--brand-accent, #00ffef), #2498aa);
+  background: linear-gradient(135deg, var(--brand-accent, #00ffef), #1d8ea0);
   box-shadow: 0 16px 36px rgba(38, 177, 196, 0.24);
-
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
@@ -206,15 +192,15 @@
 
 .home-action-icon,
 .home-card-button__icon {
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.14);
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.15);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 1.5rem;
+  font-size: 24px;
 }
 
 .home-action-content {
@@ -223,18 +209,17 @@
 
 .home-action-title,
 .home-card-button__title {
-  font-size: 1.18rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 .home-action-text,
 .home-card-button__text {
-  margin-top: 8px;
-  font-size: 0.98rem;
+  margin-top: 4px;
+  font-size: 12px;
   line-height: 1.35;
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .home-footer {
@@ -290,11 +275,12 @@
   .home-actions {
     justify-content: flex-start;
   }
+}
 
+@media (max-width: 768px) {
   .home-cards-grid,
   .home-cards {
     grid-template-columns: 1fr;
-    max-width: 100%;
   }
 }
 

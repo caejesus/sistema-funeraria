@@ -509,10 +509,10 @@ export default function App() {
             <img
               src="/logosf.png"
               alt="Logo Grupo São Francisco"
-              style={{ width: 72, height: "auto", display: "block", objectFit: "contain", background: "transparent", boxShadow: "none", border: "none", padding: 0, margin: 0 }}
+              style={{ width: 48, height: "auto", display: "block", objectFit: "contain", background: "transparent", boxShadow: "none", border: "none", padding: 0, margin: 0 }}
             />
             <div className="home-brand-copy" style={{ background: "transparent", boxShadow: "none", border: "none", padding: 0 }}>
-              <div className="home-brand-title">GRUPO SÃO FRANCISCO</div>
+              <div className="home-brand-title">Grupo São Francisco</div>
               <div className="home-brand-subtitle">Assistência e cuidado em todos os momentos</div>
             </div>
           </div>
@@ -570,27 +570,27 @@ export default function App() {
             >
               <div className="home-action-icon"><i className="fa-solid fa-circle-plus" /></div>
               <div className="home-action-content">
-                <div className="home-action-title">NOVO ATENDIMENTO</div>
-                <div className="home-action-text">Iniciar novo atendimento</div>
+                <div className="home-action-title">Novo atendimento</div>
+                <div className="home-action-text">Iniciar novo registro</div>
               </div>
             </button>
             <button className="home-action-card" onClick={() => setActiveTab("atendimentos")}>
               <div className="home-action-icon"><i className="fa-solid fa-file-lines" /></div>
               <div className="home-action-content">
-                <div className="home-action-title">SERVIÇOS</div>
-                <div className="home-action-text">Consultar, editar e reabrir registros</div>
+                <div className="home-action-title">Serviços</div>
+                <div className="home-action-text">Consultar e editar registros</div>
               </div>
             </button>
             <button className="home-action-card" onClick={() => setActiveTab("operacional")}>
               <div className="home-action-icon"><i className="fa-solid fa-diagram-project" /></div>
               <div className="home-action-content">
-                <div className="home-action-title">GESTÃO DE ETAPAS</div>
-                <div className="home-action-text">Acompanhar etapas e atendimentos em andamento</div>
+                <div className="home-action-title">Gestão de etapas</div>
+                <div className="home-action-text">Acompanhar atendimentos</div>
               </div>
             </button>
           </div>
           <footer className="home-footer">
-            © 2026 Caetano Digital System. All Rights Reserved.
+            © 2026 Caetano Digital System · Todos os direitos reservados
           </footer>
         </section>
       )}
