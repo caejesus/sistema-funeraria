@@ -27,6 +27,7 @@ import { OperacionalTab } from "./components/OperacionalTab";
 import { ConfigTab } from "./components/ConfigTab";
 import { OrdemServicoTab } from "./components/OrdemServicoTab";
 import { ServicosDoDia } from "./components/ServicosDoDia";
+import { RelatoriosTab } from "./components/RelatoriosTab";
 
 import { useOrdemServico } from "./hooks/useOrdemServico";
 
@@ -462,6 +463,9 @@ export default function App() {
           )}
           {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE") && (
             <button style={activeTab === "servicos_dia" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("servicos_dia")}>Serviços do Dia</button>
+          )}
+          {normalizeRole(session?.role) === "ADM" && (
+            <button style={activeTab === "relatorios" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("relatorios")}>Relatórios</button>
           )}
           {normalizeRole(session?.role) === "ADM" && (
             <button style={activeTab === "config" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("config")}>Configurações</button>
@@ -1078,6 +1082,10 @@ export default function App() {
             )}
           </section>
         </>
+      )}
+
+      {activeTab === "relatorios" && normalizeRole(session?.role) === "ADM" && (
+        <RelatoriosTab atendimentos={atendimentos} />
       )}
 
       {activeTab === "config" && normalizeRole(session.role) === "ADM" && (
