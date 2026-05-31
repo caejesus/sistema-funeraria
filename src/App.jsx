@@ -6,6 +6,7 @@ import "./App.css";
 import { gerarFichaPdf } from "./pdf/gerarFichaPDF";
 import { drawCell } from "./pdf/pdfHelpers";
 import { gerarTermoPdf } from "./pdf/gerarTermoPDF";
+import { gerarFichaTecnicoPdf } from "./pdf/gerarFichaTecnicoPDF";
 
 import { STORAGE_KEYS, FUNERAL_UNITS, SERVICE_TYPE_OPTIONS, initialServices } from "./constants";
 import { formatDateBR, formatMoney, moneyToNumber } from "./utils/format";
@@ -277,6 +278,12 @@ export default function App() {
     gerarTermoPdf({ form, formatDateBR, openPdfPreview });
   }
 
+  function gerarFichaTecnicaPDF() {
+    const currentRecord = atendimentos.find((i) => i.id === editingAttendanceId);
+    const numero = currentRecord?.numero || "";
+    gerarFichaTecnicoPdf({ form, services, numero, openPdfPreview });
+  }
+
   // --- Route guards ---
   const isEquipeRoute = window.location.pathname === "/equipe";
   const isPublicAcompanhamento = !!publicTrackingId;
@@ -335,6 +342,9 @@ export default function App() {
             </button>
             <button style={styles.primaryBtn} onClick={gerarTermoPDF}>
               <i className="fa-solid fa-file-lines" style={styles.buttonIcon} /> Gerar Termo PDF
+            </button>
+            <button style={styles.primaryBtn} onClick={gerarFichaTecnicaPDF}>
+              <i className="fa-solid fa-file-medical" style={styles.buttonIcon} /> Ficha Técnica
             </button>
           </div>
         </div>
