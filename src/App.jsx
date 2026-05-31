@@ -31,6 +31,66 @@ import { RelatoriosTab } from "./components/RelatoriosTab";
 
 import { useOrdemServico } from "./hooks/useOrdemServico";
 
+// ─── Login shared panel ───────────────────────────────────────────────────────
+
+const COMPANY_CARDS = [
+  { logo: "/logosf.png", icon: "fa-solid fa-building",  label: "FUNERÁRIA",  sub: "São Francisco" },
+  { logo: null,          icon: "fa-solid fa-tree",       label: "MEMORIAL",   sub: "São Francisco" },
+  { logo: null,          icon: "fa-solid fa-cross",      label: "SANTA RITA", sub: "Funerária" },
+  { logo: null,          icon: "fa-solid fa-users",      label: "PLANO SF",   sub: "Assistência Familiar" },
+];
+
+const cardStyle = {
+  background: "rgba(255,255,255,0.03)",
+  border: "0.5px solid rgba(38,177,196,0.15)",
+  borderRadius: 12,
+  padding: "14px 12px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 8,
+};
+
+function LoginLeftPanel() {
+  return (
+    <div className="login-left">
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>
+          Sistema de Gestão
+        </div>
+        <div style={{ fontSize: 28, fontWeight: 800, color: "#f1f5f9", lineHeight: 1.2 }}>Grupo</div>
+        <div style={{ fontSize: 32, fontWeight: 900, color: "#26b1c4", lineHeight: 1.1 }}>SÃO FRANCISCO</div>
+        <div style={{ width: 48, height: 3, background: "#26b1c4", borderRadius: 999, margin: "12px auto 0" }} />
+      </div>
+
+      <div className="login-company-grid">
+        {COMPANY_CARDS.map(({ logo, icon, label, sub }) => (
+          <div key={label} style={cardStyle}>
+            {logo
+              ? <img src={logo} alt={label} style={{ height: 48, maxHeight: 48, objectFit: "contain" }} />
+              : (
+                <div style={{ width: 32, height: 32, background: "rgba(38,177,196,0.1)", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#26b1c4" }}>
+                  <i className={icon} />
+                </div>
+              )
+            }
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#e2e8f0", textTransform: "uppercase", textAlign: "center" }}>{label}</div>
+              <div style={{ fontSize: 10, color: "#475569", textAlign: "center" }}>{sub}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ fontSize: 12, color: "#334155", textAlign: "center", maxWidth: 280 }}>
+        Cuidando com respeito e dedicação em todos os momentos
+      </div>
+    </div>
+  );
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+
 export default function App() {
   // --- Auth ---
   const [session, setSession] = useState(null);
@@ -361,12 +421,13 @@ export default function App() {
 
   if (bootLoading) {
     return (
-      <div style={{ ...styles.loginPage, ...themeVars }}>
-        <div style={styles.loginCard}>
-          <div style={styles.loginBrandWrap}>
-            <img src="/logosf.png" alt="Logo Grupo São Francisco" style={styles.loginLogo} />
-            <h1 style={styles.loginTitle}>Sistema Funerário</h1>
-            <p style={styles.loginSub}>Carregando usuários e configurações...</p>
+      <div className="login-screen">
+        <LoginLeftPanel />
+        <div className="login-right">
+          <div style={{ maxWidth: 340, width: "100%", textAlign: "center" }}>
+            <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: 32, color: "#26b1c4", marginBottom: 20 }} />
+            <div style={{ fontSize: 22, fontWeight: 700, color: "#f1f5f9", marginBottom: 8 }}>Carregando</div>
+            <div style={{ fontSize: 13, color: "#475569" }}>Aguarde enquanto carregamos as configurações do sistema.</div>
           </div>
         </div>
       </div>
@@ -379,34 +440,54 @@ export default function App() {
 
   if (!session) {
     return (
-      <div style={{ ...styles.loginPage, ...themeVars }}>
-        <div style={styles.loginCard}>
-          <div style={styles.loginBrandWrap}>
-            <img src="/logosf.png" alt="Logo Grupo São Francisco" style={styles.loginLogo} />
-            <h1 style={styles.loginTitle}>Sistema Funerário</h1>
-            <p style={styles.loginSub}>Acesso interno</p>
+      <div className="login-screen">
+        <LoginLeftPanel />
+        <div className="login-right">
+          <div style={{ maxWidth: 340, width: "100%" }}>
+            <div style={{ marginBottom: 32 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#f1f5f9", margin: "0 0 8px" }}>Acesso interno</h1>
+              <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>Entre com suas credenciais para continuar</p>
+            </div>
+            <form onSubmit={handleLogin}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>
+                  Usuário
+                </label>
+                <input
+                  style={{ width: "100%", background: "#1d2939", border: "1px solid #314155", borderRadius: 12, padding: "13px 16px", fontSize: 14, color: "#f1f5f9", outline: "none", boxSizing: "border-box" }}
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  autoComplete="username"
+                />
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>
+                  Senha
+                </label>
+                <input
+                  type="password"
+                  style={{ width: "100%", background: "#1d2939", border: "1px solid #314155", borderRadius: 12, padding: "13px 16px", fontSize: 14, color: "#f1f5f9", outline: "none", boxSizing: "border-box" }}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+              <button
+                type="submit"
+                style={{ width: "100%", background: "#26b1c4", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer" }}
+              >
+                Entrar
+              </button>
+              {loginError && (
+                <div style={{ marginTop: 12, fontSize: 13, color: "#f87171", textAlign: "center", background: "rgba(248,113,113,0.08)", borderRadius: 8, padding: "10px 14px" }}>
+                  {loginError}
+                </div>
+              )}
+            </form>
+            <div style={{ marginTop: 40, fontSize: 11, color: "#1e3a4a", textAlign: "center" }}>
+              © 2026 Grupo São Francisco
+            </div>
           </div>
-          <form onSubmit={handleLogin}>
-            <div style={styles.field}>
-              <label style={styles.label}>Usuário</label>
-              <input
-                style={styles.input}
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-              />
-            </div>
-            <div style={styles.field}>
-              <label style={styles.label}>Senha</label>
-              <input
-                type="password"
-                style={styles.input}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            {loginError ? <div style={styles.errorBox}>{loginError}</div> : null}
-            <button style={styles.primaryBtn} type="submit">Entrar</button>
-          </form>
         </div>
       </div>
     );
