@@ -129,7 +129,7 @@ export default function App() {
 
   const { cepStatus, handleCepChange } = useCep(setForm);
 
-  const { users, settings, bootLoading, addSettingItem, removeSettingItem, addUser, removeUser } =
+  const { users, settings, bootLoading, addSettingItem, removeSettingItem, addUser, updateUser, removeUser } =
     useSettings();
 
   const {
@@ -166,6 +166,13 @@ export default function App() {
   });
 
   // --- Computed ---
+
+  // Listas de colaboradores filtradas por função operacional
+  const atendentesOpts = useMemo(() => users.filter((u) => (u.funcoes || []).includes("atendente")).map((u) => u.name), [users]);
+  const motoristasOpts = useMemo(() => users.filter((u) => (u.funcoes || []).includes("motorista")).map((u) => u.name), [users]);
+  const tecnicosOpts   = useMemo(() => users.filter((u) => (u.funcoes || []).includes("tecnico")).map((u) => u.name), [users]);
+  const apoiosOpts     = useMemo(() => users.filter((u) => (u.funcoes || []).includes("apoio")).map((u) => u.name), [users]);
+
   const selectedCount = useMemo(() => services.filter((s) => s.checked).length, [services]);
 
   const totalValue = useMemo(
@@ -375,7 +382,8 @@ export default function App() {
     );
   }
 
-  if (session && normalizeRole(session.role) === "EQUIPE") return renderEquipeContainer();
+  const EQUIPE_ROLES = ["EQUIPE", "MOTORISTA", "TECNICO", "APOIO", "ONIBUS"];
+  if (session && EQUIPE_ROLES.includes(normalizeRole(session.role))) return renderEquipeContainer();
   if (isEquipeRoute) return renderEquipeContainer();
 
   if (finalizado) {
@@ -546,10 +554,10 @@ export default function App() {
           <button style={activeTab === "atendimentos" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("atendimentos")}>Serviços</button>
           <button style={activeTab === "operacional" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("operacional")}>Gestão de Etapas</button>
           <button style={activeTab === "equipe" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("equipe")}>Equipe</button>
-          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE") && (
+          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
             <button style={activeTab === "os" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("os")}>OS</button>
           )}
-          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE") && (
+          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
             <button style={activeTab === "servicos_dia" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("servicos_dia")}>Serviços do Dia</button>
           )}
           {normalizeRole(session?.role) === "ADM" && (
@@ -608,6 +616,7 @@ export default function App() {
         <OperacionalTab
           attendances={operationalAttendances}
           settings={settings}
+          users={users}
           session={session}
           updateOperationalStage={updateOperationalStage}
           updateOperationalTransport={updateOperationalTransport}
@@ -626,11 +635,11 @@ export default function App() {
         />
       )}
 
-      {activeTab === "servicos_dia" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE") && (
+      {activeTab === "servicos_dia" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
         <ServicosDoDia atendimentos={atendimentos} />
       )}
 
-      {activeTab === "os" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE") && (
+      {activeTab === "os" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
         <OrdemServicoTab
           ordens={ordens}
           criarOrdem={criarOrdem}
@@ -701,7 +710,7 @@ export default function App() {
                     <label style={styles.label}>Cemitério</label>
                     <select style={styles.input} value={form.cemiterio} onChange={(e) => updateForm("cemiterio", e.target.value)}>
                       <option value="">Selecione</option>
-                      {settings.cemeteries.map((item) => <option key={item} value={item}>{item}</option>)}
+                      {settings.cemeteries.map((item) => { const [nome] = item.split("|"); return <option key={item} value={nome}>{nome}</option>; })}
                     </select>
                   </div>
 
@@ -785,10 +794,7 @@ export default function App() {
                       </div>
                       <div style={styles.field}>
                         <label style={styles.label}>Local de embarque</label>
-                        <select style={styles.input} value={form.embarque} onChange={(e) => updateForm("embarque", e.target.value)}>
-                          <option value="">Selecione</option>
-                          {settings.embarques.map((item) => <option key={item} value={item}>{item}</option>)}
-                        </select>
+                        <input style={styles.input} value={form.embarque} onChange={(e) => updateForm("embarque", e.target.value)} placeholder="Ex: Aeroporto Internacional" />
                       </div>
                     </>
                   )}
@@ -976,7 +982,7 @@ export default function App() {
                     <label style={styles.label}>Técnico</label>
                     <select style={styles.input} value={form.tecnico} onChange={(e) => updateForm("tecnico", e.target.value)}>
                       <option value="">Selecione</option>
-                      {(settings.technicians || []).map((t) => <option key={t} value={t}>{t}</option>)}
+                      {tecnicosOpts.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                 </div>
@@ -1132,14 +1138,14 @@ export default function App() {
                     <label style={styles.label}>Atendente</label>
                     <select style={styles.input} value={form.atendenteGeral} onChange={(e) => updateForm("atendenteGeral", e.target.value)}>
                       <option value="">Selecione</option>
-                      {(settings.attendants || []).map((a) => <option key={a} value={a}>{a}</option>)}
+                      {atendentesOpts.map((a) => <option key={a} value={a}>{a}</option>)}
                     </select>
                   </div>
                   <div style={styles.field}>
                     <label style={styles.label}>Motorista</label>
                     <select style={styles.input} value={form.motorista} onChange={(e) => updateForm("motorista", e.target.value)}>
                       <option value="">Selecione</option>
-                      {(settings.drivers || []).map((d) => <option key={d} value={d}>{d}</option>)}
+                      {motoristasOpts.map((d) => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
                   <div style={styles.field}>
@@ -1180,6 +1186,7 @@ export default function App() {
           users={users}
           settings={settings}
           addUser={addUser}
+          updateUser={updateUser}
           removeUser={removeUser}
           addSettingItem={addSettingItem}
           removeSettingItem={removeSettingItem}

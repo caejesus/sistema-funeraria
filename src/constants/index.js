@@ -18,6 +18,24 @@ export const OPERATION_STAGES = [
 
 export const TRANSPORT_STAGE_KEYS = ["remocao", "entrega", "sepultamento"];
 
+export const USER_ROLES = [
+  { value: "ADM",        label: "Administrador" },
+  { value: "SUPERVISOR", label: "Supervisor" },
+  { value: "ATENDENTE",  label: "Atendente" },
+  { value: "MOTORISTA",  label: "Motorista" },
+  { value: "TECNICO",    label: "Técnico" },
+  { value: "APOIO",      label: "Apoio" },
+  { value: "ONIBUS",     label: "Ônibus" },
+];
+
+export const FUNCOES_OPERACIONAIS = [
+  { value: "atendente", label: "Atendente" },
+  { value: "motorista", label: "Motorista" },
+  { value: "tecnico",   label: "Técnico" },
+  { value: "apoio",     label: "Apoio" },
+  { value: "onibus",    label: "Ônibus" },
+];
+
 export const DEFAULT_USERS = [
   {
     id: "1",
@@ -25,6 +43,7 @@ export const DEFAULT_USERS = [
     login: "admin",
     password: "10121410",
     role: "ADM",
+    funcoes: [],
   },
 ];
 
@@ -49,25 +68,10 @@ export const DEFAULT_SETTINGS = {
   ],
   cemeteries: ["São João Batista", "Nossa Senhora Aparecida"],
   coffinColors: ["MOGNO", "RAJADA"],
-  technicians: [],
-  attendants: [],
-  drivers: [],
   cars: [],
-  supports: [],
-  embarques: [],
 };
 
-export const SETTINGS_FIELDS = [
-  "hospitals",
-  "cemeteries",
-  "coffinColors",
-  "technicians",
-  "attendants",
-  "drivers",
-  "cars",
-  "supports",
-  "embarques",
-];
+export const SETTINGS_FIELDS = ["hospitals", "cemeteries", "coffinColors", "cars"];
 
 export const FUNERAL_UNITS = {
   "Unidade Cachoeirinha": [

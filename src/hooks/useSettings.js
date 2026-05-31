@@ -126,7 +126,11 @@ export function useSettings() {
       alert("Esse login já existe.");
       return false;
     }
-    const userToSave = { ...userData, id: String(Date.now()) };
+    const userToSave = {
+      ...userData,
+      id: String(Date.now()),
+      funcoes: Array.isArray(userData.funcoes) ? userData.funcoes : [],
+    };
     const { error } = await supabase.from("app_users").insert([userToSave]);
     if (error) {
       console.error("Erro ao salvar usuário:", error);
@@ -134,6 +138,17 @@ export function useSettings() {
       return false;
     }
     setUsers((prev) => [...prev, userToSave]);
+    return true;
+  }
+
+  async function updateUser(id, dados) {
+    const { error } = await supabase.from("app_users").update(dados).eq("id", id);
+    if (error) {
+      console.error("Erro ao atualizar usuário:", error);
+      alert("Erro ao atualizar colaborador no banco.");
+      return false;
+    }
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...dados } : u)));
     return true;
   }
 
@@ -159,6 +174,7 @@ export function useSettings() {
     addSettingItem,
     removeSettingItem,
     addUser,
+    updateUser,
     removeUser,
   };
 }

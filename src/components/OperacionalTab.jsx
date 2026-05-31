@@ -10,11 +10,16 @@ import {
 export function OperacionalTab({
   attendances,
   settings,
+  users = [],
   session,
   updateOperationalStage,
   updateOperationalTransport,
   updateOperationalPerson,
 }) {
+  const atendentesOpts = users.filter((u) => (u.funcoes || []).includes("atendente")).map((u) => u.name);
+  const tecnicosOpts   = users.filter((u) => (u.funcoes || []).includes("tecnico")).map((u) => u.name);
+  const apoiosOpts     = users.filter((u) => (u.funcoes || []).includes("apoio")).map((u) => u.name);
+  const motoristasOpts = users.filter((u) => (u.funcoes || []).includes("motorista")).map((u) => u.name);
   const [expandedOperations, setExpandedOperations] = useState({});
 
   function toggleOperationalCard(attendanceId) {
@@ -112,7 +117,7 @@ export function OperacionalTab({
                                   }
                                 >
                                   <option value="">Selecione</option>
-                                  {(settings.attendants || []).map((a) => (
+                                  {atendentesOpts.map((a) => (
                                     <option key={a} value={a}>{a}</option>
                                   ))}
                                 </select>
@@ -132,7 +137,7 @@ export function OperacionalTab({
                                   }
                                 >
                                   <option value="">Selecione</option>
-                                  {(settings.technicians || []).map((t) => (
+                                  {tecnicosOpts.map((t) => (
                                     <option key={t} value={t}>{t}</option>
                                   ))}
                                 </select>
@@ -152,7 +157,7 @@ export function OperacionalTab({
                                   }
                                 >
                                   <option value="">Selecione</option>
-                                  {(settings.supports || []).map((s) => (
+                                  {apoiosOpts.map((s) => (
                                     <option key={s} value={s}>{s}</option>
                                   ))}
                                 </select>
@@ -172,7 +177,7 @@ export function OperacionalTab({
                                   }
                                 >
                                   <option value="">Selecione</option>
-                                  {(settings.drivers || []).map((d) => (
+                                  {motoristasOpts.map((d) => (
                                     <option key={d} value={d}>{d}</option>
                                   ))}
                                 </select>

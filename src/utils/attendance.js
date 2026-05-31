@@ -60,15 +60,28 @@ export function getNextAttendanceNumber(atendimentos) {
   return `ATD-${year}-${String(next).padStart(4, "0")}`;
 }
 
+const VALID_ROLES = ["ADM", "SUPERVISOR", "ATENDENTE", "MOTORISTA", "TECNICO", "APOIO", "ONIBUS"];
+
 export function normalizeRole(role = "") {
-  return role === "OPERADOR" ? "ATENDENTE" : role;
+  const r = String(role || "").toUpperCase().trim();
+  if (r === "OPERADOR") return "ATENDENTE";
+  if (r === "EQUIPE")   return "MOTORISTA";  // retrocompatibilidade
+  return VALID_ROLES.includes(r) ? r : (r || "ATENDENTE");
 }
+
+const ROLE_LABELS = {
+  ADM:        "Administrador",
+  SUPERVISOR: "Supervisor",
+  ATENDENTE:  "Atendente",
+  MOTORISTA:  "Motorista",
+  TECNICO:    "Técnico",
+  APOIO:      "Apoio",
+  ONIBUS:     "Ônibus",
+};
 
 export function getRoleUiLabel(role = "") {
   const normalized = normalizeRole(role);
-  if (normalized === "ADM") return "ADM";
-  if (normalized === "EQUIPE") return "EQUIPE";
-  return "ATENDENTE";
+  return ROLE_LABELS[normalized] || normalized || "Atendente";
 }
 
 export function getInitials(name = "") {
