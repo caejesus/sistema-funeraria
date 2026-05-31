@@ -373,7 +373,6 @@ export default function App() {
         <Equipe
           atendimentos={atendimentosEquipe}
           updateOperationalStage={updateOperationalStage}
-          formatDateBR={formatDateBR}
           ordensAtivas={ordensAtivas}
           atualizarStatusOs={atualizarStatusOs}
           servicosDoDia={servicosDoDia}
@@ -628,7 +627,6 @@ export default function App() {
         <Equipe
           atendimentos={atendimentosEquipe}
           updateOperationalStage={updateOperationalStage}
-          formatDateBR={formatDateBR}
           ordensAtivas={ordensAtivas}
           atualizarStatusOs={atualizarStatusOs}
           servicosDoDia={servicosDoDia}
