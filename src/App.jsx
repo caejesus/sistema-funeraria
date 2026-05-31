@@ -747,7 +747,7 @@ export default function App() {
                   </select>
                 </div>
 
-                {form.tipoPlano === "socio" && (
+                {["socio_especial", "socio_luxo", "socio_premium"].includes(form.tipoPlano) && (
                   <div style={styles.grid3}>
                     <div style={styles.field}>
                       <label style={styles.label}>Plano</label>

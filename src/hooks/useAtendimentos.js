@@ -49,7 +49,13 @@ export function useAtendimentos({
         .select("*")
         .order("id", { ascending: false });
       if (error) { console.error("Erro ao carregar:", error); return; }
-      setAtendimentos((data || []).map((item) => item.dados || item));
+      setAtendimentos((data || []).map((item) => {
+        const record = item.dados || item;
+        if (record?.form?.tipoPlano === "socio") {
+          return { ...record, form: { ...record.form, tipoPlano: "socio_especial" } };
+        }
+        return record;
+      }));
     }
     carregarAtendimentos();
   }, []);

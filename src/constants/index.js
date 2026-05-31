@@ -129,8 +129,10 @@ export const OS_PRIORIDADE = [
 ];
 
 export const SERVICE_TYPE_OPTIONS = [
-  { value: "particular", label: "PARTICULAR" },
-  { value: "socio", label: "ASSOCIADO" },
+  { value: "particular",           label: "PARTICULAR" },
+  { value: "socio_especial",       label: "SÓCIO ESPECIAL" },
+  { value: "socio_luxo",           label: "SÓCIO LUXO" },
+  { value: "socio_premium",        label: "SÓCIO PREMIUM" },
   { value: "seguradora", label: "SEGURADORA" },
   { value: "orgao_publico", label: "ÓRGÃO PÚBLICO" },
   { value: "prefeitura_conveniada", label: "PREFEITURA CONVENIADA" },

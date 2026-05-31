@@ -132,20 +132,29 @@ export function gerarFichaPdf({
       });
       y += 5.9;
   
-      if (form.tipoPlano === "socio") {
-        drawCell(doc, left, y, 55, 5.9, `PLANO: ${form.plano}`, {
-          fontSize: 12,
-        });
-        drawCell(doc, 60, y, 45, 5.9, `CÓDIGO: ${form.codigo}`, {
-          fontSize: 12,
-        });
-        drawCell(doc, 105, y, 100, 5.9, `DEPENDENTE: ${form.dependente}`, {
-          fontSize: 12,
-        });
+      const TIPO_LABELS = {
+        particular:            "SERVIÇO PARTICULAR",
+        socio_especial:        "SÓCIO ESPECIAL",
+        socio_luxo:            "SÓCIO LUXO",
+        socio_premium:         "SÓCIO PREMIUM",
+        pm:                    "POLÍCIA MILITAR (DPS AM)",
+        tokyo:                 "TOKYO MARINE",
+        seguradora:            "SEGURADORA",
+        orgao_publico:         "ÓRGÃO PÚBLICO",
+        prefeitura_conveniada: "PREFEITURA CONVENIADA",
+        casai:                 "CASAI (DSEI MANAUS)",
+        autazes:               "PREFEITURA DE AUTAZES",
+      };
+
+      const isSocio = ["socio_especial", "socio_luxo", "socio_premium"].includes(form.tipoPlano);
+
+      if (isSocio) {
+        drawCell(doc, left, y, 55, 5.9, `PLANO: ${form.plano}`, { fontSize: 12 });
+        drawCell(doc, 60, y, 45, 5.9, `CÓDIGO: ${form.codigo}`, { fontSize: 12 });
+        drawCell(doc, 105, y, 100, 5.9, `DEPENDENTE: ${form.dependente}`, { fontSize: 12 });
       } else {
-        drawCell(doc, left, y, 200, 5.9, `PLANO: SERVIÇO PARTICULAR`, {
-          fontSize: 12,
-        });
+        const tipoLabel = TIPO_LABELS[form.tipoPlano] || "SERVIÇO PARTICULAR";
+        drawCell(doc, left, y, 200, 5.9, `PLANO: ${tipoLabel}`, { fontSize: 12 });
       }
       y += 6.6;
   
