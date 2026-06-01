@@ -562,7 +562,7 @@ export default function App() {
             <img
               src="/logosf.png"
               alt="Logo Grupo São Francisco"
-              style={{ width: 48, height: "auto", display: "block", objectFit: "contain", background: "transparent", boxShadow: "none", border: "none", padding: 0, margin: 0 }}
+              style={{ width: 96, height: "auto", display: "block", objectFit: "contain", background: "transparent", boxShadow: "none", border: "none", padding: 0, margin: 0 }}
             />
             <div className="home-brand-copy" style={{ background: "transparent", boxShadow: "none", border: "none", padding: 0 }}>
               <div className="home-brand-title">Grupo São Francisco</div>
@@ -645,9 +645,6 @@ export default function App() {
               </div>
             </button>
           </div>
-          <footer className="home-footer">
-            © 2026 Caetano Digital System · Todos os direitos reservados
-          </footer>
         </section>
       )}
 
