@@ -328,8 +328,8 @@
 
 .login-left {
   flex: 1.2;
-  background: #f0f4f3;
-  border-right: 1px solid #e5ecea;
+  background: #0f1720;
+  border-right: 1px solid rgba(38, 177, 196, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;

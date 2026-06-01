@@ -42,8 +42,8 @@ const COMPANY_CARDS = [
 ];
 
 const cardStyle = {
-  background: "#f9fbfb",
-  border: "0.5px solid #e5ecea",
+  background: "#111827",
+  border: "0.5px solid rgba(148,163,184,0.15)",
   borderRadius: 12,
   padding: "14px 12px",
   display: "flex",
@@ -61,13 +61,20 @@ const logoImgStyle = {
   margin: "0 auto 8px",
 };
 
+const onLogoError = (e) => { e.target.style.display = "none"; };
+
 function LoginLeftPanel() {
   return (
     <div className="login-left">
-      <img src="/logogrupo.png" alt="Grupo São Francisco" style={{ width: 140, objectFit: "contain", marginBottom: "1.5rem" }} />
+      <img
+        src="/logogrupo.png"
+        alt="Grupo São Francisco"
+        style={{ width: 140, objectFit: "contain", marginBottom: "1.5rem" }}
+        onError={onLogoError}
+      />
 
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+        <div style={{ fontSize: 11, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
           Sistema de Gestão Funerária
         </div>
         <div style={{ width: 48, height: 2, background: "#26b1c4", margin: "0 auto" }} />
@@ -77,20 +84,20 @@ function LoginLeftPanel() {
         {COMPANY_CARDS.map(({ logo, icon, label, sub }) => (
           <div key={label + sub} style={cardStyle}>
             {logo
-              ? <img src={logo} alt={label} className="login-company-logo" style={logoImgStyle} />
+              ? <img src={logo} alt={label} className="login-company-logo" style={logoImgStyle} onError={onLogoError} />
               : (
                 <div style={{ width: 48, height: 48, background: "rgba(38,177,196,0.1)", borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#26b1c4", marginBottom: 8 }}>
                   <i className={icon} style={{ fontSize: 20 }} />
                 </div>
               )
             }
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#333", textTransform: "uppercase" }}>{label}</div>
-            <div style={{ fontSize: 10, color: "#94a3b8" }}>{sub}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#e2e8f0", textTransform: "uppercase" }}>{label}</div>
+            <div style={{ fontSize: 10, color: "#475569" }}>{sub}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ fontSize: 12, color: "#94a3b8", textAlign: "center", marginTop: "2rem", maxWidth: 280 }}>
+      <div style={{ fontSize: 12, color: "#334155", textAlign: "center", marginTop: "2rem", maxWidth: 280 }}>
         Cuidando com respeito e dedicação em todos os momentos
       </div>
     </div>
