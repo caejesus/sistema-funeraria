@@ -1,6 +1,30 @@
 import jsPDF from "jspdf";
 import { getCemiterioNome, formatPeso, formatAltura } from "../utils/format";
 
+function maskCpf(value) {
+  const n = String(value || "").replace(/\D/g, "").slice(0, 11);
+  if (n.length <= 3) return n;
+  if (n.length <= 6) return n.slice(0, 3) + "." + n.slice(3);
+  if (n.length <= 9) return n.slice(0, 3) + "." + n.slice(3, 6) + "." + n.slice(6);
+  return n.slice(0, 3) + "." + n.slice(3, 6) + "." + n.slice(6, 9) + "-" + n.slice(9);
+}
+
+function maskRg(value) {
+  const n = String(value || "").replace(/\D/g, "").slice(0, 9);
+  if (n.length <= 2) return n;
+  if (n.length <= 5) return n.slice(0, 2) + "." + n.slice(2);
+  if (n.length <= 8) return n.slice(0, 2) + "." + n.slice(2, 5) + "." + n.slice(5);
+  return n.slice(0, 2) + "." + n.slice(2, 5) + "." + n.slice(5, 8) + "-" + n.slice(8);
+}
+
+function maskCelular(value) {
+  const n = String(value || "").replace(/\D/g, "").slice(0, 11);
+  if (n.length <= 2) return "(" + n;
+  if (n.length <= 7) return "(" + n.slice(0, 2) + ") " + n.slice(2);
+  if (n.length <= 10) return "(" + n.slice(0, 2) + ") " + n.slice(2, 6) + "-" + n.slice(6);
+  return "(" + n.slice(0, 2) + ") " + n.slice(2, 7) + "-" + n.slice(7);
+}
+
 export function gerarFichaPdf({
   form,
   services,
@@ -9,6 +33,7 @@ export function gerarFichaPdf({
   formatDateBR,
   formatMoney,
   openPdfPreview,
+  operationalStages = {},
 }) {
       const doc = new jsPDF("p", "mm", "a4");
       doc.setDrawColor(0, 0, 0);
@@ -191,36 +216,25 @@ export function gerarFichaPdf({
       });
       y += 5.9;
   
-      drawCell(doc, left, y, 145, 5.9, `NOME: ${form.responsavelNome}`, {
-        fontSize: 12,
-      });
-      drawCell(doc, 150, y, 55, 5.9, `CPF: ${form.responsavelCpf}`, {
-        fontSize: 12,
-      });
+      drawCell(doc, left, y, 145, 5.9, `NOME: ${form.responsavelNome}`, { fontSize: 12 });
+      drawCell(doc, 150, y, 55, 5.9, `CPF: ${maskCpf(form.responsavelCpf)}`, { fontSize: 12 });
       y += 5.9;
-  
-      drawCell(doc, left, y, 200, 5.9, `RG: ${form.responsavelRg}`, {
-        fontSize: 12,
-      });
+
+      drawCell(doc, left, y, 200, 5.9, `RG: ${maskRg(form.responsavelRg)}`, { fontSize: 12 });
       y += 5.9;
-  
-      drawCell(doc, left, y, 160, 5.9, `ENDEREÇO: ${form.responsavelEndereco}`, {
-        fontSize: 12,
-      });
-      drawCell(doc, 165, y, 40, 5.9, `CEP: ${form.responsavelCep}`, {
-        fontSize: 12,
-      });
+
+      const enderecoCompleto = [
+        form.responsavelEndereco,
+        form.responsavelNumero ? `, ${form.responsavelNumero}` : "",
+        form.responsavelComplemento ? ` - ${form.responsavelComplemento}` : "",
+      ].join("");
+      drawCell(doc, left, y, 160, 5.9, `ENDEREÇO: ${enderecoCompleto}`, { fontSize: 12 });
+      drawCell(doc, 165, y, 40, 5.9, `CEP: ${form.responsavelCep}`, { fontSize: 12 });
       y += 5.9;
-  
-      drawCell(doc, left, y, 75, 5.9, `BAIRRO: ${form.responsavelBairro}`, {
-        fontSize: 12,
-      });
-      drawCell(doc, 80, y, 60, 5.9, `CELULAR: ${form.responsavelCelular1}`, {
-        fontSize: 12,
-      });
-      drawCell(doc, 140, y, 65, 5.9, `CELULAR: ${form.responsavelCelular2}`, {
-        fontSize: 12,
-      });
+
+      drawCell(doc, left, y, 75, 5.9, `BAIRRO: ${form.responsavelBairro}`, { fontSize: 12 });
+      drawCell(doc, 80,  y, 60, 5.9, `CELULAR: ${maskCelular(form.responsavelCelular1)}`, { fontSize: 12 });
+      drawCell(doc, 140, y, 65, 5.9, `CELULAR: ${maskCelular(form.responsavelCelular2)}`, { fontSize: 12 });
       y += 5.9;
   
       const velorioTexto =
@@ -240,76 +254,36 @@ export function gerarFichaPdf({
       });
       y += 6.8;
   
-      function drawFinalBlock(titulo, atendente, motorista, carro, showDetails = false) {
-        drawCell(
-          doc,
-          left,
-          y,
-          70,
-          5.5,
-          showDetails ? `ATENDENTE: ${atendente || ""}` : "",
-          {
-            bold: true,
-            fontSize: 10,
-          }
-        );
-        drawCell(
-          doc,
-          75,
-          y,
-          80,
-          5.5,
-          showDetails ? `${titulo} ${motorista || ""}` : titulo,
-          {
-            bold: true,
-            fontSize: 10,
-          }
-        );
-        drawCell(
-          doc,
-          155,
-          y,
-          50,
-          5.5,
-          showDetails ? `CARRO: ${carro || ""}` : "",
-          {
-            bold: true,
-            fontSize: 7.2,
-          }
-        );
+      function drawTransporteBlock(label, atendenteCol1, driver, car) {
+        drawCell(doc, left, y, 70, 5.5, atendenteCol1, { bold: true, fontSize: 10 });
+        drawCell(doc, 75,   y, 80, 5.5, `${label} ${driver || ""}`, { bold: true, fontSize: 10 });
+        drawCell(doc, 155,  y, 50, 5.5, `CARRO: ${car || ""}`, { bold: true, fontSize: 7.2 });
         y += 5.5;
-  
         drawCell(doc, left, y, 70, 5.5, "", {});
-        drawCell(doc, 75, y, 80, 5.5, "ASSINATURA:", {
-          bold: true,
-          fontSize: 7.2,
-        });
-        drawCell(doc, 155, y, 50, 5.5, "", {});
+        drawCell(doc, 75,   y, 80, 5.5, "ASSINATURA:", { bold: true, fontSize: 7.2 });
+        drawCell(doc, 155,  y, 50, 5.5, "", {});
         y += 5.5;
       }
-  
-      drawFinalBlock(
+
+      drawTransporteBlock(
         "REMOÇÃO:",
-        form.atendenteRemocao,
-        form.Remocao,
-        form.carroRemocao,
-        true
+        `ATENDENTE: ${form.atendenteGeral || ""}`,
+        operationalStages?.remocao?.driver || form.Remocao || "",
+        operationalStages?.remocao?.car    || form.carroRemocao || ""
       );
-  
-      drawFinalBlock(
+
+      drawTransporteBlock(
         "ENTREGA:",
-        form.atendenteEntrega,
-        form.Entrega,
-        form.carroEntrega,
-        false
+        "ATENDENTE:",
+        operationalStages?.entrega?.driver || form.Entrega || "",
+        operationalStages?.entrega?.car    || form.carroEntrega || ""
       );
-  
-      drawFinalBlock(
+
+      drawTransporteBlock(
         "SEPULTAMENTO:",
-        form.atendenteSepultamento,
-        form.Sepultamento,
-        form.carroSepultamento,
-        false
+        "ATENDENTE:",
+        operationalStages?.sepultamento?.driver || form.Sepultamento || "",
+        operationalStages?.sepultamento?.car    || form.carroSepultamento || ""
       );
   
       const assinaturaY = Math.min(y + 40, 297);

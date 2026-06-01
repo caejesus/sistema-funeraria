@@ -353,7 +353,9 @@ export default function App() {
   }
 
   function gerarFichaPDF() {
-    gerarFichaPdf({ form, services, totalValue, drawCell, formatDateBR, formatMoney, openPdfPreview });
+    const currentRecord = atendimentos.find((item) => item.id === editingAttendanceId);
+    const operationalStages = currentRecord?.operationalStages || {};
+    gerarFichaPdf({ form, services, totalValue, drawCell, formatDateBR, formatMoney, openPdfPreview, operationalStages });
   }
 
   function gerarTermoPDF() {
