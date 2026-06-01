@@ -65,7 +65,7 @@ const ACCORDIONS = [
   { key: "hospitals",    label: "Hospitais / Locais de Óbito", hasAddress: false },
   { key: "cemeteries",   label: "Cemitérios",                  hasAddress: true,  placeholder: "Nome do cemitério" },
   { key: "coffinColors", label: "Cores de Urna",               hasAddress: false, upper: true },
-  { key: "cars",         label: "Carros",                      hasAddress: false, upper: true, placeholder: "Ex: STRADA - QWE1A23" },
+  { key: "cars",         label: "Carros",                      hasAddress: false, hasCar: true, upper: true, placeholder: "Modelo (ex: STRADA)" },
 ];
 
 const EMPTY_USER = { name: "", login: "", password: "", role: "ATENDENTE", funcoes: [] };
@@ -76,7 +76,7 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
   const [newUser, setNewUser] = useState(EMPTY_USER);
   const [editingUser, setEditingUser] = useState(null);
   const [openAccordion, setOpenAccordion] = useState(null);
-  const [newItems, setNewItems] = useState({ hospitals: "", cemeteries: "", cemeteryAddress: "", coffinColors: "", cars: "" });
+  const [newItems, setNewItems] = useState({ hospitals: "", cemeteries: "", cemeteryAddress: "", coffinColors: "", cars: "", carPlaca: "" });
 
   async function handleAddUser() {
     const ok = await addUser(newUser);
@@ -102,6 +102,13 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
       const value = addr ? `${nome}|${addr}` : nome;
       const ok = await addSettingItem(key, value);
       if (ok) setNewItems((p) => ({ ...p, cemeteries: "", cemeteryAddress: "" }));
+    } else if (key === "cars") {
+      const modelo = (newItems.cars || "").trim().toUpperCase();
+      const placa  = (newItems.carPlaca || "").trim().toUpperCase();
+      if (!modelo) return;
+      const value = placa ? `${modelo} - ${placa}` : modelo;
+      const ok = await addSettingItem(key, value);
+      if (ok) setNewItems((p) => ({ ...p, cars: "", carPlaca: "" }));
     } else {
       const raw = (newItems[key] || "").trim();
       if (!raw) return;
@@ -228,7 +235,7 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
       <section style={styles.card}>
         <h2 style={styles.cardTitle}>Cadastros dinâmicos</h2>
 
-        {ACCORDIONS.map(({ key, label, hasAddress, placeholder }) => {
+        {ACCORDIONS.map(({ key, label, hasAddress, hasCar, placeholder }) => {
           const isOpen = openAccordion === key;
           const items = settings[key] || [];
           return (
@@ -263,18 +270,27 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
                   {/* Add form */}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12, marginBottom: 10 }}>
                     <input
-                      style={{ ...styles.input, flex: 1, minWidth: 140 }}
-                      placeholder={placeholder || `Novo item`}
+                      style={{ ...styles.input, flex: hasCar ? 2 : 1, minWidth: 130 }}
+                      placeholder={placeholder || "Novo item"}
                       value={newItems[key] || ""}
                       onChange={(e) => setNewItems((p) => ({ ...p, [key]: e.target.value }))}
-                      onKeyDown={(e) => e.key === "Enter" && handleAddItem(key)}
+                      onKeyDown={(e) => e.key === "Enter" && !hasAddress && !hasCar && handleAddItem(key)}
                     />
                     {hasAddress && (
                       <input
-                        style={{ ...styles.input, flex: 1, minWidth: 140 }}
+                        style={{ ...styles.input, flex: 1, minWidth: 130 }}
                         placeholder="Endereço (opcional)"
                         value={newItems.cemeteryAddress || ""}
                         onChange={(e) => setNewItems((p) => ({ ...p, cemeteryAddress: e.target.value }))}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddItem(key)}
+                      />
+                    )}
+                    {hasCar && (
+                      <input
+                        style={{ ...styles.input, flex: 1, minWidth: 90 }}
+                        placeholder="Placa (ex: JAV9I91)"
+                        value={newItems.carPlaca || ""}
+                        onChange={(e) => setNewItems((p) => ({ ...p, carPlaca: e.target.value }))}
                         onKeyDown={(e) => e.key === "Enter" && handleAddItem(key)}
                       />
                     )}
@@ -289,15 +305,25 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
                       Nenhum item cadastrado
                     </div>
                   ) : (
-                    items.map((item) => {
-                      const [nome, addr] = item.split("|");
+                    items.map((rawItem) => {
+                      let displayName, displaySub;
+                      if (key === "cemeteries") {
+                        [displayName, displaySub] = rawItem.split("|");
+                      } else if (key === "cars") {
+                        const dashIdx = rawItem.indexOf(" - ");
+                        displayName = dashIdx >= 0 ? rawItem.slice(0, dashIdx) : rawItem;
+                        displaySub  = dashIdx >= 0 ? rawItem.slice(dashIdx + 3) : "";
+                      } else {
+                        displayName = rawItem;
+                        displaySub  = "";
+                      }
                       return (
-                        <div key={item} style={{ ...styles.listItem, padding: "10px 12px", marginBottom: 6 }}>
+                        <div key={rawItem} style={{ ...styles.listItem, padding: "10px 12px", marginBottom: 6 }}>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 13, color: "var(--text-main)" }}>{nome}</div>
-                            {addr && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{addr}</div>}
+                            <div style={{ fontSize: 13, color: "var(--text-main)" }}>{displayName}</div>
+                            {displaySub && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{displaySub}</div>}
                           </div>
-                          <button style={styles.outlineDangerBtn} onClick={() => removeSettingItem(key, item)}>
+                          <button style={styles.outlineDangerBtn} onClick={() => removeSettingItem(key, rawItem)}>
                             Remover
                           </button>
                         </div>

@@ -379,6 +379,7 @@ export default function App() {
           atualizarStatusOs={atualizarStatusOs}
           servicosDoDia={servicosDoDia}
           session={session}
+          settings={settings}
         />
       </div>
     );
@@ -636,6 +637,7 @@ export default function App() {
           atualizarStatusOs={atualizarStatusOs}
           servicosDoDia={servicosDoDia}
           session={session}
+          settings={settings}
         />
       )}
 

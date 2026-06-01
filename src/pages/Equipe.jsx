@@ -311,9 +311,9 @@ function getStageContent(key, form, item) {
 
 // ─── Stage card ───────────────────────────────────────────────────────────────
 
-const MODAL_INIT = { open: false, carro: "", placa: "" };
+const MODAL_INIT = { open: false, carroSelecionado: "" };
 
-function StageCard({ item, stage, updateOperationalStage, updateOperationalTransport, updateOperationalPerson, session }) {
+function StageCard({ item, stage, updateOperationalStage, updateOperationalTransport, updateOperationalPerson, session, settings }) {
   const { key, label } = stage;
   const status      = getEffectiveStageStatus(item, key);
   const st          = item?.operationalStages?.[key] || {};
@@ -337,23 +337,34 @@ function StageCard({ item, stage, updateOperationalStage, updateOperationalTrans
     cursor: "pointer",
   });
 
+  const inputStyle = {
+    width: "100%",
+    background: "var(--input-bg)",
+    border: "1px solid var(--input-border)",
+    borderRadius: 10,
+    padding: "11px 14px",
+    fontSize: 14,
+    color: "var(--input-text)",
+    outline: "none",
+    boxSizing: "border-box",
+    cursor: "pointer",
+  };
+
   function handleIniciar() {
-    if (key === "remocao") {
-      setModal({ open: true, carro: "", placa: "" });
+    if (isTransport) {
+      setModal({ open: true, carroSelecionado: "" });
       return;
     }
     if (typeof updateOperationalStage === "function")
       updateOperationalStage(item.id, key, "start");
-    if (isTransport && session?.name && typeof updateOperationalPerson === "function")
-      updateOperationalPerson(item.id, key, "driver", session.name);
   }
 
-  function confirmRemocao() {
+  function confirmTransporte() {
+    if (!modal.carroSelecionado) { alert("Selecione o veículo."); return; }
     if (typeof updateOperationalStage === "function")
       updateOperationalStage(item.id, key, "start");
-    const veiculo = [modal.carro, modal.placa].filter(Boolean).join(" - ");
-    if (veiculo && typeof updateOperationalTransport === "function")
-      updateOperationalTransport(item.id, key, "car", veiculo);
+    if (typeof updateOperationalTransport === "function")
+      updateOperationalTransport(item.id, key, "car", modal.carroSelecionado);
     if (session?.name && typeof updateOperationalPerson === "function")
       updateOperationalPerson(item.id, key, "driver", session.name);
     setModal(MODAL_INIT);
@@ -361,33 +372,30 @@ function StageCard({ item, stage, updateOperationalStage, updateOperationalTrans
 
   return (
     <>
-      {/* Modal de remoção */}
+      {/* Modal de transporte */}
       {modal.open && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
           <div style={{ background: "var(--card-bg)", borderRadius: 16, padding: 22, width: "100%", maxWidth: 340, boxShadow: "0 24px 60px rgba(0,0,0,0.35)" }}>
             <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text-main)", marginBottom: 18 }}>
-              Confirmar início da remoção
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: "block", fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>Carro / Veículo</label>
-              <input
-                style={{ width: "100%", background: "var(--input-bg)", border: "1px solid var(--input-border)", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "var(--input-text)", outline: "none", boxSizing: "border-box" }}
-                value={modal.carro}
-                onChange={(e) => setModal((m) => ({ ...m, carro: e.target.value }))}
-                placeholder="STRADA"
-              />
+              Confirmar início — {label}
             </div>
             <div style={{ marginBottom: 20 }}>
-              <label style={{ display: "block", fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>Placa</label>
-              <input
-                style={{ width: "100%", background: "var(--input-bg)", border: "1px solid var(--input-border)", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "var(--input-text)", outline: "none", boxSizing: "border-box" }}
-                value={modal.placa}
-                onChange={(e) => setModal((m) => ({ ...m, placa: e.target.value.toUpperCase() }))}
-                placeholder="JAV9I91"
-              />
+              <label style={{ display: "block", fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>
+                Selecionar veículo
+              </label>
+              <select
+                style={{ ...inputStyle, color: modal.carroSelecionado ? "var(--input-text)" : "var(--text-muted)" }}
+                value={modal.carroSelecionado}
+                onChange={(e) => setModal((m) => ({ ...m, carroSelecionado: e.target.value }))}
+              >
+                <option value="">Selecione o veículo</option>
+                {(settings?.cars || []).map((car) => (
+                  <option key={car} value={car}>{car}</option>
+                ))}
+              </select>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <button type="button" style={primaryBtn({ flex: 1 })} onClick={confirmRemocao}>
+              <button type="button" style={primaryBtn({ flex: 1 })} onClick={confirmTransporte}>
                 Confirmar e iniciar
               </button>
               <button type="button"
@@ -504,7 +512,7 @@ function calcularIdade(dataNascimento) {
   return isNaN(anos) || anos < 0 ? null : `${anos} anos`;
 }
 
-function AtendimentoCard({ item, isExpanded, onToggle, updateOperationalStage, updateOperationalTransport, updateOperationalPerson, session, isNovo }) {
+function AtendimentoCard({ item, isExpanded, onToggle, updateOperationalStage, updateOperationalTransport, updateOperationalPerson, session, settings, isNovo }) {
   const form = item.form || {};
   const localObito = form.localObito || item.localObito || "";
   const localVelorio = getLocalVelorio(form) || "";
@@ -544,6 +552,7 @@ function AtendimentoCard({ item, isExpanded, onToggle, updateOperationalStage, u
               updateOperationalTransport={updateOperationalTransport}
               updateOperationalPerson={updateOperationalPerson}
               session={session}
+              settings={settings}
             />
           ))}
         </div>
@@ -706,6 +715,7 @@ export default function Equipe({
   atualizarStatusOs,
   servicosDoDia = [],
   session,
+  settings,
 }) {
   const [abaAtiva, setAbaAtiva]     = useState("operacional");
   const [expandedId, setExpandedId] = useState(null);
@@ -808,6 +818,7 @@ export default function Equipe({
                     updateOperationalTransport={updateOperationalTransport}
                     updateOperationalPerson={updateOperationalPerson}
                     session={session}
+                    settings={settings}
                     isNovo={idsRecentes.includes(item.id)}
                   />
                 ))}
