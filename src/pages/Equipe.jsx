@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import notificationSound from "../assets/notificacao.mp3";
 import { formatDateBR, getCemiterioNome, getCemiterioEndereco } from "../utils/format";
+import { getInitials, getRoleUiLabel } from "../utils/attendance";
 import { OPERATION_STAGES } from "../constants";
 import {
   servicoAtivo,
@@ -781,6 +782,19 @@ export default function Equipe({
           {audioLiberado ? "Alerta sonoro ativado" : "Toque na tela para liberar o alerta sonoro"}
         </p>
       </div>
+
+      {/* User card */}
+      {session && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--card-bg-soft)", border: "1px solid var(--border-soft)", borderRadius: 16, padding: "12px 16px", marginBottom: 12 }}>
+          <div style={{ width: 42, height: 42, borderRadius: "50%", background: "linear-gradient(135deg, var(--brand-accent), #1d8ea0)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, fontWeight: 800, flexShrink: 0 }}>
+            {getInitials(session.name)}
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-main)" }}>{session.name}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{getRoleUiLabel(session.role)}</div>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div style={{ display: "flex", borderBottom: "1px solid var(--border-soft)", marginBottom: 16, overflowX: "auto", scrollbarWidth: "none" }}>
