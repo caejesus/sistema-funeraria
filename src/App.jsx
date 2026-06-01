@@ -121,6 +121,18 @@ export default function App() {
   const isDark = theme === "dark";
   const themeVars = getThemeVars(isDark);
 
+  // --- Audio unlock (equipe) ---
+  const [audioLiberadoEquipe, setAudioLiberadoEquipe] = useState(false);
+  useEffect(() => {
+    const unlock = () => setAudioLiberadoEquipe(true);
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+
   const [osConvertidaMensagem, setOsConvertidaMensagem] = useState("");
 
   // --- Hooks ---
@@ -363,10 +375,16 @@ export default function App() {
           <div style={styles.headerBox}>
             <div>
               <div style={styles.brandTitle}>Painel da Equipe</div>
-              <div style={styles.brandSub}>Acompanhamento operacional da equipe em campo.</div>
+              <div style={styles.brandSub}>
+                {audioLiberadoEquipe ? "Alerta sonoro ativado" : "Toque na tela para liberar o alerta sonoro"}
+              </div>
             </div>
-            <button style={styles.outlineBtn} onClick={handleLogout}>
-              <i className="fa-solid fa-right-from-bracket" style={styles.buttonIcon} /> Sair
+            <button
+              style={{ background: "var(--card-bg-soft)", border: "1px solid var(--border-soft)", borderRadius: 10, padding: "8px 10px", cursor: "pointer", color: "var(--text-muted)", fontSize: 18, display: "flex", alignItems: "center", marginLeft: "auto" }}
+              onClick={handleLogout}
+              title="Sair"
+            >
+              <i className="fa-solid fa-right-from-bracket" />
             </button>
           </div>
         </div>
@@ -380,6 +398,7 @@ export default function App() {
           servicosDoDia={servicosDoDia}
           session={session}
           settings={settings}
+          audioLiberado={audioLiberadoEquipe}
         />
       </div>
     );

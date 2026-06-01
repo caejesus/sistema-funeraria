@@ -717,10 +717,10 @@ export default function Equipe({
   servicosDoDia = [],
   session,
   settings,
+  audioLiberado = false,
 }) {
   const [abaAtiva, setAbaAtiva]     = useState("operacional");
   const [expandedId, setExpandedId] = useState(null);
-  const [audioLiberado, setAudioLiberado] = useState(false);
   const [idsVistos, setIdsVistos]   = useState([]);
   const [idsRecentes, setIdsRecentes] = useState([]);
 
@@ -733,17 +733,6 @@ export default function Equipe({
     () => ordensAtivas.filter((o) => !["finalizada", "cancelada"].includes(o.status)),
     [ordensAtivas]
   );
-
-  // Audio unlock
-  useEffect(() => {
-    const unlock = () => setAudioLiberado(true);
-    window.addEventListener("pointerdown", unlock, { once: true });
-    window.addEventListener("keydown", unlock, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", unlock);
-      window.removeEventListener("keydown", unlock);
-    };
-  }, []);
 
   // New-item notification
   useEffect(() => {
@@ -774,14 +763,6 @@ export default function Equipe({
 
   return (
     <div style={{ padding: 12, background: "var(--page-bg)", minHeight: "100vh" }}>
-
-      {/* Header */}
-      <div style={{ marginBottom: 16 }}>
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 500, color: "var(--text-main)" }}>Tela da equipe</h2>
-        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--text-muted)" }}>
-          {audioLiberado ? "Alerta sonoro ativado" : "Toque na tela para liberar o alerta sonoro"}
-        </p>
-      </div>
 
       {/* User card */}
       {session && (
