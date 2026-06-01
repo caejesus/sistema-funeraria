@@ -45,20 +45,22 @@ const cardStyle = {
   background: "#ffffff",
   border: "0.5px solid rgba(255,255,255,0.1)",
   borderRadius: 12,
-  padding: "14px 12px",
+  padding: "20px 16px",
+  minHeight: 160,
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
+  justifyContent: "center",
   textAlign: "center",
 };
 
 const logoImgStyle = {
   width: "100%",
-  maxWidth: 80,
-  height: 48,
+  maxWidth: 160,
+  height: 100,
   objectFit: "contain",
   display: "block",
-  margin: "0 auto 8px",
+  margin: "0 auto 12px",
 };
 
 function LoginLeftPanel() {
@@ -67,7 +69,7 @@ function LoginLeftPanel() {
       <img
         src="/logogrupo.png"
         alt="Grupo São Francisco"
-        style={{ width: 120, height: "auto", display: "block", margin: "0 auto 1.5rem", background: "#ffffff", borderRadius: 12, padding: 8, objectFit: "contain" }}
+        style={{ height: 100, width: "auto", maxWidth: 220, display: "block", margin: "0 auto 1.5rem", objectFit: "contain" }}
       />
 
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
