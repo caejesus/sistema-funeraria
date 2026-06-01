@@ -28,6 +28,7 @@ import { ConfigTab } from "./components/ConfigTab";
 import { OrdemServicoTab } from "./components/OrdemServicoTab";
 import { ServicosDoDia } from "./components/ServicosDoDia";
 import { RelatoriosTab } from "./components/RelatoriosTab";
+import { AlterarSenhaModal } from "./components/AlterarSenhaModal";
 
 import { useOrdemServico } from "./hooks/useOrdemServico";
 
@@ -134,6 +135,7 @@ export default function App() {
   }, []);
 
   const [osConvertidaMensagem, setOsConvertidaMensagem] = useState("");
+  const [showAlterarSenha, setShowAlterarSenha] = useState(false);
 
   // --- Hooks ---
   const { pdfPreview, openPdfPreview, closePdfPreview, downloadPreviewPdf, printPreviewPdf } =
@@ -385,15 +387,32 @@ export default function App() {
                 {audioLiberadoEquipe ? "Alerta sonoro ativado" : "Toque na tela para liberar o alerta sonoro"}
               </div>
             </div>
-            <button
-              style={{ background: "var(--card-bg-soft)", border: "1px solid var(--border-soft)", borderRadius: 10, padding: "8px 10px", cursor: "pointer", color: "var(--text-muted)", fontSize: 18, display: "flex", alignItems: "center", marginLeft: "auto" }}
-              onClick={handleLogout}
-              title="Sair"
-            >
-              <i className="fa-solid fa-right-from-bracket" />
-            </button>
+            <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+              <button
+                style={{ background: "var(--card-bg-soft)", border: "1px solid var(--border-soft)", borderRadius: 10, padding: "8px 10px", cursor: "pointer", color: "var(--text-muted)", fontSize: 18, display: "flex", alignItems: "center" }}
+                onClick={() => setShowAlterarSenha(true)}
+                title="Alterar senha"
+              >
+                <i className="fa-solid fa-key" />
+              </button>
+              <button
+                style={{ background: "var(--card-bg-soft)", border: "1px solid var(--border-soft)", borderRadius: 10, padding: "8px 10px", cursor: "pointer", color: "var(--text-muted)", fontSize: 18, display: "flex", alignItems: "center" }}
+                onClick={handleLogout}
+                title="Sair"
+              >
+                <i className="fa-solid fa-right-from-bracket" />
+              </button>
+            </div>
           </div>
         </div>
+        {showAlterarSenha && (
+          <AlterarSenhaModal
+            session={session}
+            users={users}
+            onClose={() => setShowAlterarSenha(false)}
+            updateUser={updateUser}
+          />
+        )}
         <Equipe
           atendimentos={atendimentosEquipe}
           updateOperationalStage={updateOperationalStage}
@@ -563,6 +582,9 @@ export default function App() {
                 <i className="fa-solid fa-gear" />
               </button>
             )}
+            <button className="home-utility-button" onClick={() => setShowAlterarSenha(true)} title="Alterar senha">
+              <i className="fa-solid fa-key" />
+            </button>
             <button className="home-utility-button" onClick={() => setTheme(isDark ? "light" : "dark")} title={isDark ? "Claro" : "Escuro"}>
               <i className={`fa-solid ${isDark ? "fa-sun" : "fa-moon"}`} />
             </button>
@@ -1234,6 +1256,15 @@ export default function App() {
         onDownload={downloadPreviewPdf}
         onPrint={printPreviewPdf}
       />
+
+      {showAlterarSenha && (
+        <AlterarSenhaModal
+          session={session}
+          users={users}
+          onClose={() => setShowAlterarSenha(false)}
+          updateUser={updateUser}
+        />
+      )}
     </div>
   );
 }
