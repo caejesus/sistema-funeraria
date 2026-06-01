@@ -42,8 +42,8 @@ const COMPANY_CARDS = [
 ];
 
 const cardStyle = {
-  background: "#111827",
-  border: "0.5px solid rgba(148,163,184,0.15)",
+  background: "#ffffff",
+  border: "0.5px solid rgba(255,255,255,0.1)",
   borderRadius: 12,
   padding: "14px 12px",
   display: "flex",
@@ -61,16 +61,13 @@ const logoImgStyle = {
   margin: "0 auto 8px",
 };
 
-const onLogoError = (e) => { e.target.style.display = "none"; };
-
 function LoginLeftPanel() {
   return (
     <div className="login-left">
       <img
         src="/logogrupo.png"
         alt="Grupo São Francisco"
-        style={{ width: 140, objectFit: "contain", marginBottom: "1.5rem" }}
-        onError={onLogoError}
+        style={{ width: 120, height: "auto", display: "block", margin: "0 auto 1.5rem", background: "#ffffff", borderRadius: 12, padding: 8, objectFit: "contain" }}
       />
 
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
@@ -84,15 +81,15 @@ function LoginLeftPanel() {
         {COMPANY_CARDS.map(({ logo, icon, label, sub }) => (
           <div key={label + sub} style={cardStyle}>
             {logo
-              ? <img src={logo} alt={label} className="login-company-logo" style={logoImgStyle} onError={onLogoError} />
+              ? <img src={logo} alt={label} className="login-company-logo" style={logoImgStyle} />
               : (
                 <div style={{ width: 48, height: 48, background: "rgba(38,177,196,0.1)", borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#26b1c4", marginBottom: 8 }}>
                   <i className={icon} style={{ fontSize: 20 }} />
                 </div>
               )
             }
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#e2e8f0", textTransform: "uppercase" }}>{label}</div>
-            <div style={{ fontSize: 10, color: "#475569" }}>{sub}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#111827", textTransform: "uppercase" }}>{label}</div>
+            <div style={{ fontSize: 10, color: "#64748b" }}>{sub}</div>
           </div>
         ))}
       </div>
