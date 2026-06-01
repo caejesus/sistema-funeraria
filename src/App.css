@@ -12,6 +12,40 @@
   padding: 24px;
 }
 
+/* ─── Home — no-scroll layout ────────────────────────────────────────────── */
+.app-shell--home {
+  height: 100vh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.app-shell--home .home-header {
+  flex-shrink: 0;
+}
+
+.app-shell--home .home-screen {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px 24px;
+}
+
+.app-shell--home .home-cards-grid,
+.app-shell--home .home-cards {
+  margin: 0 auto;
+}
+
+.app-shell--home .home-footer {
+  flex-shrink: 0;
+  padding: 12px 24px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-muted, #666666);
+}
+
 .home-header {
   width: 100%;
   max-width: var(--home-max-width);

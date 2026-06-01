@@ -555,7 +555,7 @@ export default function App() {
 
   // --- Main shell ---
   return (
-    <div className="app-shell" style={themeVars}>
+    <div className={`app-shell${activeTab === "home" ? " app-shell--home" : ""}`} style={themeVars}>
       {activeTab === "home" && (
         <header className="home-header">
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
@@ -645,6 +645,9 @@ export default function App() {
               </div>
             </button>
           </div>
+          <footer className="home-footer">
+            © 2026 Caetano Digital System · Todos os direitos reservados
+          </footer>
         </section>
       )}
 
