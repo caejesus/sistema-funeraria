@@ -328,7 +328,7 @@
 
 .login-left {
   flex: 1.2;
-  background: #ffffff;
+  background: #f0f4f3;
   border-right: 1px solid #e5ecea;
   display: flex;
   flex-direction: column;

@@ -64,7 +64,7 @@ const logoImgStyle = {
 function LoginLeftPanel() {
   return (
     <div className="login-left">
-      <img src="/logosf.png" alt="Grupo São Francisco" style={{ width: 140, objectFit: "contain", marginBottom: "1.5rem" }} />
+      <img src="/logogrupo.png" alt="Grupo São Francisco" style={{ width: 140, objectFit: "contain", marginBottom: "1.5rem" }} />
 
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
         <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
@@ -504,7 +504,7 @@ export default function App() {
       <div className="login-screen">
         <LoginLeftPanel />
         <div className="login-right">
-          <div style={{ maxWidth: 340, width: "100%", background: "#ffffff", border: "1px solid #e5ecea", borderRadius: 20, padding: "2rem", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+          <div style={{ maxWidth: 340, width: "100%", background: "#ffffff", border: "1px solid #e5ecea", borderRadius: 20, padding: "2rem", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
             <div style={{ marginBottom: "2rem" }}>
               <h1 style={{ fontSize: 22, fontWeight: 700, color: "#333333", margin: "0 0 6px" }}>Acesso interno</h1>
               <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>Entre com suas credenciais</p>
@@ -549,7 +549,7 @@ export default function App() {
               </button>
             </form>
             <div style={{ marginTop: "1.5rem", fontSize: 11, color: "#94a3b8", textAlign: "center" }}>
-              © 2026 Grupo São Francisco
+              © 2026 Caetano Digital Systems
             </div>
           </div>
         </div>
