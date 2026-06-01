@@ -48,93 +48,43 @@ export function gerarFichaPdf({
   
       y += 26;
   
-      drawCell(doc, left, y, 200, 5.9, `FALECIDO: ${form.falecido}`, {
-        bold: true,
-        fontSize: 12,
-      });
+      // L1 — FALECIDO + NASC.
+      drawCell(doc, left, y, 150, 5.9, `FALECIDO: ${form.falecido}`, { bold: true, fontSize: 12 });
+      drawCell(doc, 155, y, 50, 5.9, `NASC.: ${form.dataNascimento ? formatDateBR(form.dataNascimento) : ""}`, { bold: false, fontSize: 10 });
       y += 5.9;
 
-      const extraInfoFalecido = [
-        form.sexo ? `SEXO: ${form.sexo}` : null,
-        form.dataNascimento ? `NASC.: ${formatDateBR(form.dataNascimento)}` : null,
-        form.peso ? `PESO: ${formatPeso(form.peso)}` : null,
-        form.altura ? `ALTURA: ${formatAltura(form.altura)}` : null,
-      ].filter(Boolean).join("     ");
+      // L2 — SEXO, PESO, ALTURA
+      drawCell(doc, left, y, 65, 5.9, `SEXO: ${form.sexo || ""}`, { bold: false, fontSize: 10 });
+      drawCell(doc, 70,   y, 65, 5.9, `PESO: ${formatPeso(form.peso)}`, { bold: false, fontSize: 10 });
+      drawCell(doc, 135,  y, 70, 5.9, `ALTURA: ${formatAltura(form.altura)}`, { bold: false, fontSize: 10 });
+      y += 5.9;
 
-      if (extraInfoFalecido) {
-        drawCell(doc, left, y, 200, 5.9, extraInfoFalecido, {
-          bold: false,
-          fontSize: 10,
-        });
-        y += 5.9;
-      }
+      // L3 — LOCAL DO ÓBITO + DATA/SAÍDA
+      const localObitoDisplay = String(form.localObito || "").toUpperCase().startsWith("SVO")
+        ? "SVO"
+        : (form.localObito || "");
+      drawCell(doc, left, y, 150, 5.9, `LOCAL DO ÓBITO: ${localObitoDisplay}`, { bold: true, fontSize: 12 });
+      drawCell(doc, 155,  y, 50,  5.9, `DATA/SAÍDA: ${formatDateBR(form.dataSaida)}`, { bold: true, fontSize: 12 });
+      y += 5.9;
 
-      drawCell(doc, left, y, 150, 5.9, `LOCAL DO ÓBITO: ${form.localObito}`, {
-        bold: true,
-        fontSize: 12,
-      });
-      drawCell(
-        doc,
-        155,
-        y,
-        50,
-        5.9,
-        `DATA/SAÍDA: ${formatDateBR(form.dataSaida)}`,
-        {
-          bold: true,
-          fontSize: 12,
-        }
-      );
+      // L4 — CEMITÉRIO + HORA/SAÍDA
+      drawCell(doc, left, y, 150, 5.9, `CEMITÉRIO: ${getCemiterioNome(form.cemiterio)}`, { bold: true, fontSize: 12 });
+      drawCell(doc, 155,  y, 50,  5.9, `HORA/SAÍDA: ${form.horaSaida}`, { bold: true, fontSize: 12 });
       y += 5.9;
-  
-      drawCell(doc, left, y, 150, 5.9, `CEMITÉRIO: ${getCemiterioNome(form.cemiterio)}`, {
-        bold: true,
-        fontSize: 12,
-      });
-      drawCell(doc, 155, y, 50, 5.9, `HORA/SAÍDA: ${form.horaSaida}`, {
-        bold: true,
-        fontSize: 12,
-      });
+
+      // L5 — HORA/ATEND
+      drawCell(doc, left, y, 200, 5.9, `HORA/ATEND: ${form.horaAtendimento}`, { bold: true, fontSize: 12 });
       y += 5.9;
-  
-      drawCell(doc, left, y, 200, 5.9, `HORA/ATEND: ${form.horaAtendimento}`, {
-        bold: true,
-        fontSize: 12,
-      });
+
+      // L6 — DATA/ATEND + CHEGOU NA CLÍNICA + INÍCIO ÀS
+      drawCell(doc, left, y, 60, 5.9, `DATA/ATEND: ${formatDateBR(form.dataAtendimento)}`, { bold: true, fontSize: 12 });
+      drawCell(doc, 65,   y, 95, 5.9, `CHEGOU NA CLÍNICA ÀS: ${form.chegouClinica}`, { bold: true, fontSize: 7.8 });
+      drawCell(doc, 160,  y, 45, 5.9, `INÍCIO ÀS: ${form.inicioAs}`, { bold: true, fontSize: 12 });
       y += 5.9;
-  
-      drawCell(
-        doc,
-        left,
-        y,
-        60,
-        5.9,
-        `DATA/ATEND: ${formatDateBR(form.dataAtendimento)}`,
-        {
-          bold: true,
-          fontSize: 12,
-        }
-      );
-      drawCell(
-        doc,
-        65,
-        y,
-        95,
-        5.9,
-        `CHEGOU NA CLÍNICA ÀS: ${form.chegouClinica}`,
-        {
-          bold: true,
-          fontSize: 7.8,
-        }
-      );
-      drawCell(doc, 160, y, 45, 5.9, `INÍCIO ÀS: ${form.inicioAs}`, {
-        bold: true,
-        fontSize: 12,
-      });
-      y += 5.9;
-  
+
+      // L7 — TIPO DE SERVIÇO
       const TIPO_LABELS = {
-        particular:            "SERVIÇO PARTICULAR",
+        particular:            "PARTICULAR",
         socio_especial:        "SÓCIO ESPECIAL",
         socio_luxo:            "SÓCIO LUXO",
         socio_premium:         "SÓCIO PREMIUM",
@@ -150,11 +100,13 @@ export function gerarFichaPdf({
       const isSocio = ["socio_especial", "socio_luxo", "socio_premium"].includes(form.tipoPlano);
 
       if (isSocio) {
-        drawCell(doc, left, y, 100, 5.9, `CÓDIGO: ${form.codigo}`, { fontSize: 12 });
-        drawCell(doc, 105, y, 100, 5.9, `DEPENDENTE: ${form.dependente}`, { fontSize: 12 });
+        const planoLabel = TIPO_LABELS[form.tipoPlano] || form.tipoPlano;
+        drawCell(doc, left, y, 65, 5.9, `PLANO: ${planoLabel}`, { fontSize: 12 });
+        drawCell(doc, 70,   y, 65, 5.9, `CÓD: ${form.codigo || ""}`, { fontSize: 12 });
+        drawCell(doc, 135,  y, 70, 5.9, `DEPENDENTE: ${form.dependente || ""}`, { fontSize: 12 });
       } else {
-        const tipoLabel = TIPO_LABELS[form.tipoPlano] || "SERVIÇO PARTICULAR";
-        drawCell(doc, left, y, 200, 5.9, `PLANO: ${tipoLabel}`, { fontSize: 12 });
+        const tipoLabel = TIPO_LABELS[form.tipoPlano] || "PARTICULAR";
+        drawCell(doc, left, y, 200, 5.9, `TIPO DE SERVIÇO: ${tipoLabel}`, { fontSize: 12 });
       }
       y += 6.6;
   
