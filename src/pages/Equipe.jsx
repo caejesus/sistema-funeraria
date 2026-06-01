@@ -225,29 +225,121 @@ function OsCard({ os, atualizarStatus }) {
   );
 }
 
+// ─── Stage content per key ────────────────────────────────────────────────────
+
+function getStageContent(key, form, item) {
+  const infos = [];
+  const links = [];
+  const maps = (query, lbl) => ({
+    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
+    icon: "fa-solid fa-location-dot", label: lbl, color: "var(--brand-accent)", newTab: true,
+  });
+
+  if (key === "remocao") {
+    if (form.localObito) infos.push({ label: "LOCAL DO ÓBITO", value: form.localObito });
+    if (form.religiao)   infos.push({ label: "RELIGIÃO",       value: form.religiao });
+    if (form.sexo)       infos.push({ label: "SEXO",           value: form.sexo });
+    if (form.peso)       infos.push({ label: "PESO",           value: form.peso });
+    if (form.altura)     infos.push({ label: "ALTURA",         value: form.altura });
+    const contato = [form.responsavelNome, form.responsavelCelular1].filter(Boolean).join(" · ");
+    if (contato)         infos.push({ label: "CONTATO",        value: contato });
+
+    if (form.localObito)
+      links.push(maps(`${form.localObito}, Manaus, AM`, "Local do óbito"));
+
+    const tel = (form.responsavelCelular1 || "").replace(/\D/g, "");
+    if (tel) {
+      links.push({ href: `tel:${tel}`,                    icon: "fa-solid fa-phone",      label: "Ligar",     color: "#22c55e" });
+      links.push({ href: `https://wa.me/55${tel}`,        icon: "fa-brands fa-whatsapp",  label: "WhatsApp",  color: "#22c55e", newTab: true });
+    }
+  }
+
+  if (key === "procedimentoClinico") {
+    const temTanato = (item.services || []).some((s) => s.name === "TANATOPRAXIA (CONSERVAÇÃO DO CORPO)" && s.checked);
+    if (temTanato) infos.push({ label: "TANATOPRAXIA", value: "Sim" });
+    if (form.sexo)   infos.push({ label: "SEXO",    value: form.sexo });
+    if (form.peso)   infos.push({ label: "PESO",    value: form.peso });
+    if (form.altura) infos.push({ label: "ALTURA",  value: form.altura });
+    if (form.maquiagem) {
+      const v = form.maquiagem === "sim"
+        ? `Sim${form.maquiagemTipo ? " — " + form.maquiagemTipo : ""}`
+        : "Não";
+      infos.push({ label: "MAQUIAGEM", value: v });
+    }
+    if (form.barbear) infos.push({ label: "BARBEAR", value: form.barbear === "sim" ? "Sim" : "Não" });
+  }
+
+  if (key === "ornamentacao") {
+    if (form.ornamentacao) {
+      const v = form.ornamentacao === "sim"
+        ? `Sim${form.tipoFlor ? " — " + form.tipoFlor : ""}`
+        : "Não";
+      infos.push({ label: "ORNAMENTAÇÃO", value: v });
+    }
+    const urna = [form.modeloUrna, form.corUrna].filter(Boolean).join(" — ");
+    if (urna)          infos.push({ label: "URNA",     value: urna });
+    if (form.religiao) infos.push({ label: "RELIGIÃO", value: form.religiao });
+  }
+
+  if (key === "entrega") {
+    let localLabel = "";
+    let mapsQuery  = "";
+    if (form.velorioTipo === "funeraria") {
+      localLabel = [form.velorioUnidade, form.velorioSala].filter(Boolean).join(" — ");
+      mapsQuery  = `Funerária São Francisco, ${form.velorioUnidade}, Manaus, AM`;
+    } else if (form.velorioTipo === "viagem") {
+      localLabel = ["Translado", form.cidadeDestino, form.embarque ? `Embarque: ${form.embarque}` : ""].filter(Boolean).join(" — ");
+      mapsQuery  = form.cidadeDestino || "";
+    } else {
+      localLabel = [form.velorioEndereco, form.velorioNumero, form.velorioBairro].filter(Boolean).join(", ");
+      mapsQuery  = [form.velorioEndereco, form.velorioNumero, form.velorioBairro, "Manaus AM"].filter(Boolean).join(" ");
+    }
+    if (localLabel) infos.push({ label: "LOCAL", value: localLabel });
+    if (form.horarioVelorio)     infos.push({ label: "INÍCIO DO VELÓRIO", value: form.horarioVelorio });
+    if (form.tempoVelorioValor)  infos.push({ label: "TEMPO DE VELÓRIO",  value: `${form.tempoVelorioValor} ${form.tempoVelorioUnidade || ""}`.trim() });
+    if (mapsQuery) links.push(maps(mapsQuery, "Ver local"));
+  }
+
+  if (key === "sepultamento") {
+    const nome = getCemiterioNome(form.cemiterio);
+    const addr = getCemiterioEndereco(form.cemiterio);
+    if (nome)            infos.push({ label: "CEMITÉRIO",        value: nome });
+    if (form.horaSaida)  infos.push({ label: "HORÁRIO DE SAÍDA", value: form.horaSaida });
+    if (nome || addr)
+      links.push(maps(addr ? `${addr}, Manaus, AM` : `${nome}, Manaus, AM`, "Ver cemitério"));
+  }
+
+  return { infos, links };
+}
+
 // ─── Stage card ───────────────────────────────────────────────────────────────
 
 function StageCard({ item, stage, updateOperationalStage }) {
   const { key, label } = stage;
-  const status = getEffectiveStageStatus(item, key);
-  const st = item?.operationalStages?.[key] || {};
-  const cfg = STAGE_CFG[status] || STAGE_CFG.nao_iniciado;
+  const status   = getEffectiveStageStatus(item, key);
+  const st       = item?.operationalStages?.[key] || {};
+  const cfg      = STAGE_CFG[status] || STAGE_CFG.nao_iniciado;
   const isTransport = TRANSPORT_KEYS.has(key);
+  const form     = item?.form || {};
+  const { infos, links } = getStageContent(key, form, item);
 
-  const mapsLink = (() => {
-    if (key !== "sepultamento") return null;
-    const form = item?.form || {};
-    const nome = getCemiterioNome(form.cemiterio);
-    const addr = getCemiterioEndereco(form.cemiterio);
-    if (!nome && !addr) return null;
-    const query = encodeURIComponent(addr ? `${addr}, Manaus, AM` : `${nome}, Manaus, AM`);
-    return `https://www.google.com/maps/search/?api=1&query=${query}`;
-  })();
+  const actionLinkStyle = (color) => ({
+    border: `1px solid ${color}`,
+    borderRadius: 8,
+    padding: "6px 10px",
+    fontSize: 12,
+    color,
+    display: "flex",
+    alignItems: "center",
+    gap: 4,
+    textDecoration: "none",
+    background: "none",
+  });
 
   return (
     <div style={{ border: `1px solid ${cfg.border}`, borderRadius: 12, padding: 12, marginBottom: 8, background: cfg.bg }}>
       {/* Stage header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: status === "cancelado" ? 0 : 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: status === "cancelado" ? 0 : 8 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: status === "cancelado" || status === "nao_iniciado" ? "var(--text-muted)" : "var(--text-main)" }}>
           {label}
         </span>
@@ -259,8 +351,6 @@ function StageCard({ item, stage, updateOperationalStage }) {
         </span>
       </div>
 
-      {status === "cancelado" && null}
-
       {status !== "cancelado" && (
         <>
           {/* Timing */}
@@ -270,7 +360,7 @@ function StageCard({ item, stage, updateOperationalStage }) {
             </div>
           )}
 
-          {/* Responsável info */}
+          {/* Finalizado / iniciado por */}
           {status === "finalizado" && st.finishedBy && (
             <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>
               Finalizado por: {st.finishedBy}
@@ -289,27 +379,45 @@ function StageCard({ item, stage, updateOperationalStage }) {
             </div>
           )}
 
-          {/* Person info for non-transport */}
+          {/* Person (non-transport) */}
           {!isTransport && (() => {
             const person = st.attendant || st.technician || st.support || "";
             return person ? <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>Responsável: {person}</div> : null;
           })()}
 
-          {/* Maps button for sepultamento */}
-          {mapsLink && (
-            <a href={mapsLink} target="_blank" rel="noopener noreferrer"
-              style={{ ...outlineBtn("var(--border-soft)"), marginBottom: 6, fontSize: 12, gap: 6 }}>
-              <i className="fa-solid fa-map-pin" style={{ fontSize: 10 }} />
-              Abrir no Maps
-            </a>
+          {/* Stage-specific infos */}
+          {infos.length > 0 && (
+            <div style={{ marginTop: 8, display: "grid", gap: 5 }}>
+              {infos.map(({ label: lbl, value }) => (
+                <div key={lbl}>
+                  <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{lbl}</div>
+                  <div style={{ fontSize: 12, color: "var(--text-soft)" }}>{value}</div>
+                </div>
+              ))}
+            </div>
           )}
 
-          {/* Action button */}
+          {/* Stage-specific action links */}
+          {links.length > 0 && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+              {links.map(({ href, icon, label: lbl, color, newTab }, i) => (
+                <a key={i} href={href}
+                  target={newTab ? "_blank" : undefined}
+                  rel={newTab ? "noopener noreferrer" : undefined}
+                  style={actionLinkStyle(color)}>
+                  <i className={icon} style={{ fontSize: 11 }} />
+                  {lbl}
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* Action button (iniciar / finalizar) */}
           {status !== "finalizado" && typeof updateOperationalStage === "function" && (
             <button type="button"
               style={status === "em_andamento"
-                ? primaryBtn({ marginTop: 4 })
-                : outlineBtn("var(--brand-accent)", { width: "100%", marginTop: 4, color: "var(--brand-accent)", justifyContent: "center" })
+                ? primaryBtn({ marginTop: 10 })
+                : outlineBtn("var(--brand-accent)", { width: "100%", marginTop: 10, color: "var(--brand-accent)", justifyContent: "center" })
               }
               onClick={() => updateOperationalStage(item.id, key, status === "em_andamento" ? "finish" : "start")}>
               {status === "em_andamento" ? `Finalizar ${label.toLowerCase()}` : `Iniciar ${label.toLowerCase()}`}
