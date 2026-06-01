@@ -35,55 +35,62 @@ import { useOrdemServico } from "./hooks/useOrdemServico";
 // ─── Login shared panel ───────────────────────────────────────────────────────
 
 const COMPANY_CARDS = [
-  { logo: "/logosf.png", icon: "fa-solid fa-building",  label: "FUNERÁRIA",  sub: "São Francisco" },
-  { logo: null,          icon: "fa-solid fa-tree",       label: "MEMORIAL",   sub: "São Francisco" },
-  { logo: null,          icon: "fa-solid fa-cross",      label: "SANTA RITA", sub: "Funerária" },
-  { logo: null,          icon: "fa-solid fa-users",      label: "PLANO SF",   sub: "Assistência Familiar" },
+  { logo: "/logosaofrancisco.png", icon: null,                label: "FUNERÁRIA", sub: "São Francisco"       },
+  { logo: "/logosantarita.png",    icon: null,                label: "FUNERÁRIA", sub: "Santa Rita"          },
+  { logo: "/logomemorial.png",     icon: null,                label: "MEMORIAL",  sub: "São Francisco"       },
+  { logo: null,                    icon: "fa-solid fa-users", label: "PLANO SF",  sub: "Assistência Familiar" },
 ];
 
 const cardStyle = {
-  background: "rgba(255,255,255,0.03)",
-  border: "0.5px solid rgba(38,177,196,0.15)",
+  background: "#f9fbfb",
+  border: "0.5px solid #e5ecea",
   borderRadius: 12,
   padding: "14px 12px",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: 8,
+  textAlign: "center",
+};
+
+const logoImgStyle = {
+  width: "100%",
+  maxWidth: 80,
+  height: 48,
+  objectFit: "contain",
+  display: "block",
+  margin: "0 auto 8px",
 };
 
 function LoginLeftPanel() {
   return (
     <div className="login-left">
-      <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>
-          Sistema de Gestão
+      <img src="/logosf.png" alt="Grupo São Francisco" style={{ width: 140, objectFit: "contain", marginBottom: "1.5rem" }} />
+
+      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+          Sistema de Gestão Funerária
         </div>
-        <div style={{ fontSize: 28, fontWeight: 800, color: "#f1f5f9", lineHeight: 1.2 }}>Grupo</div>
-        <div style={{ fontSize: 32, fontWeight: 900, color: "#26b1c4", lineHeight: 1.1 }}>SÃO FRANCISCO</div>
-        <div style={{ width: 48, height: 3, background: "#26b1c4", borderRadius: 999, margin: "12px auto 0" }} />
+        <div style={{ width: 48, height: 2, background: "#26b1c4", margin: "0 auto" }} />
       </div>
 
       <div className="login-company-grid">
         {COMPANY_CARDS.map(({ logo, icon, label, sub }) => (
-          <div key={label} style={cardStyle}>
+          <div key={label + sub} style={cardStyle}>
             {logo
-              ? <img src={logo} alt={label} style={{ height: 48, maxHeight: 48, objectFit: "contain" }} />
+              ? <img src={logo} alt={label} className="login-company-logo" style={logoImgStyle} />
               : (
-                <div style={{ width: 32, height: 32, background: "rgba(38,177,196,0.1)", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#26b1c4" }}>
-                  <i className={icon} />
+                <div style={{ width: 48, height: 48, background: "rgba(38,177,196,0.1)", borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#26b1c4", marginBottom: 8 }}>
+                  <i className={icon} style={{ fontSize: 20 }} />
                 </div>
               )
             }
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#e2e8f0", textTransform: "uppercase", textAlign: "center" }}>{label}</div>
-              <div style={{ fontSize: 10, color: "#475569", textAlign: "center" }}>{sub}</div>
-            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#333", textTransform: "uppercase" }}>{label}</div>
+            <div style={{ fontSize: 10, color: "#94a3b8" }}>{sub}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ fontSize: 12, color: "#334155", textAlign: "center", maxWidth: 280 }}>
+      <div style={{ fontSize: 12, color: "#94a3b8", textAlign: "center", marginTop: "2rem", maxWidth: 280 }}>
         Cuidando com respeito e dedicação em todos os momentos
       </div>
     </div>
@@ -478,14 +485,11 @@ export default function App() {
 
   if (bootLoading) {
     return (
-      <div className="login-screen">
-        <LoginLeftPanel />
-        <div className="login-right">
-          <div style={{ maxWidth: 340, width: "100%", textAlign: "center" }}>
-            <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: 32, color: "#26b1c4", marginBottom: 20 }} />
-            <div style={{ fontSize: 22, fontWeight: 700, color: "#f1f5f9", marginBottom: 8 }}>Carregando</div>
-            <div style={{ fontSize: 13, color: "#475569" }}>Aguarde enquanto carregamos as configurações do sistema.</div>
-          </div>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f7f6" }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 40, textAlign: "center", border: "1px solid #e5ecea", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", maxWidth: 320, width: "90%" }}>
+          <img src="/logosf.png" alt="Grupo São Francisco" style={{ width: 180, display: "block", margin: "0 auto 20px", objectFit: "contain" }} />
+          <div style={{ fontSize: 24, fontWeight: 700, color: "#333", marginBottom: 8 }}>Sistema Funerário</div>
+          <div style={{ fontSize: 13, color: "#94a3b8" }}>Carregando...</div>
         </div>
       </div>
     );
@@ -494,27 +498,27 @@ export default function App() {
   // (acompanhamento público já tratado no guard prioritário acima)
 
   if (!session) {
+    const fieldStyle = { width: "100%", background: "#f8fbfb", border: "1px solid #d9e4e2", borderRadius: 12, padding: "13px 16px", fontSize: 14, color: "#333333", outline: "none", boxSizing: "border-box", cursor: "pointer" };
+    const labelStyle = { display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 };
     return (
       <div className="login-screen">
         <LoginLeftPanel />
         <div className="login-right">
-          <div style={{ maxWidth: 340, width: "100%" }}>
-            <div style={{ marginBottom: 32 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#f1f5f9", margin: "0 0 8px" }}>Acesso interno</h1>
-              <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>Entre com suas credenciais para continuar</p>
+          <div style={{ maxWidth: 340, width: "100%", background: "#ffffff", border: "1px solid #e5ecea", borderRadius: 20, padding: "2rem", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+            <div style={{ marginBottom: "2rem" }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#333333", margin: "0 0 6px" }}>Acesso interno</h1>
+              <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>Entre com suas credenciais</p>
             </div>
             <form onSubmit={handleLogin}>
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>
-                  Usuário
-                </label>
+                <label style={labelStyle}>USUÁRIO</label>
                 <select
-                  style={{ width: "100%", background: "#1d2939", border: "1px solid #314155", borderRadius: 12, padding: "13px 16px", fontSize: 14, color: login ? "#f1f5f9" : "#64748b", outline: "none", boxSizing: "border-box", cursor: "pointer" }}
+                  style={{ ...fieldStyle, color: login ? "#333333" : "#94a3b8" }}
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
                   disabled={bootLoading}
                 >
-                  <option value="">{bootLoading ? "Carregando usuários..." : "Selecione seu usuário"}</option>
+                  <option value="">Selecione seu usuário</option>
                   {users.map((u) => (
                     <option key={u.login} value={u.login}>
                       {u.name} — {getRoleUiLabel(u.role)}
@@ -522,31 +526,29 @@ export default function App() {
                   ))}
                 </select>
               </div>
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>
-                  Senha
-                </label>
+              <div style={{ marginBottom: loginError ? 16 : 24 }}>
+                <label style={labelStyle}>SENHA</label>
                 <input
                   type="password"
-                  style={{ width: "100%", background: "#1d2939", border: "1px solid #314155", borderRadius: 12, padding: "13px 16px", fontSize: 14, color: "#f1f5f9", outline: "none", boxSizing: "border-box" }}
+                  style={fieldStyle}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                 />
               </div>
-              <button
-                type="submit"
-                style={{ width: "100%", background: "#26b1c4", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer" }}
-              >
-                Entrar
-              </button>
               {loginError && (
-                <div style={{ marginTop: 12, fontSize: 13, color: "#f87171", textAlign: "center", background: "rgba(248,113,113,0.08)", borderRadius: 8, padding: "10px 14px" }}>
+                <div style={{ marginBottom: 16, fontSize: 13, color: "#dc2626", background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.18)", borderRadius: 10, padding: "10px 14px" }}>
                   {loginError}
                 </div>
               )}
+              <button
+                type="submit"
+                style={{ width: "100%", background: "#26b1c4", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", marginTop: 8 }}
+              >
+                Entrar
+              </button>
             </form>
-            <div style={{ marginTop: 40, fontSize: 11, color: "#1e3a4a", textAlign: "center" }}>
+            <div style={{ marginTop: "1.5rem", fontSize: 11, color: "#94a3b8", textAlign: "center" }}>
               © 2026 Grupo São Francisco
             </div>
           </div>
