@@ -230,54 +230,49 @@ function OsCard({ os, atualizarStatus }) {
 function getStageContent(key, form, item) {
   const infos = [];
   const links = [];
-  const maps = (query, lbl) => ({
+  const mapsLink = (query, lbl) => ({
     href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
     icon: "fa-solid fa-location-dot", label: lbl, color: "var(--brand-accent)", newTab: true,
   });
 
   if (key === "remocao") {
-    if (form.localObito) infos.push({ label: "LOCAL DO ÓBITO", value: form.localObito });
-    if (form.religiao)   infos.push({ label: "RELIGIÃO",       value: form.religiao });
-    if (form.sexo)       infos.push({ label: "SEXO",           value: form.sexo });
-    if (form.peso)       infos.push({ label: "PESO",           value: form.peso });
-    if (form.altura)     infos.push({ label: "ALTURA",         value: form.altura });
-    const contato = [form.responsavelNome, form.responsavelCelular1].filter(Boolean).join(" · ");
-    if (contato)         infos.push({ label: "CONTATO",        value: contato });
+    if (form.localObito)       infos.push({ label: "LOCAL DO ÓBITO", value: form.localObito });
+    if (form.responsavelNome)  infos.push({ label: "RESPONSÁVEL",    value: form.responsavelNome });
+    if (form.responsavelCelular1) infos.push({ label: "CONTATO",     value: form.responsavelCelular1 });
 
     if (form.localObito)
-      links.push(maps(`${form.localObito}, Manaus, AM`, "Local do óbito"));
+      links.push(mapsLink(`${form.localObito}, Manaus, AM`, "Local do óbito"));
 
     const tel = (form.responsavelCelular1 || "").replace(/\D/g, "");
     if (tel) {
-      links.push({ href: `tel:${tel}`,                    icon: "fa-solid fa-phone",      label: "Ligar",     color: "#22c55e" });
-      links.push({ href: `https://wa.me/55${tel}`,        icon: "fa-brands fa-whatsapp",  label: "WhatsApp",  color: "#22c55e", newTab: true });
+      links.push({ href: `tel:${tel}`,               icon: "fa-solid fa-phone",     label: "Ligar",    color: "#22c55e" });
+      links.push({ href: `https://wa.me/55${tel}`,   icon: "fa-brands fa-whatsapp", label: "WhatsApp", color: "#22c55e", newTab: true });
     }
   }
 
   if (key === "procedimentoClinico") {
-    const temTanato = (item.services || []).some((s) => s.name === "TANATOPRAXIA (CONSERVAÇÃO DO CORPO)" && s.checked);
-    if (temTanato) infos.push({ label: "TANATOPRAXIA", value: "Sim" });
-    if (form.sexo)   infos.push({ label: "SEXO",    value: form.sexo });
-    if (form.peso)   infos.push({ label: "PESO",    value: form.peso });
-    if (form.altura) infos.push({ label: "ALTURA",  value: form.altura });
+    const temTanato = (item.services || []).some(
+      (s) => s.name === "TANATOPRAXIA (CONSERVAÇÃO DO CORPO)" && s.checked
+    );
+    infos.push({ label: "TANATOPRAXIA", value: temTanato ? "Sim" : "Não" });
     if (form.maquiagem) {
       const v = form.maquiagem === "sim"
         ? `Sim${form.maquiagemTipo ? " — " + form.maquiagemTipo : ""}`
         : "Não";
       infos.push({ label: "MAQUIAGEM", value: v });
     }
-    if (form.barbear) infos.push({ label: "BARBEAR", value: form.barbear === "sim" ? "Sim" : "Não" });
   }
 
   if (key === "ornamentacao") {
+    const urna = [form.modeloUrna, form.corUrna].filter(Boolean).join(" — ");
+    if (urna) infos.push({ label: "URNA", value: urna });
     if (form.ornamentacao) {
+      const flores = form.tipoFlor === "naturais" ? "Naturais" : form.tipoFlor === "artificiais" ? "Artificiais" : form.tipoFlor;
       const v = form.ornamentacao === "sim"
-        ? `Sim${form.tipoFlor ? " — " + form.tipoFlor : ""}`
+        ? `Sim${flores ? " — " + flores : ""}`
         : "Não";
       infos.push({ label: "ORNAMENTAÇÃO", value: v });
     }
-    const urna = [form.modeloUrna, form.corUrna].filter(Boolean).join(" — ");
-    if (urna)          infos.push({ label: "URNA",     value: urna });
     if (form.religiao) infos.push({ label: "RELIGIÃO", value: form.religiao });
   }
 
@@ -286,27 +281,29 @@ function getStageContent(key, form, item) {
     let mapsQuery  = "";
     if (form.velorioTipo === "funeraria") {
       localLabel = [form.velorioUnidade, form.velorioSala].filter(Boolean).join(" — ");
-      mapsQuery  = `Funerária São Francisco, ${form.velorioUnidade}, Manaus, AM`;
+      mapsQuery  = `Funerária São Francisco ${form.velorioUnidade} Manaus AM`;
     } else if (form.velorioTipo === "viagem") {
-      localLabel = ["Translado", form.cidadeDestino, form.embarque ? `Embarque: ${form.embarque}` : ""].filter(Boolean).join(" — ");
+      localLabel = ["Translado", form.cidadeDestino].filter(Boolean).join(" — ");
       mapsQuery  = form.cidadeDestino || "";
     } else {
       localLabel = [form.velorioEndereco, form.velorioNumero, form.velorioBairro].filter(Boolean).join(", ");
       mapsQuery  = [form.velorioEndereco, form.velorioNumero, form.velorioBairro, "Manaus AM"].filter(Boolean).join(" ");
     }
-    if (localLabel) infos.push({ label: "LOCAL", value: localLabel });
-    if (form.horarioVelorio)     infos.push({ label: "INÍCIO DO VELÓRIO", value: form.horarioVelorio });
-    if (form.tempoVelorioValor)  infos.push({ label: "TEMPO DE VELÓRIO",  value: `${form.tempoVelorioValor} ${form.tempoVelorioUnidade || ""}`.trim() });
-    if (mapsQuery) links.push(maps(mapsQuery, "Ver local"));
+    if (localLabel) infos.push({ label: "LOCAL DO VELÓRIO", value: localLabel });
+    if (mapsQuery)  links.push(mapsLink(mapsQuery, "Ver local"));
+  }
+
+  if (key === "velorio") {
+    if (form.horarioVelorio)    infos.push({ label: "HORÁRIO",         value: form.horarioVelorio });
+    if (form.tempoVelorioValor) infos.push({ label: "TEMPO DE VELÓRIO", value: `${form.tempoVelorioValor} ${form.tempoVelorioUnidade || ""}`.trim() });
   }
 
   if (key === "sepultamento") {
     const nome = getCemiterioNome(form.cemiterio);
     const addr = getCemiterioEndereco(form.cemiterio);
-    if (nome)            infos.push({ label: "CEMITÉRIO",        value: nome });
-    if (form.horaSaida)  infos.push({ label: "HORÁRIO DE SAÍDA", value: form.horaSaida });
-    if (nome || addr)
-      links.push(maps(addr ? `${addr}, Manaus, AM` : `${nome}, Manaus, AM`, "Ver cemitério"));
+    if (nome)           infos.push({ label: "CEMITÉRIO",        value: nome });
+    if (form.horaSaida) infos.push({ label: "HORÁRIO DE SAÍDA", value: form.horaSaida });
+    if (nome || addr)   links.push(mapsLink(addr ? `${addr}, Manaus, AM` : `${nome}, Manaus, AM`, "Ver cemitério"));
   }
 
   return { infos, links };
@@ -314,16 +311,19 @@ function getStageContent(key, form, item) {
 
 // ─── Stage card ───────────────────────────────────────────────────────────────
 
-function StageCard({ item, stage, updateOperationalStage }) {
-  const { key, label } = stage;
-  const status   = getEffectiveStageStatus(item, key);
-  const st       = item?.operationalStages?.[key] || {};
-  const cfg      = STAGE_CFG[status] || STAGE_CFG.nao_iniciado;
-  const isTransport = TRANSPORT_KEYS.has(key);
-  const form     = item?.form || {};
-  const { infos, links } = getStageContent(key, form, item);
+const MODAL_INIT = { open: false, carro: "", placa: "" };
 
-  const actionLinkStyle = (color) => ({
+function StageCard({ item, stage, updateOperationalStage, updateOperationalTransport, updateOperationalPerson, session }) {
+  const { key, label } = stage;
+  const status      = getEffectiveStageStatus(item, key);
+  const st          = item?.operationalStages?.[key] || {};
+  const cfg         = STAGE_CFG[status] || STAGE_CFG.nao_iniciado;
+  const isTransport = TRANSPORT_KEYS.has(key);
+  const form        = item?.form || {};
+  const { infos, links } = getStageContent(key, form, item);
+  const [modal, setModal] = useState(MODAL_INIT);
+
+  const aLink = (color) => ({
     border: `1px solid ${color}`,
     borderRadius: 8,
     padding: "6px 10px",
@@ -334,107 +334,183 @@ function StageCard({ item, stage, updateOperationalStage }) {
     gap: 4,
     textDecoration: "none",
     background: "none",
+    cursor: "pointer",
   });
 
+  function handleIniciar() {
+    if (key === "remocao") {
+      setModal({ open: true, carro: "", placa: "" });
+      return;
+    }
+    if (typeof updateOperationalStage === "function")
+      updateOperationalStage(item.id, key, "start");
+    if (isTransport && session?.name && typeof updateOperationalPerson === "function")
+      updateOperationalPerson(item.id, key, "driver", session.name);
+  }
+
+  function confirmRemocao() {
+    if (typeof updateOperationalStage === "function")
+      updateOperationalStage(item.id, key, "start");
+    const veiculo = [modal.carro, modal.placa].filter(Boolean).join(" - ");
+    if (veiculo && typeof updateOperationalTransport === "function")
+      updateOperationalTransport(item.id, key, "car", veiculo);
+    if (session?.name && typeof updateOperationalPerson === "function")
+      updateOperationalPerson(item.id, key, "driver", session.name);
+    setModal(MODAL_INIT);
+  }
+
   return (
-    <div style={{ border: `1px solid ${cfg.border}`, borderRadius: 12, padding: 12, marginBottom: 8, background: cfg.bg }}>
-      {/* Stage header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: status === "cancelado" ? 0 : 8 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: status === "cancelado" || status === "nao_iniciado" ? "var(--text-muted)" : "var(--text-main)" }}>
-          {label}
-        </span>
-        <span style={{
-          background: status === "finalizado" ? "rgba(34,197,94,0.12)" : status === "em_andamento" ? "rgba(38,177,196,0.12)" : "rgba(148,163,184,0.1)",
-          color: cfg.color, borderRadius: 999, padding: "3px 10px", fontSize: 11, fontWeight: 700,
-        }}>
-          {cfg.label}
-        </span>
-      </div>
-
-      {status !== "cancelado" && (
-        <>
-          {/* Timing */}
-          {(st.start || st.end) && (
-            <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>
-              {st.start && `Início: ${st.start}`}{st.start && st.end && " · "}{st.end && `Fim: ${st.end}`}
+    <>
+      {/* Modal de remoção */}
+      {modal.open && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "var(--card-bg)", borderRadius: 16, padding: 22, width: "100%", maxWidth: 340, boxShadow: "0 24px 60px rgba(0,0,0,0.35)" }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text-main)", marginBottom: 18 }}>
+              Confirmar início da remoção
             </div>
-          )}
-
-          {/* Finalizado / iniciado por */}
-          {status === "finalizado" && st.finishedBy && (
-            <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>
-              Finalizado por: {st.finishedBy}
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>Carro / Veículo</label>
+              <input
+                style={{ width: "100%", background: "var(--input-bg)", border: "1px solid var(--input-border)", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "var(--input-text)", outline: "none", boxSizing: "border-box" }}
+                value={modal.carro}
+                onChange={(e) => setModal((m) => ({ ...m, carro: e.target.value }))}
+                placeholder="STRADA"
+              />
             </div>
-          )}
-          {status === "em_andamento" && st.startedBy && (
-            <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>
-              Por: {st.startedBy}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>Placa</label>
+              <input
+                style={{ width: "100%", background: "var(--input-bg)", border: "1px solid var(--input-border)", borderRadius: 10, padding: "11px 14px", fontSize: 14, color: "var(--input-text)", outline: "none", boxSizing: "border-box" }}
+                value={modal.placa}
+                onChange={(e) => setModal((m) => ({ ...m, placa: e.target.value.toUpperCase() }))}
+                placeholder="JAV9I91"
+              />
             </div>
-          )}
-
-          {/* Transport read-only */}
-          {isTransport && (st.driver || st.car) && (
-            <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>
-              {st.driver && `Motorista: ${st.driver}`}{st.driver && st.car && " · "}{st.car && `Carro: ${st.car}`}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" style={primaryBtn({ flex: 1 })} onClick={confirmRemocao}>
+                Confirmar e iniciar
+              </button>
+              <button type="button"
+                style={{ flex: 1, background: "none", border: "1px solid var(--border-soft)", borderRadius: 10, padding: "10px 0", fontSize: 13, color: "var(--text-muted)", cursor: "pointer" }}
+                onClick={() => setModal(MODAL_INIT)}>
+                Cancelar
+              </button>
             </div>
-          )}
-
-          {/* Person (non-transport) */}
-          {!isTransport && (() => {
-            const person = st.attendant || st.technician || st.support || "";
-            return person ? <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>Responsável: {person}</div> : null;
-          })()}
-
-          {/* Stage-specific infos */}
-          {infos.length > 0 && (
-            <div style={{ marginTop: 8, display: "grid", gap: 5 }}>
-              {infos.map(({ label: lbl, value }) => (
-                <div key={lbl}>
-                  <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{lbl}</div>
-                  <div style={{ fontSize: 12, color: "var(--text-soft)" }}>{value}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Stage-specific action links */}
-          {links.length > 0 && (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-              {links.map(({ href, icon, label: lbl, color, newTab }, i) => (
-                <a key={i} href={href}
-                  target={newTab ? "_blank" : undefined}
-                  rel={newTab ? "noopener noreferrer" : undefined}
-                  style={actionLinkStyle(color)}>
-                  <i className={icon} style={{ fontSize: 11 }} />
-                  {lbl}
-                </a>
-              ))}
-            </div>
-          )}
-
-          {/* Action button (iniciar / finalizar) */}
-          {status !== "finalizado" && typeof updateOperationalStage === "function" && (
-            <button type="button"
-              style={status === "em_andamento"
-                ? primaryBtn({ marginTop: 10 })
-                : outlineBtn("var(--brand-accent)", { width: "100%", marginTop: 10, color: "var(--brand-accent)", justifyContent: "center" })
-              }
-              onClick={() => updateOperationalStage(item.id, key, status === "em_andamento" ? "finish" : "start")}>
-              {status === "em_andamento" ? `Finalizar ${label.toLowerCase()}` : `Iniciar ${label.toLowerCase()}`}
-            </button>
-          )}
-        </>
+          </div>
+        </div>
       )}
-    </div>
+
+      <div style={{ border: `1px solid ${cfg.border}`, borderRadius: 12, padding: 12, marginBottom: 8, background: cfg.bg }}>
+        {/* Stage header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: status === "cancelado" ? 0 : 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: status === "cancelado" || status === "nao_iniciado" ? "var(--text-muted)" : "var(--text-main)" }}>
+            {label}
+          </span>
+          <span style={{
+            background: status === "finalizado" ? "rgba(34,197,94,0.12)" : status === "em_andamento" ? "rgba(38,177,196,0.12)" : "rgba(148,163,184,0.1)",
+            color: cfg.color, borderRadius: 999, padding: "3px 10px", fontSize: 11, fontWeight: 700,
+          }}>
+            {cfg.label}
+          </span>
+        </div>
+
+        {status !== "cancelado" && (
+          <>
+            {/* Timing */}
+            {(st.start || st.end) && (
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>
+                {st.start && `Início: ${st.start}`}{st.start && st.end && " · "}{st.end && `Fim: ${st.end}`}
+              </div>
+            )}
+
+            {/* Finalizado / iniciado por */}
+            {status === "finalizado" && st.finishedBy && (
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>
+                Finalizado por: {st.finishedBy}
+              </div>
+            )}
+            {status === "em_andamento" && st.startedBy && (
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>
+                Por: {st.startedBy}
+              </div>
+            )}
+
+            {/* Transport read-only */}
+            {isTransport && (st.driver || st.car) && (
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>
+                {st.driver && `Motorista: ${st.driver}`}{st.driver && st.car && " · "}{st.car && `Carro: ${st.car}`}
+              </div>
+            )}
+
+            {/* Person (non-transport) */}
+            {!isTransport && (() => {
+              const person = st.attendant || st.technician || st.support || "";
+              return person ? <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>Responsável: {person}</div> : null;
+            })()}
+
+            {/* Stage-specific infos */}
+            {infos.length > 0 && (
+              <div style={{ marginTop: 8, display: "grid", gap: 6 }}>
+                {infos.map(({ label: lbl, value }) => (
+                  <div key={lbl} style={{ marginBottom: 2 }}>
+                    <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{lbl}</div>
+                    <div style={{ fontSize: 13, color: "var(--text-soft)", fontWeight: 500 }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Stage-specific action links */}
+            {links.length > 0 && (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+                {links.map(({ href, icon, label: lbl, color, newTab }, i) => (
+                  <a key={i} href={href}
+                    target={newTab ? "_blank" : undefined}
+                    rel={newTab ? "noopener noreferrer" : undefined}
+                    style={aLink(color)}>
+                    <i className={icon} style={{ fontSize: 11 }} />
+                    {lbl}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {/* Action button (iniciar / finalizar) */}
+            {status !== "finalizado" && typeof updateOperationalStage === "function" && (
+              <button type="button"
+                style={status === "em_andamento"
+                  ? primaryBtn({ marginTop: 10 })
+                  : outlineBtn("var(--brand-accent)", { width: "100%", marginTop: 10, color: "var(--brand-accent)", justifyContent: "center" })
+                }
+                onClick={() => status === "em_andamento"
+                  ? updateOperationalStage(item.id, key, "finish")
+                  : handleIniciar()
+                }>
+                {status === "em_andamento" ? `Finalizar ${label.toLowerCase()}` : `Iniciar ${label.toLowerCase()}`}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </>
   );
 }
 
 // ─── Atendimento card (collapsed / expanded) ──────────────────────────────────
 
-function AtendimentoCard({ item, isExpanded, onToggle, updateOperationalStage, isNovo }) {
+function calcularIdade(dataNascimento) {
+  if (!dataNascimento) return null;
+  const anos = Math.floor((new Date() - new Date(dataNascimento)) / (365.25 * 24 * 60 * 60 * 1000));
+  return isNaN(anos) || anos < 0 ? null : `${anos} anos`;
+}
+
+function AtendimentoCard({ item, isExpanded, onToggle, updateOperationalStage, updateOperationalTransport, updateOperationalPerson, session, isNovo }) {
   const form = item.form || {};
   const localObito = form.localObito || item.localObito || "";
   const localVelorio = getLocalVelorio(form) || "";
+
+  const idade = calcularIdade(form.dataNascimento);
+  const dadosFalecido = [form.sexo, idade, form.peso, form.altura].filter(Boolean).join(" · ");
 
   if (isExpanded) {
     return (
@@ -450,6 +526,9 @@ function AtendimentoCard({ item, isExpanded, onToggle, updateOperationalStage, i
               {item.falecido || form.falecido || "Sem nome informado"}
             </div>
             <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 1 }}>{item.numero}</div>
+            {dadosFalecido && (
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>{dadosFalecido}</div>
+            )}
           </div>
           <span style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap", flexShrink: 0 }}>{item.status}</span>
         </div>
@@ -457,7 +536,15 @@ function AtendimentoCard({ item, isExpanded, onToggle, updateOperationalStage, i
         {/* Stages list */}
         <div style={{ padding: 12 }}>
           {OPERATION_STAGES.map((stage) => (
-            <StageCard key={stage.key} item={item} stage={stage} updateOperationalStage={updateOperationalStage} />
+            <StageCard
+              key={stage.key}
+              item={item}
+              stage={stage}
+              updateOperationalStage={updateOperationalStage}
+              updateOperationalTransport={updateOperationalTransport}
+              updateOperationalPerson={updateOperationalPerson}
+              session={session}
+            />
           ))}
         </div>
       </div>
@@ -613,9 +700,12 @@ function ServicosDoDiaAba({ servicos }) {
 export default function Equipe({
   atendimentos = [],
   updateOperationalStage,
+  updateOperationalTransport,
+  updateOperationalPerson,
   ordensAtivas = [],
   atualizarStatusOs,
   servicosDoDia = [],
+  session,
 }) {
   const [abaAtiva, setAbaAtiva]     = useState("operacional");
   const [expandedId, setExpandedId] = useState(null);
@@ -715,6 +805,9 @@ export default function Equipe({
                     isExpanded={expandedId === item.id}
                     onToggle={() => setExpandedId(expandedId === item.id ? null : item.id)}
                     updateOperationalStage={updateOperationalStage}
+                    updateOperationalTransport={updateOperationalTransport}
+                    updateOperationalPerson={updateOperationalPerson}
+                    session={session}
                     isNovo={idsRecentes.includes(item.id)}
                   />
                 ))}

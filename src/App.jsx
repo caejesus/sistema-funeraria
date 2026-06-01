@@ -373,9 +373,12 @@ export default function App() {
         <Equipe
           atendimentos={atendimentosEquipe}
           updateOperationalStage={updateOperationalStage}
+          updateOperationalTransport={updateOperationalTransport}
+          updateOperationalPerson={updateOperationalPerson}
           ordensAtivas={ordensAtivas}
           atualizarStatusOs={atualizarStatusOs}
           servicosDoDia={servicosDoDia}
+          session={session}
         />
       </div>
     );
@@ -627,9 +630,12 @@ export default function App() {
         <Equipe
           atendimentos={atendimentosEquipe}
           updateOperationalStage={updateOperationalStage}
+          updateOperationalTransport={updateOperationalTransport}
+          updateOperationalPerson={updateOperationalPerson}
           ordensAtivas={ordensAtivas}
           atualizarStatusOs={atualizarStatusOs}
           servicosDoDia={servicosDoDia}
+          session={session}
         />
       )}
 
