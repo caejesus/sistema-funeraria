@@ -368,6 +368,12 @@ export default function App() {
   const isEquipeRoute = window.location.pathname === "/equipe";
   const isPublicAcompanhamento = !!publicTrackingId;
 
+  // 1. Acompanhamento público — verificação PRIORITÁRIA, antes de qualquer check de sessão ou perfil
+  const publicTrackingIdDirect = window.location.pathname.match(/^\/acompanhamento\/([^/]+)/)?.[1] || "";
+  if (publicTrackingIdDirect) {
+    return <AcompanhamentoPublico trackingId={publicTrackingIdDirect} />;
+  }
+
   function renderEquipeContainer() {
     return (
       <div style={{ ...styles.page, ...themeVars }}>
@@ -464,9 +470,7 @@ export default function App() {
     );
   }
 
-  if (isPublicAcompanhamento) {
-    return <AcompanhamentoPublico trackingId={publicTrackingId} />;
-  }
+  // (acompanhamento público já tratado no guard prioritário acima)
 
   if (!session) {
     return (
