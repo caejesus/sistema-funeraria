@@ -57,8 +57,9 @@ function OSCard({ os, atualizarStatus, onCancelar, onConverter, readOnly = false
     setUpdatingStatus(false);
   }
 
+  // Display: inclui complemento para referência; sem maps URL neste componente
   const localLabel = isSvo
-    ? ["SVO", os.endereco, d.numero].filter(Boolean).join(" — ")
+    ? ["SVO", os.endereco, d.numero, d.complemento].filter(Boolean).join(" — ")
     : (os.local_obito || "");
 
   return (

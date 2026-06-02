@@ -145,10 +145,15 @@ function OsCard({ os, atualizarStatus }) {
   const action = OS_NEXT[os.status];
   const d = os.dados || {};
   const isSvo = (os.local_obito || "").toUpperCase() === "SVO";
+  // Display: inclui complemento para a equipe saber o ponto de referência
   const localLabel = isSvo
-    ? ["SVO", os.endereco, d.numero].filter(Boolean).join(" — ")
+    ? ["SVO", os.endereco, d.numero, d.complemento].filter(Boolean).join(" — ")
     : (os.local_obito || "");
-  const mapsQuery = encodeURIComponent([localLabel, "Manaus, AM"].filter(Boolean).join(", "));
+  // Maps: SEM complemento (referência pessoal quebra a busca)
+  const mapsLabel  = isSvo
+    ? ["SVO", os.endereco, d.numero].filter(Boolean).join(" ")
+    : (os.local_obito || "");
+  const mapsQuery = encodeURIComponent([mapsLabel, "Manaus, AM"].filter(Boolean).join(", "));
   const telLimpo = (d.responsavel_telefone || "").replace(/\D/g, "");
   const urgente = os.prioridade === "urgente";
 
@@ -287,7 +292,9 @@ function getStageContent(key, form, item) {
       localLabel = ["Translado", form.cidadeDestino].filter(Boolean).join(" — ");
       mapsQuery  = form.cidadeDestino || "";
     } else {
-      localLabel = [form.velorioEndereco, form.velorioNumero, form.velorioBairro].filter(Boolean).join(", ");
+      // Display: inclui complemento para a equipe saber o ponto de referência
+      localLabel = [form.velorioEndereco, form.velorioNumero, form.velorioComplemento, form.velorioBairro].filter(Boolean).join(", ");
+      // Maps: SEM complemento (referência pessoal quebra a busca)
       mapsQuery  = [form.velorioEndereco, form.velorioNumero, form.velorioBairro, "Manaus AM"].filter(Boolean).join(" ");
     }
     if (localLabel) infos.push({ label: "LOCAL DO VELÓRIO", value: localLabel });
