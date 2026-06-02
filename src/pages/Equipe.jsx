@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import notificationSound from "../assets/notificacao.mp3";
-import { formatDateBR, getCemiterioNome, getCemiterioEndereco } from "../utils/format";
+import { formatDateBR, getCemiterioNome, getCemiterioEndereco, getHospitalNome, getHospitalMaps } from "../utils/format";
 import { getInitials, getRoleUiLabel } from "../utils/attendance";
 import { OPERATION_STAGES } from "../constants";
 import {
@@ -237,12 +237,12 @@ function getStageContent(key, form, item) {
   });
 
   if (key === "remocao") {
-    if (form.localObito)       infos.push({ label: "LOCAL DO ÓBITO", value: form.localObito });
+    if (form.localObito)       infos.push({ label: "LOCAL DO ÓBITO", value: getHospitalNome(form.localObito) });
     if (form.responsavelNome)  infos.push({ label: "RESPONSÁVEL",    value: form.responsavelNome });
     if (form.responsavelCelular1) infos.push({ label: "CONTATO",     value: form.responsavelCelular1 });
 
     if (form.localObito)
-      links.push(mapsLink(`${form.localObito}, Manaus, AM`, "Local do óbito"));
+      links.push(mapsLink(`${getHospitalMaps(form.localObito)}, Manaus, AM`, "Local do óbito"));
 
     const tel = (form.responsavelCelular1 || "").replace(/\D/g, "");
     if (tel) {
@@ -524,7 +524,7 @@ function calcularIdade(dataNascimento) {
 
 function AtendimentoCard({ item, isExpanded, onToggle, updateOperationalStage, updateOperationalTransport, updateOperationalPerson, session, settings, isNovo }) {
   const form = item.form || {};
-  const localObito = form.localObito || item.localObito || "";
+  const localObito = getHospitalNome(form.localObito || item.localObito || "");
   const localVelorio = getLocalVelorio(form) || "";
 
   const idade = calcularIdade(form.dataNascimento);

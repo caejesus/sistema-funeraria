@@ -51,6 +51,15 @@ export function formatAltura(value) {
   return clean.endsWith("m") ? clean : `${clean}m`;
 }
 
+export function getHospitalNome(value) {
+  return value?.split("|")[0] || value || "";
+}
+
+export function getHospitalMaps(value) {
+  const parts = value?.split("|");
+  return parts?.[1] || parts?.[0] || value || "";
+}
+
 export function getCemiterioNome(value) {
   return value?.split("|")[0] || value || "";
 }

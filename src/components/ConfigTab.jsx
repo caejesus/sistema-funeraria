@@ -62,7 +62,7 @@ function FuncoesCheckboxes({ selected, onChange }) {
 // ─── Accordion config ─────────────────────────────────────────────────────────
 
 const ACCORDIONS = [
-  { key: "hospitals",    label: "Hospitais / Locais de Óbito", hasAddress: false },
+  { key: "hospitals",    label: "Hospitais / Locais de Óbito", hasHospital: true, placeholder: "Nome reduzido (ex: HPS Platão Araújo)" },
   { key: "cemeteries",   label: "Cemitérios",                  hasAddress: true,  placeholder: "Nome do cemitério" },
   { key: "coffinColors", label: "Cores de Urna",               hasAddress: false, upper: true },
   { key: "cars",         label: "Carros",                      hasAddress: false, hasCar: true, upper: true, placeholder: "Modelo (ex: STRADA)" },
@@ -76,7 +76,7 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
   const [newUser, setNewUser] = useState(EMPTY_USER);
   const [editingUser, setEditingUser] = useState(null);
   const [openAccordion, setOpenAccordion] = useState(null);
-  const [newItems, setNewItems] = useState({ hospitals: "", cemeteries: "", cemeteryAddress: "", coffinColors: "", cars: "", carPlaca: "" });
+  const [newItems, setNewItems] = useState({ hospitals: "", hospitalMaps: "", cemeteries: "", cemeteryAddress: "", coffinColors: "", cars: "", carPlaca: "" });
 
   async function handleAddUser() {
     const ok = await addUser(newUser);
@@ -95,7 +95,14 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
   }
 
   async function handleAddItem(key) {
-    if (key === "cemeteries") {
+    if (key === "hospitals") {
+      const nome = (newItems.hospitals || "").trim();
+      const maps = (newItems.hospitalMaps || "").trim();
+      if (!nome) return;
+      const value = maps ? `${nome}|${maps}` : nome;
+      const ok = await addSettingItem(key, value);
+      if (ok) setNewItems((p) => ({ ...p, hospitals: "", hospitalMaps: "" }));
+    } else if (key === "cemeteries") {
       const nome = (newItems.cemeteries || "").trim();
       const addr = (newItems.cemeteryAddress || "").trim();
       if (!nome) return;
@@ -235,7 +242,7 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
       <section style={styles.card}>
         <h2 style={styles.cardTitle}>Cadastros dinâmicos</h2>
 
-        {ACCORDIONS.map(({ key, label, hasAddress, hasCar, placeholder }) => {
+        {ACCORDIONS.map(({ key, label, hasAddress, hasHospital, hasCar, placeholder }) => {
           const isOpen = openAccordion === key;
           const items = settings[key] || [];
           return (
@@ -274,8 +281,17 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
                       placeholder={placeholder || "Novo item"}
                       value={newItems[key] || ""}
                       onChange={(e) => setNewItems((p) => ({ ...p, [key]: e.target.value }))}
-                      onKeyDown={(e) => e.key === "Enter" && !hasAddress && !hasCar && handleAddItem(key)}
+                      onKeyDown={(e) => e.key === "Enter" && !hasAddress && !hasCar && !hasHospital && handleAddItem(key)}
                     />
+                    {hasHospital && (
+                      <input
+                        style={{ ...styles.input, flex: 1, minWidth: 160 }}
+                        placeholder="Nome completo para Maps (opcional)"
+                        value={newItems.hospitalMaps || ""}
+                        onChange={(e) => setNewItems((p) => ({ ...p, hospitalMaps: e.target.value }))}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddItem(key)}
+                      />
+                    )}
                     {hasAddress && (
                       <input
                         style={{ ...styles.input, flex: 1, minWidth: 130 }}
@@ -307,7 +323,9 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
                   ) : (
                     items.map((rawItem) => {
                       let displayName, displaySub;
-                      if (key === "cemeteries") {
+                      if (key === "hospitals") {
+                        [displayName, displaySub] = rawItem.split("|");
+                      } else if (key === "cemeteries") {
                         [displayName, displaySub] = rawItem.split("|");
                       } else if (key === "cars") {
                         const dashIdx = rawItem.indexOf(" - ");

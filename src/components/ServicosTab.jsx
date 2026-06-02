@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { formatDateBR, formatMoney, getCemiterioNome } from "../utils/format";
+import { formatDateBR, formatMoney, getCemiterioNome, getHospitalNome } from "../utils/format";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -273,7 +273,7 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                   <InfoCell label="Responsável" value={item.responsavelNome} />
                   <InfoCell label="Cemitério"   value={getCemiterioNome(item.cemiterio)} />
                   <InfoCell label="Atendente"   value={item.atendente} />
-                  <InfoCell label="Local do óbito" value={item.localObito} />
+                  <InfoCell label="Local do óbito" value={getHospitalNome(item.localObito)} />
                   <InfoCell
                     label="Total"
                     value={item.totalValue != null ? `R$ ${formatMoney(item.totalValue)}` : null}

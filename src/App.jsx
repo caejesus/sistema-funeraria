@@ -9,7 +9,7 @@ import { gerarTermoPdf } from "./pdf/gerarTermoPDF";
 import { gerarFichaTecnicoPdf } from "./pdf/gerarFichaTecnicoPDF";
 
 import { STORAGE_KEYS, FUNERAL_UNITS, SERVICE_TYPE_OPTIONS, initialServices } from "./constants";
-import { formatDateBR, formatMoney, moneyToNumber, formatPeso, formatAltura } from "./utils/format";
+import { formatDateBR, formatMoney, moneyToNumber, formatPeso, formatAltura, getHospitalNome } from "./utils/format";
 import { normalizeRole, getRoleUiLabel, getInitials, getAttendanceOperationalStatus } from "./utils/attendance";
 import { loadStorage, saveStorage } from "./utils/storage";
 import { getInitialForm } from "./utils/initialForm";
@@ -763,7 +763,7 @@ export default function App() {
                     <label style={styles.label}>Local do óbito</label>
                     <select style={styles.input} value={form.localObito} onChange={(e) => updateForm("localObito", e.target.value)}>
                       <option value="">Selecione</option>
-                      {settings.hospitals.map((item) => <option key={item} value={item}>{item}</option>)}
+                      {settings.hospitals.map((item) => { const nome = getHospitalNome(item); return <option key={item} value={nome}>{nome}</option>; })}
                     </select>
                   </div>
                   <div style={styles.fieldWide}>

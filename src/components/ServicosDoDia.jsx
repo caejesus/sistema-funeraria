@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import { drawCell } from "../pdf/pdfHelpers";
 import { styles } from "../styles/appStyles";
 import { SERVICE_TYPE_OPTIONS } from "../constants";
-import { formatDateBR, getCemiterioNome } from "../utils/format";
+import { formatDateBR, getCemiterioNome, getHospitalNome } from "../utils/format";
 
 // ─── Helpers (exported for reuse in Equipe.jsx) ──────────────────────────────
 
@@ -131,7 +131,7 @@ function gerarPDFOficial(ordenados) {
     const tipoLabel = getServiceTypeLabel(form.tipoPlano);
     const falecido = form.falecido || "";
     const dataObito = formatDateBR(form.dataFalecimento) || "";
-    const localObito = form.localObito || "";
+    const localObito = getHospitalNome(form.localObito) || "";
     const cemOuTipo = getCemiterioOuTipo(item);
     const obs = form.observacaoTermo || "";
     const hora = form.horaSaida || "";
@@ -224,7 +224,7 @@ function ServicoCard({ item, numero }) {
         </div>
         <div>
           <div style={{ ...styles.label, marginBottom: 3 }}>LOCAL DO ÓBITO</div>
-          <div style={{ fontSize: 13 }}>{form.localObito || "—"}</div>
+          <div style={{ fontSize: 13 }}>{getHospitalNome(form.localObito) || "—"}</div>
         </div>
         <div>
           <div style={{ ...styles.label, marginBottom: 3 }}>CEMITÉRIO</div>

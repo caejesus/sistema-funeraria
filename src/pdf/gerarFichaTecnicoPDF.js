@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { formatPeso, formatAltura } from "../utils/format";
+import { formatPeso, formatAltura, getHospitalNome } from "../utils/format";
 
 export function gerarFichaTecnicoPdf({ form, services, numero, openPdfPreview }) {
   const doc = new jsPDF("p", "mm", "a4");
@@ -122,7 +122,7 @@ export function gerarFichaTecnicoPdf({ form, services, numero, openPdfPreview })
 
   sectionTitle("DO SERVIÇO");
 
-  writeLineValue("· Local do óbito:", upper(form.localObito), left, y, left + 39, 196, { valueX: left + 40.5 });
+  writeLineValue("· Local do óbito:", upper(getHospitalNome(form.localObito)), left, y, left + 39, 196, { valueX: left + 40.5 });
   y += 7;
 
   let localVelorioTexto = "";

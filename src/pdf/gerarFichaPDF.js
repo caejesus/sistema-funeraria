@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { getCemiterioNome, formatPeso, formatAltura } from "../utils/format";
+import { getCemiterioNome, formatPeso, formatAltura, getHospitalNome } from "../utils/format";
 
 function maskCpf(value) {
   const n = String(value || "").replace(/\D/g, "").slice(0, 11);
@@ -87,7 +87,7 @@ export function gerarFichaPdf({
       // L3 — LOCAL DO ÓBITO + DATA/SAÍDA
       const localObitoDisplay = String(form.localObito || "").toUpperCase().startsWith("SVO")
         ? "SVO"
-        : (form.localObito || "");
+        : getHospitalNome(form.localObito);
       drawCell(doc, left, y, 150, 5.9, `LOCAL DO ÓBITO: ${localObitoDisplay}`, { bold: true, fontSize: 12 });
       drawCell(doc, 155,  y, 50,  5.9, `DATA/SAÍDA: ${formatDateBR(form.dataSaida)}`, { bold: true, fontSize: 12 });
       y += 5.9;
