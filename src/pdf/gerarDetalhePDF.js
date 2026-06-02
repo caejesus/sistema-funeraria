@@ -11,8 +11,8 @@ export async function gerarDetalhePDF(elementId, filename, openPdfPreview) {
       useCORS: true,
       backgroundColor: "#ffffff",
       logging: false,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
+      width: 800,
+      windowWidth: 800,
     });
 
     const imgData = canvas.toDataURL("image/png");
