@@ -32,6 +32,12 @@ function formatDataCurta(iso) {
   } catch { return "—"; }
 }
 
+const CONHECIA_LABELS = {
+  ja_conhecia: "Já conhecia o Grupo SF",
+  anuncios:    "Conheceu pelos anúncios",
+  indicacao:   "Indicação de amigo/parente",
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function AvaliacoesTab() {
@@ -194,6 +200,19 @@ export function AvaliacoesTab() {
                           {a.atendente && a.created_at && " · "}
                           {a.created_at && formatDataCurta(a.created_at)}
                         </div>
+                        {a.conhecia_grupo && (
+                          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                            Como conheceu: {CONHECIA_LABELS[a.conhecia_grupo] || a.conhecia_grupo}
+                          </div>
+                        )}
+                        {a.primeira_vez != null && (
+                          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                            Primeira vez: {a.primeira_vez ? "Sim" : "Não"}
+                            {a.experiencia_primeira_vez && (
+                              <span style={{ fontStyle: "italic" }}> — "{a.experiencia_primeira_vez}"</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                       {a.media_geral != null && (
                         <div style={{ textAlign: "right", flexShrink: 0 }}>

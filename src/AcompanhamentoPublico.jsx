@@ -56,6 +56,9 @@ function AvaliacaoForm({ atendimento, trackingId, onEnviado }) {
   const [comentarios, setComentariosState] = useState(["", "", "", ""]);
   const [salvando,    setSalvando]        = useState(false);
   const [erro,        setErro]            = useState("");
+  const [conheciaGrupo,          setConheciaGrupo]          = useState("");
+  const [primeiraVez,            setPrimeiraVez]            = useState(null);
+  const [experienciaPrimeiraVez, setExperienciaPrimeiraVez] = useState("");
 
   const form       = atendimento?.form || {};
   const atendente  = form.atendenteGeral || "";
@@ -86,19 +89,22 @@ function AvaliacaoForm({ atendimento, trackingId, onEnviado }) {
       : 0;
 
     const { error } = await supabase.from("avaliacoes").insert([{
-      atendimento_id:          trackingId,
-      falecido:                atendimento?.falecido || "",
+      atendimento_id:            trackingId,
+      falecido:                  atendimento?.falecido || "",
       atendente,
-      motorista_remocao:       motorista,
-      nota_atendimento:        notas[0] || null,
-      nota_velorio:            temVelorio ? (notas[1] || null) : null,
-      nota_remocao:            notas[2] || null,
-      nota_encerramento:       notas[3] || null,
-      comentario_atendimento:  comentarios[0] || null,
-      comentario_velorio:      temVelorio ? (comentarios[1] || null) : null,
-      comentario_remocao:      comentarios[2] || null,
-      comentario_encerramento: comentarios[3] || null,
-      media_geral:             media,
+      motorista_remocao:         motorista,
+      nota_atendimento:          notas[0] || null,
+      nota_velorio:              temVelorio ? (notas[1] || null) : null,
+      nota_remocao:              notas[2] || null,
+      nota_encerramento:         notas[3] || null,
+      comentario_atendimento:    comentarios[0] || null,
+      comentario_velorio:        temVelorio ? (comentarios[1] || null) : null,
+      comentario_remocao:        comentarios[2] || null,
+      comentario_encerramento:   comentarios[3] || null,
+      media_geral:               media,
+      conhecia_grupo:            conheciaGrupo || null,
+      primeira_vez:              primeiraVez,
+      experiencia_primeira_vez:  experienciaPrimeiraVez || null,
     }]);
 
     setSalvando(false);
@@ -106,10 +112,67 @@ function AvaliacaoForm({ atendimento, trackingId, onEnviado }) {
     onEnviado(media);
   }
 
+  const isSocio = ["socio_especial", "socio_luxo", "socio_premium"].includes(form.tipoPlano);
+  const primVezTexto = isSocio
+    ? "É a primeira vez que utiliza os serviços do Plano de Assistência Familiar do Grupo São Francisco?"
+    : "É a primeira vez que utiliza os serviços do Grupo São Francisco?";
+
+  const CONHECIA_OPTIONS = [
+    { value: "ja_conhecia", label: "Já conheço o Grupo SF" },
+    { value: "anuncios",    label: "Conheci pelos anúncios" },
+    { value: "indicacao",   label: "Tive indicação de amigo/parente" },
+  ];
+
+  const btnOpcao = (selected) => ({
+    background: selected ? "rgba(38,177,196,0.12)"          : "rgba(255,255,255,0.04)",
+    border:     selected ? "1px solid rgba(38,177,196,0.3)" : "1px solid rgba(148,163,184,0.15)",
+    borderRadius: 10,
+    padding: "10px 14px",
+    fontSize: 13,
+    color:      selected ? "#26b1c4" : "#94a3b8",
+    fontWeight: selected ? 500 : 400,
+    width: "100%",
+    textAlign: "left",
+    cursor: "pointer",
+    marginBottom: 8,
+  });
+
   return (
     <div style={S.card}>
       <div style={{ fontSize: 17, fontWeight: 700, color: "#f8fafc", marginBottom: 4 }}>Sua opinião importa</div>
       <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Avalie nosso atendimento</div>
+
+      {/* A — Você já nos conhecia? */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 13, color: "#cbd5e1", marginBottom: 12, lineHeight: 1.5 }}>Você já nos conhecia?</div>
+        {CONHECIA_OPTIONS.map(({ value, label }) => (
+          <button key={value} type="button" style={btnOpcao(conheciaGrupo === value)} onClick={() => setConheciaGrupo(value)}>
+            {conheciaGrupo === value && <i className="fa-solid fa-check" style={{ marginRight: 8, fontSize: 12 }} />}
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* B — Primeira vez */}
+      <div style={{ paddingBottom: 20, marginBottom: 20, borderBottom: "1px solid rgba(148,163,184,0.12)" }}>
+        <div style={{ fontSize: 13, color: "#cbd5e1", marginBottom: 12, lineHeight: 1.5 }}>{primVezTexto}</div>
+        <button type="button" style={btnOpcao(primeiraVez === true)} onClick={() => setPrimeiraVez(true)}>
+          {primeiraVez === true && <i className="fa-solid fa-check" style={{ marginRight: 8, fontSize: 12 }} />}
+          Sim, é a primeira vez
+        </button>
+        <button type="button" style={btnOpcao(primeiraVez === false)} onClick={() => setPrimeiraVez(false)}>
+          {primeiraVez === false && <i className="fa-solid fa-check" style={{ marginRight: 8, fontSize: 12 }} />}
+          Não, já utilizei antes
+        </button>
+        {primeiraVez !== null && (
+          <textarea
+            style={{ width: "100%", marginTop: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.15)", borderRadius: 10, padding: "8px 12px", fontSize: 13, color: "#e2e8f0", resize: "none", height: 60, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+            placeholder={primeiraVez ? "Como foi sua experiência com nossos serviços?" : "Como foi desta vez em comparação às anteriores?"}
+            value={experienciaPrimeiraVez}
+            onChange={(e) => setExperienciaPrimeiraVez(e.target.value)}
+          />
+        )}
+      </div>
 
       {perguntas.map(({ idx, texto }, pos) => (
         <div key={idx} style={{ paddingBottom: 18, marginBottom: 18, borderBottom: pos < perguntas.length - 1 ? "1px solid rgba(148,163,184,0.08)" : "none" }}>
