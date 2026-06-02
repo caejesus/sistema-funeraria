@@ -34,69 +34,59 @@ import { useOrdemServico } from "./hooks/useOrdemServico";
 
 // ─── Login shared panel ───────────────────────────────────────────────────────
 
-const COMPANY_CARDS = [
-  { logo: "/logosaofrancisco.png", icon: null,                label: "FUNERÁRIA", sub: "São Francisco"       },
-  { logo: "/logosantarita.png",    icon: null,                label: "FUNERÁRIA", sub: "Santa Rita"          },
-  { logo: "/logomemorial.png",     icon: null,                label: "MEMORIAL",  sub: "São Francisco"       },
-  { logo: null,                    icon: "fa-solid fa-users", label: "PLANO SF",  sub: "Assistência Familiar" },
+const LOGIN_FEATURES = [
+  {
+    icon: "fa-solid fa-bolt",
+    title: "Atendimento mais prático e digital",
+    sub: "Registre e gerencie serviços com agilidade",
+  },
+  {
+    icon: "fa-solid fa-satellite-dish",
+    title: "Acompanhamento do serviço em tempo real",
+    sub: "Família e equipe sempre informados",
+  },
+  {
+    icon: "fa-solid fa-chart-line",
+    title: "Gestão e controle com facilidade",
+    sub: "Relatórios, etapas e equipe em um só lugar",
+  },
 ];
-
-const cardStyle = {
-  background: "#ffffff",
-  border: "0.5px solid rgba(255,255,255,0.1)",
-  borderRadius: 12,
-  padding: "20px 16px",
-  minHeight: 160,
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  textAlign: "center",
-};
-
-const logoImgStyle = {
-  width: "100%",
-  maxWidth: 160,
-  height: 100,
-  objectFit: "contain",
-  display: "block",
-  margin: "0 auto 12px",
-};
 
 function LoginLeftPanel() {
   return (
     <div className="login-left">
+      {/* Logo do grupo */}
       <img
         src="/logogrupo.png"
         alt="Grupo São Francisco"
-        style={{ height: 100, width: "auto", maxWidth: 220, display: "block", margin: "0 auto 1.5rem", objectFit: "contain" }}
+        style={{ height: 80, width: "auto", maxWidth: 200, display: "block", margin: "0 auto 2rem", objectFit: "contain" }}
       />
 
-      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <div style={{ fontSize: 11, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
-          Sistema de Gestão Funerária
-        </div>
-        <div style={{ width: 48, height: 2, background: "#26b1c4", margin: "0 auto" }} />
+      {/* Título */}
+      <div style={{ fontSize: 11, color: "#26b1c4", textTransform: "uppercase", letterSpacing: "0.12em", textAlign: "center", marginBottom: "2rem" }}>
+        Sistema de Atendimento Funeral
       </div>
 
-      <div className="login-company-grid">
-        {COMPANY_CARDS.map(({ logo, icon, label, sub }) => (
-          <div key={label + sub} style={cardStyle}>
-            {logo
-              ? <img src={logo} alt={label} className="login-company-logo" style={logoImgStyle} />
-              : (
-                <div style={{ width: 48, height: 48, background: "rgba(38,177,196,0.1)", borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#26b1c4", marginBottom: 8 }}>
-                  <i className={icon} style={{ fontSize: 20 }} />
-                </div>
-              )
-            }
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#111827", textTransform: "uppercase" }}>{label}</div>
-            <div style={{ fontSize: 10, color: "#64748b" }}>{sub}</div>
+      {/* Linha decorativa */}
+      <div style={{ width: 40, height: 2, background: "#26b1c4", margin: "0 auto 2.5rem", borderRadius: 2 }} />
+
+      {/* Features */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", width: "100%", maxWidth: 320 }}>
+        {LOGIN_FEATURES.map(({ icon, title, sub }) => (
+          <div key={title} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 44, height: 44, background: "rgba(38,177,196,0.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <i className={icon} style={{ fontSize: 20, color: "#26b1c4" }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 14, color: "#f1f5f9", fontWeight: 500, lineHeight: 1.3 }}>{title}</div>
+              <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{sub}</div>
+            </div>
           </div>
         ))}
       </div>
 
-      <div style={{ fontSize: 12, color: "#334155", textAlign: "center", marginTop: "2rem", maxWidth: 280 }}>
+      {/* Frase rodapé */}
+      <div style={{ fontSize: 12, color: "#334155", textAlign: "center", marginTop: "3rem", maxWidth: 280 }}>
         Cuidando com respeito e dedicação em todos os momentos
       </div>
     </div>
