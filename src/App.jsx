@@ -59,7 +59,7 @@ function LoginLeftPanel() {
       <img
         src="/logogrupo.png"
         alt="Grupo São Francisco"
-        style={{ height: 80, width: "auto", maxWidth: 200, display: "block", margin: "0 auto 2rem", objectFit: "contain" }}
+        style={{ height: 140, width: "auto", maxWidth: 320, display: "block", margin: "0 auto 2.5rem", objectFit: "contain" }}
       />
 
       {/* Título */}
