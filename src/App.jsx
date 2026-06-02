@@ -28,6 +28,7 @@ import { ConfigTab } from "./components/ConfigTab";
 import { OrdemServicoTab } from "./components/OrdemServicoTab";
 import { ServicosDoDia } from "./components/ServicosDoDia";
 import { RelatoriosTab } from "./components/RelatoriosTab";
+import { AvaliacoesTab } from "./components/AvaliacoesTab";
 import { AlterarSenhaModal } from "./components/AlterarSenhaModal";
 
 import { useOrdemServico } from "./hooks/useOrdemServico";
@@ -613,6 +614,9 @@ export default function App() {
           )}
           {normalizeRole(session?.role) === "ADM" && (
             <button style={activeTab === "relatorios" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("relatorios")}>Relatórios</button>
+          )}
+          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "SUPERVISOR") && (
+            <button style={activeTab === "avaliacoes" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("avaliacoes")}>Avaliações</button>
           )}
           {normalizeRole(session?.role) === "ADM" && (
             <button style={activeTab === "config" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("config")}>Configurações</button>
@@ -1229,6 +1233,10 @@ export default function App() {
 
       {activeTab === "relatorios" && normalizeRole(session?.role) === "ADM" && (
         <RelatoriosTab atendimentos={atendimentos} />
+      )}
+
+      {activeTab === "avaliacoes" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "SUPERVISOR") && (
+        <AvaliacoesTab />
       )}
 
       {activeTab === "config" && normalizeRole(session.role) === "ADM" && (
