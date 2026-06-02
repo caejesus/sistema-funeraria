@@ -176,17 +176,17 @@ export function AvaliacoesTab() {
             <h3 style={{ ...styles.cardTitle, fontSize: 17, marginBottom: 16 }}>Avaliações Recentes</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {filtradas.map((a) => {
-                const comentariosPreenchidos = [
-                  a.comentario_atendimento,
-                  a.comentario_velorio,
-                  a.comentario_remocao,
-                  a.comentario_encerramento,
-                ].filter(Boolean);
+                const categorias = [
+                  { label: "Atendimento",  nota: a.nota_atendimento,  comentario: a.comentario_atendimento  },
+                  a.nota_velorio   != null ? { label: "Velório",      nota: a.nota_velorio,      comentario: a.comentario_velorio      } : null,
+                  { label: "Remoção",      nota: a.nota_remocao,      comentario: a.comentario_remocao      },
+                  { label: "Encerramento", nota: a.nota_encerramento,  comentario: a.comentario_encerramento },
+                ].filter(c => c && c.nota != null);
 
                 return (
                   <div key={a.id} style={{ background: "var(--card-bg-alt)", border: "1px solid var(--border-soft)", borderRadius: 14, padding: "14px 16px" }}>
                     {/* Header */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, gap: 12, flexWrap: "wrap" }}>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-main)" }}>{a.falecido || "—"}</div>
                         <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
@@ -203,25 +203,18 @@ export function AvaliacoesTab() {
                       )}
                     </div>
 
-                    {/* Notas por categoria */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px 16px", marginBottom: comentariosPreenchidos.length ? 10 : 0 }}>
-                      {[
-                        { label: "Atendimento",  nota: a.nota_atendimento  },
-                        a.nota_velorio    != null ? { label: "Velório",       nota: a.nota_velorio      } : null,
-                        { label: "Remoção",       nota: a.nota_remocao      },
-                        { label: "Encerramento",  nota: a.nota_encerramento },
-                      ].filter(p => p && p.nota != null).map(({ label, nota }) => (
-                        <div key={label}>
-                          <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 3 }}>{label}</div>
-                          <EstrelasDisplay nota={nota} size={12} />
+                    {/* Categorias com nota + comentário inline */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {categorias.map(({ label, nota, comentario }, idx) => (
+                        <div key={label} style={{ paddingBottom: idx < categorias.length - 1 ? 10 : 0, borderBottom: idx < categorias.length - 1 ? "1px solid var(--border-soft)" : "none" }}>
+                          <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
+                          <EstrelasDisplay nota={nota} size={13} />
+                          {comentario && (
+                            <div style={{ fontSize: 12, color: "var(--text-soft)", fontStyle: "italic", marginTop: 5 }}>"{comentario}"</div>
+                          )}
                         </div>
                       ))}
                     </div>
-
-                    {/* Comentários */}
-                    {comentariosPreenchidos.map((c, i) => (
-                      <div key={i} style={{ fontSize: 12, color: "var(--text-soft)", fontStyle: "italic", marginTop: 4 }}>"{c}"</div>
-                    ))}
                   </div>
                 );
               })}

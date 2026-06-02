@@ -175,16 +175,24 @@ export default function AcompanhamentoPublico({ trackingId = "" }) {
   useEffect(() => {
     if (!trackingId) return;
     const channel = supabase
-      .channel("acompanhamento-" + trackingId)
-      .on("postgres_changes", {
-        event: "UPDATE",
-        schema: "public",
-        table: "atendimentos",
-        filter: `record_id=eq.${trackingId}`,
-      }, (payload) => {
-        setAtendimento(payload.new?.dados || null);
-      })
-      .subscribe();
+      .channel("public-tracking-" + trackingId)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "atendimentos",
+          filter: `record_id=eq.${trackingId}`,
+        },
+        (payload) => {
+          console.log("Realtime update recebido:", payload);
+          const novoDados = payload.new?.dados || null;
+          if (novoDados) setAtendimento(novoDados);
+        }
+      )
+      .subscribe((status) => {
+        console.log("Status realtime acompanhamento:", status);
+      });
     return () => supabase.removeChannel(channel);
   }, [trackingId]);
 
