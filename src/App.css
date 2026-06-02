@@ -183,14 +183,20 @@
 
 .home-screen,
 .home-main {
+  flex: 1;
   width: 100%;
   margin: 0 auto;
-  min-height: calc(100vh - 90px);
+  min-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px;
+}
+
+.home-cards-grid,
+.home-cards {
+  margin: 0 auto;
 }
 
 .home-cards-grid,
