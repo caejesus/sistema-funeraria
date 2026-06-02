@@ -7,39 +7,41 @@ export async function gerarDetalhePDF(elementId, filename, openPdfPreview) {
 
   try {
     const canvas = await html2canvas(element, {
-      scale: 1.5,
+      scale: 2,
       useCORS: true,
       backgroundColor: "#ffffff",
       logging: false,
-      width: 850,
-      windowWidth: 850,
     });
 
-    const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth  = pdf.internal.pageSize.getWidth();  // 210mm
+    const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
-    const pageWidth  = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 8; // 8mm em todos os lados
 
-    const imgWidth  = pageWidth - 10; // 5mm de margem em cada lado
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const maxWidth  = pageWidth  - margin * 2;
+    const maxHeight = pageHeight - margin * 2;
 
-    if (imgHeight <= pageHeight) {
-      // Cabe em uma página: topo com margem de 5mm
-      pdf.addImage(imgData, "PNG", 5, 5, imgWidth, imgHeight);
-    } else {
-      // Múltiplas páginas
-      let heightLeft = imgHeight;
-      let position   = 0;
-      pdf.addImage(imgData, "PNG", 5, 0, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 5, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-    }
+    // Proporção que faz o conteúdo caber sempre em uma página
+    const ratio = Math.min(
+      maxWidth  / canvas.width,
+      maxHeight / canvas.height
+    );
+
+    const imgWidth  = canvas.width  * ratio;
+    const imgHeight = canvas.height * ratio;
+
+    // Centralizar horizontalmente, topo com margem
+    const xOffset = (pageWidth - imgWidth) / 2;
+
+    pdf.addImage(
+      canvas.toDataURL("image/png"),
+      "PNG",
+      xOffset,
+      margin,
+      imgWidth,
+      imgHeight
+    );
 
     openPdfPreview(pdf, filename, "Detalhes do Serviço");
   } catch (error) {
