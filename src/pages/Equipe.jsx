@@ -360,15 +360,24 @@ function StageCard({ item, stage, updateOperationalStage, updateOperationalTrans
       updateOperationalStage(item.id, key, "start");
   }
 
-  function confirmTransporte() {
-    if (!modal.carroSelecionado) { alert("Selecione o veículo."); return; }
-    if (typeof updateOperationalStage === "function")
-      updateOperationalStage(item.id, key, "start");
-    if (typeof updateOperationalTransport === "function")
-      updateOperationalTransport(item.id, key, "car", modal.carroSelecionado);
-    if (session?.name && typeof updateOperationalPerson === "function")
-      updateOperationalPerson(item.id, key, "driver", session.name);
+  async function confirmTransporte() {
+    const carroSelecionado = modal.carroSelecionado;
+    if (!carroSelecionado) { alert("Selecione o veículo."); return; }
+
+    // Capturar valores antes de resetar o modal
+    const itemId   = item.id;
+    const stageKey = key;
+
+    // Fechar o modal imediatamente
     setModal(MODAL_INIT);
+
+    // Executar atualizações em sequência
+    if (typeof updateOperationalStage === "function")
+      await updateOperationalStage(itemId, stageKey, "start");
+    if (typeof updateOperationalTransport === "function")
+      await updateOperationalTransport(itemId, stageKey, "car", carroSelecionado);
+    if (session?.name && typeof updateOperationalPerson === "function")
+      await updateOperationalPerson(itemId, stageKey, "driver", session.name);
   }
 
   return (
