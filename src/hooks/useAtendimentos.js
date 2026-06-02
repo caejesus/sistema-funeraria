@@ -36,6 +36,8 @@ export function useAtendimentos({
   onRecordDeleted,
 }) {
   const [atendimentos, setAtendimentos] = useState([]);
+  const atendimentosRef = useRef(atendimentos);
+  atendimentosRef.current = atendimentos; // sempre atualizado antes de qualquer efeito
   const onRecordDeletedRef = useRef(onRecordDeleted);
 
   useEffect(() => {
@@ -115,7 +117,7 @@ export function useAtendimentos({
   }
 
   async function updateAttendanceRecord(attendanceId, updater) {
-    const currentRecord = atendimentos.find((item) => item.id === attendanceId);
+    const currentRecord = atendimentosRef.current.find((item) => item.id === attendanceId);
     if (!currentRecord) return false;
     const updatedRecord = updater(currentRecord);
     if (!updatedRecord) return false;
