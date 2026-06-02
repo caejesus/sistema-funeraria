@@ -30,6 +30,7 @@ import { ServicosDoDia } from "./components/ServicosDoDia";
 import { RelatoriosTab } from "./components/RelatoriosTab";
 import { AvaliacoesTab } from "./components/AvaliacoesTab";
 import { FrotaTab } from "./components/FrotaTab";
+import { DetalhesServico } from "./components/DetalhesServico";
 import { AlterarSenhaModal } from "./components/AlterarSenhaModal";
 
 import { useOrdemServico } from "./hooks/useOrdemServico";
@@ -144,6 +145,7 @@ export default function App() {
 
   const [osConvertidaMensagem, setOsConvertidaMensagem] = useState("");
   const [showAlterarSenha, setShowAlterarSenha] = useState(false);
+  const [detalhesServico, setDetalhesServico] = useState(null);
 
   // --- Hooks ---
   const { pdfPreview, openPdfPreview, closePdfPreview, downloadPreviewPdf, printPreviewPdf } =
@@ -660,12 +662,21 @@ export default function App() {
         </section>
       )}
 
-      {activeTab === "atendimentos" && (
+      {activeTab === "atendimentos" && detalhesServico && (
+        <DetalhesServico
+          atendimento={detalhesServico}
+          onVoltar={() => setDetalhesServico(null)}
+          openPdfPreview={openPdfPreview}
+        />
+      )}
+
+      {activeTab === "atendimentos" && !detalhesServico && (
         <ServicosTab
           atendimentos={atendimentos}
           openAttendance={openAttendance}
           onDelete={handleDeleteAttendance}
           toggleEquipeAcionada={toggleEquipeAcionada}
+          onVerDetalhes={(item) => setDetalhesServico(item)}
         />
       )}
 

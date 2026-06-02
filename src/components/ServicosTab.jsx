@@ -98,7 +98,7 @@ const primaryBtn = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEquipeAcionada }) {
+export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEquipeAcionada, onVerDetalhes }) {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("todos");
 
@@ -289,6 +289,11 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                 {/* Actions */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {onVerDetalhes && (
+                      <button style={outlineBtn} onClick={() => onVerDetalhes(item)}>
+                        <i className="fa-solid fa-eye" style={{ marginRight: 6 }} />Ver detalhes
+                      </button>
+                    )}
                     <button style={outlineBtn} onClick={() => openAttendance(item, "preview")}>
                       <i className="fa-solid fa-file-invoice" style={{ marginRight: 6 }} />Ver / PDF
                     </button>
