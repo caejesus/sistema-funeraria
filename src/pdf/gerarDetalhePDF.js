@@ -7,12 +7,12 @@ export async function gerarDetalhePDF(elementId, filename, openPdfPreview) {
 
   try {
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       backgroundColor: "#ffffff",
       logging: false,
-      width: 800,
-      windowWidth: 800,
+      width: 1000,
+      windowWidth: 1000,
     });
 
     const imgData = canvas.toDataURL("image/png");
@@ -21,20 +21,25 @@ export async function gerarDetalhePDF(elementId, filename, openPdfPreview) {
     const pageWidth  = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const imgWidth  = pageWidth;
+    const imgWidth  = pageWidth - 10; // 5mm de margem em cada lado
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    let heightLeft = imgHeight;
-    let position   = 0;
-
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    if (imgHeight <= pageHeight) {
+      // Cabe em uma página: centralizar verticalmente
+      const yOffset = (pageHeight - imgHeight) / 2;
+      pdf.addImage(imgData, "PNG", 5, yOffset, imgWidth, imgHeight);
+    } else {
+      // Múltiplas páginas
+      let heightLeft = imgHeight;
+      let position   = 0;
+      pdf.addImage(imgData, "PNG", 5, 0, imgWidth, imgHeight);
       heightLeft -= pageHeight;
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 5, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
     }
 
     openPdfPreview(pdf, filename, "Detalhes do Serviço");
