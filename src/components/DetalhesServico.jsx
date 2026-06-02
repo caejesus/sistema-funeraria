@@ -1,6 +1,5 @@
 import React from "react";
-import { gerarFichaPdf } from "../pdf/gerarFichaPDF";
-import { drawCell } from "../pdf/pdfHelpers";
+import { gerarDetalhePDF } from "../pdf/gerarDetalhePDF";
 import { formatDateBR, formatMoney, getCemiterioNome, getHospitalNome } from "../utils/format";
 import { OPERATION_STAGES, SERVICE_TYPE_OPTIONS } from "../constants";
 import { getLocalVelorio } from "./ServicosDoDia";
@@ -158,17 +157,9 @@ export function DetalhesServico({ atendimento, onVoltar, openPdfPreview }) {
   const idadeFalecimento = calcularIdade(form.dataNascimento, form.dataFalecimento);
   const servicosAtivos   = services.filter(s => s.checked);
 
-  function handleGerarPdf() {
-    gerarFichaPdf({
-      form,
-      services,
-      totalValue: atendimento?.totalValue || 0,
-      drawCell,
-      formatDateBR,
-      formatMoney,
-      openPdfPreview,
-      operationalStages: stages,
-    });
+  async function handleGerarPdf() {
+    const nomeArquivo = `detalhes-${(atendimento?.falecido || "servico").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+    await gerarDetalhePDF("ficha-detalhe", nomeArquivo, openPdfPreview);
   }
 
   // ── Velório ──────────────────────────────────────────────────────────────────
@@ -251,7 +242,7 @@ export function DetalhesServico({ atendimento, onVoltar, openPdfPreview }) {
       </div>
 
       {/* ── Ficha (sempre branca) ────────────────────────────────────────────── */}
-      <div style={{ background: "#fff", borderRadius: 18, padding: "32px 36px", boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+      <div id="ficha-detalhe" style={{ background: "#fff", borderRadius: 18, padding: "32px 36px", boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
 
         {/* Cabeçalho */}
         <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: `2px solid ${BRAND}` }}>
