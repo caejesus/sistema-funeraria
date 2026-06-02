@@ -11,8 +11,8 @@ export async function gerarDetalhePDF(elementId, filename, openPdfPreview) {
       useCORS: true,
       backgroundColor: "#ffffff",
       logging: false,
-      width: 1000,
-      windowWidth: 1000,
+      width: 850,
+      windowWidth: 850,
     });
 
     const imgData = canvas.toDataURL("image/png");
@@ -25,9 +25,8 @@ export async function gerarDetalhePDF(elementId, filename, openPdfPreview) {
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
     if (imgHeight <= pageHeight) {
-      // Cabe em uma página: centralizar verticalmente
-      const yOffset = (pageHeight - imgHeight) / 2;
-      pdf.addImage(imgData, "PNG", 5, yOffset, imgWidth, imgHeight);
+      // Cabe em uma página: topo com margem de 5mm
+      pdf.addImage(imgData, "PNG", 5, 5, imgWidth, imgHeight);
     } else {
       // Múltiplas páginas
       let heightLeft = imgHeight;
