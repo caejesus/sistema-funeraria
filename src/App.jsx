@@ -29,6 +29,7 @@ import { OrdemServicoTab } from "./components/OrdemServicoTab";
 import { ServicosDoDia } from "./components/ServicosDoDia";
 import { RelatoriosTab } from "./components/RelatoriosTab";
 import { AvaliacoesTab } from "./components/AvaliacoesTab";
+import { FrotaTab } from "./components/FrotaTab";
 import { AlterarSenhaModal } from "./components/AlterarSenhaModal";
 
 import { useOrdemServico } from "./hooks/useOrdemServico";
@@ -606,6 +607,7 @@ export default function App() {
           <button style={activeTab === "atendimentos" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("atendimentos")}>Serviços</button>
           <button style={activeTab === "operacional" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("operacional")}>Gestão de Etapas</button>
           <button style={activeTab === "equipe" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("equipe")}>Equipe</button>
+          <button style={activeTab === "frota" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("frota")}>Frota</button>
           {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
             <button style={activeTab === "os" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("os")}>OS</button>
           )}
@@ -1237,6 +1239,10 @@ export default function App() {
 
       {activeTab === "avaliacoes" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "SUPERVISOR") && (
         <AvaliacoesTab />
+      )}
+
+      {activeTab === "frota" && (
+        <FrotaTab settings={settings} session={session} />
       )}
 
       {activeTab === "config" && normalizeRole(session.role) === "ADM" && (

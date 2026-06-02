@@ -7,7 +7,21 @@ import {
   currentTime,
 } from "../utils/attendance";
 import { getInitialForm } from "../utils/initialForm";
-import { initialServices } from "../constants";
+import { initialServices, TRANSPORT_STAGE_KEYS } from "../constants";
+
+const TRANSPORT_KEYS_SET = new Set(TRANSPORT_STAGE_KEYS);
+
+async function atualizarFrota(carro, status, attendanceId, updatedBy) {
+  if (!carro) return;
+  await supabase.from("frota").upsert({
+    carro,
+    status,
+    atendimento_id: attendanceId || null,
+    motivo: "",
+    updated_by: updatedBy || "",
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "carro" });
+}
 
 function getPreparedFormData(sourceForm) {
   return {
@@ -244,6 +258,11 @@ export function useAtendimentos({
 
   async function updateOperationalStage(attendanceId, stageKey, action) {
     const now = currentTime();
+
+    // Capture car before update so we can release it on finish
+    const recordBefore = atendimentosRef.current.find(item => item.id === attendanceId);
+    const carBefore    = recordBefore?.operationalStages?.[stageKey]?.car || "";
+
     await updateAttendanceRecord(attendanceId, (item) => {
       const nextStages = JSON.parse(
         JSON.stringify(item.operationalStages || createOperationStages())
@@ -285,9 +304,23 @@ export function useAtendimentos({
         updatedAt: new Date().toISOString(),
       };
     });
+
+    // Release car when transport stage finishes
+    if (action === "finish" && carBefore && TRANSPORT_KEYS_SET.has(stageKey)) {
+      const { data: frotaReg } = await supabase
+        .from("frota").select("atendimento_id").eq("carro", carBefore).single();
+      if (frotaReg && String(frotaReg.atendimento_id) === String(attendanceId)) {
+        await atualizarFrota(carBefore, "disponivel", null, session?.name);
+      }
+    }
   }
 
   async function updateOperationalTransport(attendanceId, stageKey, field, value) {
+    // Capture stage status before update to detect car assignment to active stage
+    const recordBefore   = atendimentosRef.current.find(item => item.id === attendanceId);
+    const stageBefore    = recordBefore?.operationalStages?.[stageKey] || {};
+    const stageIsActive  = stageBefore.status === "em_andamento";
+
     await updateAttendanceRecord(attendanceId, (item) => {
       const nextStages = JSON.parse(
         JSON.stringify(item.operationalStages || createOperationStages())
@@ -310,6 +343,11 @@ export function useAtendimentos({
 
       return { ...item, operationalStages: nextStages, updatedAt: new Date().toISOString(), form: nextForm };
     });
+
+    // Mark car as "em_servico" when assigned to an active transport stage
+    if (field === "car" && value && TRANSPORT_KEYS_SET.has(stageKey) && stageIsActive) {
+      await atualizarFrota(value, "em_servico", attendanceId, session?.name);
+    }
   }
 
   async function updateOperationalPerson(attendanceId, stageKey, field, value) {
