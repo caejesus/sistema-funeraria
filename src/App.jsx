@@ -36,17 +36,17 @@ import { useOrdemServico } from "./hooks/useOrdemServico";
 
 const LOGIN_FEATURES = [
   {
-    icon: "fa-solid fa-bolt",
+    icon: "fa-solid fa-user-tie",
     title: "Atendimento mais prático e digital",
     sub: "Registre e gerencie serviços com agilidade",
   },
   {
-    icon: "fa-solid fa-satellite-dish",
+    icon: "fa-solid fa-mobile-screen",
     title: "Acompanhamento do serviço em tempo real",
     sub: "Família e equipe sempre informados",
   },
   {
-    icon: "fa-solid fa-chart-line",
+    icon: "fa-solid fa-shield-halved",
     title: "Gestão e controle com facilidade",
     sub: "Relatórios, etapas e equipe em um só lugar",
   },
@@ -55,38 +55,41 @@ const LOGIN_FEATURES = [
 function LoginLeftPanel() {
   return (
     <div className="login-left">
-      {/* Logo do grupo */}
-      <img
-        src="/logogrupo.png"
-        alt="Grupo São Francisco"
-        style={{ height: 140, width: "auto", maxWidth: 320, display: "block", margin: "0 auto 2.5rem", objectFit: "contain" }}
-      />
+      {/* Placeholder do grupo */}
+      <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "20px 32px", display: "inline-block", textAlign: "center", marginBottom: "1.5rem" }}>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+          GRUPO
+        </div>
+        <div style={{ fontSize: 32, fontWeight: 700, color: "#ffffff", lineHeight: 1 }}>
+          SÃO FRANCISCO
+        </div>
+      </div>
 
       {/* Título */}
-      <div style={{ fontSize: 11, color: "#26b1c4", textTransform: "uppercase", letterSpacing: "0.12em", textAlign: "center", marginBottom: "2rem" }}>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: "0.12em", textAlign: "center", marginBottom: "2rem" }}>
         Sistema de Atendimento Funeral
       </div>
 
       {/* Linha decorativa */}
-      <div style={{ width: 40, height: 2, background: "#26b1c4", margin: "0 auto 2.5rem", borderRadius: 2 }} />
+      <div style={{ width: 40, height: 2, background: "rgba(255,255,255,0.4)", margin: "0 auto 2.5rem", borderRadius: 2 }} />
 
       {/* Features */}
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", width: "100%", maxWidth: 320 }}>
         {LOGIN_FEATURES.map(({ icon, title, sub }) => (
           <div key={title} style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 44, height: 44, background: "rgba(38,177,196,0.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <i className={icon} style={{ fontSize: 20, color: "#26b1c4" }} />
+            <div style={{ width: 44, height: 44, background: "rgba(255,255,255,0.15)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <i className={icon} style={{ fontSize: 20, color: "#ffffff" }} />
             </div>
             <div>
-              <div style={{ fontSize: 14, color: "#f1f5f9", fontWeight: 500, lineHeight: 1.3 }}>{title}</div>
-              <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{sub}</div>
+              <div style={{ fontSize: 14, color: "#ffffff", fontWeight: 500, lineHeight: 1.3 }}>{title}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", marginTop: 2 }}>{sub}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Frase rodapé */}
-      <div style={{ fontSize: 12, color: "#334155", textAlign: "center", marginTop: "3rem", maxWidth: 280 }}>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "center", marginTop: "3rem", maxWidth: 280 }}>
         Cuidando com respeito e dedicação em todos os momentos
       </div>
     </div>
