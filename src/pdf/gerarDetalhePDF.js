@@ -329,7 +329,7 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
   });
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   renderInlineText(doc, stageSegments, L, y, RX, LHEIGHT);
 
   // ── RODAPÉ ───────────────────────────────────────────────────────────────────
