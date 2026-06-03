@@ -64,25 +64,25 @@ const BRAND = "#26b1c4";
 
 function drawSectionTitle(doc, x, y, title) {
   doc.setFillColor(BRAND);
-  doc.rect(x, y, 1.5, 4, "F");
+  doc.rect(x, y, 1.5, 5, "F");
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
+  doc.setFontSize(8);
   doc.setTextColor(BRAND);
-  doc.text(title.toUpperCase(), x + 3, y + 3);
-  return y + 6.5;
+  doc.text(title.toUpperCase(), x + 3, y + 3.8);
+  return y + 8;
 }
 
 function drawField(doc, x, y, label, value, maxW) {
   const val = String(value ?? "—");
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(6);
+  doc.setFontSize(7);
   doc.setTextColor("#94a3b8");
   doc.text(String(label).toUpperCase(), x, y);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(9.5);
   doc.setTextColor("#222222");
   const lines = doc.splitTextToSize(val, (maxW || 60) - 2);
-  doc.text(lines[0] || val.slice(0, 35), x, y + 3.5);
+  doc.text(lines[0] || val.slice(0, 35), x, y + 4);
 }
 
 function drawSep(doc, x, y, w) {
@@ -120,7 +120,7 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
   const W    = 186;  // largura útil
   const C    = 62;   // 1 coluna (W / 3)
   const RX   = L + W; // x máximo (borda direita)
-  const LHEIGHT = 4.5; // line-height em texto corrido
+  const LHEIGHT = 5.5; // line-height em texto corrido
 
   const stages       = atendimento?.operationalStages || {};
   const isSocio      = ["socio_especial", "socio_luxo", "socio_premium"].includes(form?.tipoPlano);
@@ -139,17 +139,17 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
   doc.text(numData || "—", L, y + 4);
 
   // Nome
-  y += 6;
+  y += 7;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(17);
+  doc.setFontSize(18);
   doc.setTextColor("#111111");
   const nomeFalecido = doc.splitTextToSize(form?.falecido || "Falecido não informado", W);
-  doc.text(nomeFalecido[0], L, y + 4);
+  doc.text(nomeFalecido[0], L, y + 5);
 
   // Subtítulo atendente + tipo
-  y += 8;
+  y += 9;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.setTextColor("#64748b");
   const subtitulo = [
     atendente && `Atendido por ${atendente}`,
@@ -157,19 +157,19 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
     isSocio && form?.codigo && `Cód. ${form.codigo}`,
     isSocio && form?.dependente && `Dep. ${form.dependente}`,
   ].filter(Boolean).join(" · ");
-  doc.text(doc.splitTextToSize(subtitulo, W)[0] || "", L, y + 3);
+  doc.text(doc.splitTextToSize(subtitulo, W)[0] || "", L, y + 4);
 
   // Linha brand-accent
-  y += 7;
+  y += 8;
   doc.setDrawColor(BRAND);
   doc.setLineWidth(0.5);
   doc.line(L, y, L + W, y);
 
-  y += 3;
+  y += 4;
 
   // ── DADOS DO FALECIDO ────────────────────────────────────────────────────────
 
-  drawSep(doc, L, y, W); y += 2;
+  drawSep(doc, L, y, W); y += 3;
   y = drawSectionTitle(doc, L, y, "Dados do Falecido");
 
   const idadeFal = (() => {
@@ -184,17 +184,17 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
   drawField(doc, L,       y, "Sexo",         form?.sexo,                                C);
   drawField(doc, L + C,   y, "Nascimento",   nascText,                                   C);
   drawField(doc, L + C*2, y, "Peso / Altura", [form?.peso, form?.altura].filter(Boolean).join(" / ") || "—", C);
-  y += 9;
+  y += 11;
 
   const falText = [formatDateBR(form?.dataFalecimento), form?.horaFalecimento].filter(Boolean).join(" às ");
   drawField(doc, L,       y, "Falecimento",  falText || "—",                             C);
   drawField(doc, L + C,   y, "Local do Óbito", getHospitalNome(form?.localObito) || "—", C);
   drawField(doc, L + C*2, y, "Religião",     form?.religiao || "—",                      C);
-  y += 9;
+  y += 11;
 
   // ── VELÓRIO E SEPULTAMENTO ───────────────────────────────────────────────────
 
-  drawSep(doc, L, y, W); y += 2;
+  drawSep(doc, L, y, W); y += 3;
   y = drawSectionTitle(doc, L, y, "Velório e Sepultamento");
 
   const localVel = getLocalVelorio(form || {}) || "—";
@@ -204,25 +204,25 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
   drawField(doc, L,       y, "Local do velório",  localVel,                                C);
   drawField(doc, L + C,   y, "Tempo",             tempoVel,                                C);
   drawField(doc, L + C*2, y, "Cemitério",         getCemiterioNome(form?.cemiterio) || "—", C);
-  y += 9;
+  y += 11;
 
   drawField(doc, L,       y, "Início do velório", form?.horarioVelorio || "—",             C);
   drawField(doc, L + C,   y, "Data / Hora saída", saidaText || "—",                        C);
-  y += 9;
+  y += 11;
 
   // ── RESPONSÁVEL ──────────────────────────────────────────────────────────────
 
-  drawSep(doc, L, y, W); y += 2;
+  drawSep(doc, L, y, W); y += 3;
   y = drawSectionTitle(doc, L, y, "Responsável");
 
   drawField(doc, L,         y, "Nome",       form?.responsavelNome || "—",         C * 2);
   drawField(doc, L + C * 2, y, "Parentesco", form?.parentesco || "—",              C);
-  y += 9;
+  y += 11;
 
   drawField(doc, L,       y, "CPF",    form?.responsavelCpf  ? maskCpf(form.responsavelCpf)  : "—", C);
   drawField(doc, L + C,   y, "RG",     form?.responsavelRg   ? maskRg(form.responsavelRg)    : "—", C);
   drawField(doc, L + C*2, y, "Celular", form?.responsavelCelular1 ? maskCel(form.responsavelCelular1) : "—", C);
-  y += 9;
+  y += 11;
 
   const enderecoResp = [
     form?.responsavelEndereco,
@@ -233,20 +233,20 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
   ].filter(Boolean).join("") || "—";
 
   drawField(doc, L, y, "Endereço", enderecoResp, W);
-  y += 9;
+  y += 11;
 
   // ── SERVIÇOS CONTRATADOS ─────────────────────────────────────────────────────
 
-  drawSep(doc, L, y, W); y += 2;
+  drawSep(doc, L, y, W); y += 3;
   const servY = y;
   y = drawSectionTitle(doc, L, y, "Serviços Contratados");
 
   // Total alinhado à direita
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.setTextColor("#111111");
   const totalStr = `Total: R$ ${formatMoney(atendimento?.totalValue || 0)}`;
-  doc.text(totalStr, L + W - doc.getTextWidth(totalStr), servY + 4);
+  doc.text(totalStr, L + W - doc.getTextWidth(totalStr), servY + 5);
 
   // Texto corrido dos serviços
   const servTexto = servicosAtivos.map(s => {
@@ -261,10 +261,10 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
   }).join("  ·  ");
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.setTextColor("#333333");
   const servLines = doc.splitTextToSize(servTexto || "Nenhum serviço.", W);
-  const maxServLines = 7;
+  const maxServLines = 6;
   servLines.slice(0, maxServLines).forEach((line, i) => {
     doc.text(line, L, y + i * LHEIGHT);
   });
@@ -272,7 +272,7 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
 
   // ── TERMO DE AUTORIZAÇÃO ─────────────────────────────────────────────────────
 
-  drawSep(doc, L, y, W); y += 2;
+  drawSep(doc, L, y, W); y += 3;
   y = drawSectionTitle(doc, L, y, "Termo de Autorização");
 
   const termoPartes = [
@@ -291,10 +291,10 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
   ].filter(Boolean).join("  ·  ");
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.setTextColor("#333333");
   const termoLines = doc.splitTextToSize(termoPartes || "—", W);
-  const maxTermoLines = 7;
+  const maxTermoLines = 5;
   termoLines.slice(0, maxTermoLines).forEach((line, i) => {
     doc.text(line, L, y + i * LHEIGHT);
   });
@@ -302,7 +302,7 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
 
   // ── ETAPAS OPERACIONAIS ───────────────────────────────────────────────────────
 
-  drawSep(doc, L, y, W); y += 2;
+  drawSep(doc, L, y, W); y += 3;
   y = drawSectionTitle(doc, L, y, "Etapas Operacionais");
 
   // Construir segmentos coloridos para texto corrido
