@@ -157,9 +157,8 @@ export function DetalhesServico({ atendimento, onVoltar, openPdfPreview }) {
   const idadeFalecimento = calcularIdade(form.dataNascimento, form.dataFalecimento);
   const servicosAtivos   = services.filter(s => s.checked);
 
-  async function handleGerarPdf() {
-    const nomeArquivo = `detalhes-${(atendimento?.falecido || "servico").replace(/\s+/g, "-").toLowerCase()}.pdf`;
-    await gerarDetalhePDF("ficha-detalhe", nomeArquivo, openPdfPreview);
+  function handleGerarPdf() {
+    gerarDetalhePDF({ atendimento, form, services, openPdfPreview });
   }
 
   // ── Velório ──────────────────────────────────────────────────────────────────
