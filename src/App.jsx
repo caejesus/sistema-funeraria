@@ -656,10 +656,13 @@ export default function App() {
               </div>
             </button>
           </div>
-          <footer className="home-footer">
-            © 2026 Caetano Digital System · Todos os direitos reservados
-          </footer>
         </section>
+      )}
+
+      {activeTab === "home" && (
+        <footer className="home-footer">
+          © 2026 Caetano Digital System · Todos os direitos reservados
+        </footer>
       )}
 
       {activeTab === "atendimentos" && detalhesServico && (

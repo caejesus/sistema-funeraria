@@ -14,8 +14,7 @@
 
 /* ─── Home — no-scroll layout ────────────────────────────────────────────── */
 .app-shell--home {
-  height: 100vh;
-  min-height: 0;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -30,7 +29,7 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  padding: 12px 24px;
+  padding: 0 24px 8vh; /* centro óptico: levemente acima do meio */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -325,6 +324,12 @@
   .home-cards-grid,
   .home-cards {
     grid-template-columns: 1fr;
+  }
+
+  .app-shell--home .home-screen {
+    justify-content: flex-start;
+    padding-top: 24px;
+    padding-bottom: 24px;
   }
 }
 
