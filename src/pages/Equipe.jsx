@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import notificationSound from "../assets/notificacao.mp3";
+import { SaidasMotorista, SaidasAviso } from "../components/SaidasMotorista";
+import { useAgora } from "../hooks/useAgora";
 import { formatDateBR, getCemiterioNome, getCemiterioEndereco, getHospitalNome, getHospitalMaps } from "../utils/format";
 import { getInitials, getRoleUiLabel } from "../utils/attendance";
 import { OPERATION_STAGES } from "../constants";
@@ -734,8 +736,11 @@ export default function Equipe({
   session,
   settings,
   audioLiberado = false,
+  saidasApi,
 }) {
   const [abaAtiva, setAbaAtiva]     = useState("operacional");
+  const agora = useAgora();
+  const saidasAbertas = saidasApi?.abertas || [];
   const [expandedId, setExpandedId] = useState(null);
   const [idsVistos, setIdsVistos]   = useState([]);
   const [idsRecentes, setIdsRecentes] = useState([]);
@@ -793,10 +798,21 @@ export default function Equipe({
         </div>
       )}
 
+      {/* Aviso de saídas agendadas próximas */}
+      {saidasApi && (
+        <SaidasAviso
+          abertas={saidasAbertas}
+          agora={agora}
+          audioLiberado={audioLiberado}
+          onVer={() => setAbaAtiva("saidas")}
+        />
+      )}
+
       {/* Tabs */}
       <div style={{ display: "flex", borderBottom: "1px solid var(--border-soft)", marginBottom: 16, overflowX: "auto", scrollbarWidth: "none" }}>
         <Tab label="Operacional"     aba="operacional"  />
         <Tab label="Serviços do Dia" aba="servicos_dia" />
+        {saidasApi && <Tab label={`Saídas${saidasAbertas.length ? ` · ${saidasAbertas.length}` : ""}`} aba="saidas" />}
       </div>
 
       {/* ── ABA OPERACIONAL ──────────────────────────────────────────────── */}
@@ -849,6 +865,11 @@ export default function Equipe({
       {/* ── ABA SERVIÇOS DO DIA ──────────────────────────────────────────── */}
       {abaAtiva === "servicos_dia" && (
         <ServicosDoDiaAba servicos={servicosDoDia} />
+      )}
+
+      {/* ── ABA SAÍDAS ───────────────────────────────────────────────────── */}
+      {abaAtiva === "saidas" && saidasApi && (
+        <SaidasMotorista saidasApi={saidasApi} session={session} settings={settings} agora={agora} />
       )}
     </div>
   );

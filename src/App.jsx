@@ -34,6 +34,8 @@ import { DetalhesServico } from "./components/DetalhesServico";
 import { AlterarSenhaModal } from "./components/AlterarSenhaModal";
 
 import { useOrdemServico } from "./hooks/useOrdemServico";
+import { useSaidas } from "./hooks/useSaidas";
+import { SaidasTab } from "./components/SaidasTab";
 
 // ─── Login shared panel ───────────────────────────────────────────────────────
 
@@ -155,6 +157,8 @@ export default function App() {
 
   const { users, settings, bootLoading, addSettingItem, removeSettingItem, addUser, updateUser, removeUser } =
     useSettings();
+
+  const saidasApi = useSaidas(session);
 
   const {
     ordens,
@@ -436,6 +440,7 @@ export default function App() {
           session={session}
           settings={settings}
           audioLiberado={audioLiberadoEquipe}
+          saidasApi={saidasApi}
         />
       </div>
     );
@@ -611,6 +616,11 @@ export default function App() {
           <button style={activeTab === "equipe" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("equipe")}>Equipe</button>
           <button style={activeTab === "frota" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("frota")}>Frota</button>
           {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
+            <button style={activeTab === "saidas" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("saidas")}>
+              Saídas{saidasApi.abertas.length ? ` (${saidasApi.abertas.length})` : ""}
+            </button>
+          )}
+          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
             <button style={activeTab === "os" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("os")}>OS</button>
           )}
           {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
@@ -706,7 +716,13 @@ export default function App() {
           servicosDoDia={servicosDoDia}
           session={session}
           settings={settings}
+          audioLiberado={audioLiberadoEquipe}
+          saidasApi={saidasApi}
         />
+      )}
+
+      {activeTab === "saidas" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
+        <SaidasTab saidasApi={saidasApi} />
       )}
 
       {activeTab === "servicos_dia" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
