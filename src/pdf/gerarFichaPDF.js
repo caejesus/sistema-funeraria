@@ -104,7 +104,7 @@ export function gerarFichaPdf({
       // L6 — DATA/ATEND + CHEGOU NA CLÍNICA + INÍCIO ÀS
       drawCell(doc, left, y, 60, 5.9, `DATA/ATEND: ${formatDateBR(form.dataAtendimento)}`, { bold: true, fontSize: 12 });
       drawCell(doc, 65,   y, 95, 5.9, `CHEGOU NA CLÍNICA ÀS: ${form.chegouClinica}`, { bold: true, fontSize: 7.8 });
-      drawCell(doc, 160,  y, 45, 5.9, `INÍCIO ÀS: ${form.inicioAs}`, { bold: true, fontSize: 12 });
+      drawCell(doc, 160,  y, 45, 5.9, `INÍCIO ÀS: ${form.horarioVelorio || form.inicioAs || ""}`, { bold: true, fontSize: 12 });
       y += 5.9;
 
       // L7 — TIPO DE SERVIÇO

@@ -113,7 +113,7 @@ export function gerarFichaTecnicoPdf({ form, services, numero, openPdfPreview })
 
   // Chegou na clínica + Início
   writeLineValue("Chegou na clínica às:", safeText(form.chegouClinica), left, y, left + 48, 104);
-  writeLineValue("Início às:", safeText(form.inicioAs), 107, y, 120, 196, { valueX: 121.5 });
+  writeLineValue("Início às:", safeText(form.horarioVelorio || form.inicioAs), 107, y, 120, 196, { valueX: 121.5 });
   y += 4;
 
   sep();

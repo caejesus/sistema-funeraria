@@ -82,7 +82,7 @@ export function gerarTermoPdf({ form, formatDateBR, openPdfPreview }) {
       }
   
       const tempoVelorio = safeText(form.tempoVelorioValor);
-      const horarioVelorio = safeText(form.horarioVelorio);
+      const horarioVelorio = safeText(form.horarioVelorio || form.inicioAs);
       const tecnicoNome = upper(form.tecnico);
       const atendenteNome = upper(form.atendenteGeral || form.atendenteEntrega);
   

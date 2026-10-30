@@ -206,7 +206,7 @@ export function gerarDetalhePDF({ atendimento, form, services, openPdfPreview })
   drawField(doc, L + C*2, y, "Cemitério",         getCemiterioNome(form?.cemiterio) || "—", C);
   y += 11;
 
-  drawField(doc, L,       y, "Início do velório", form?.horarioVelorio || "—",             C);
+  drawField(doc, L,       y, "Início do velório", form?.horarioVelorio || form?.inicioAs || "—",             C);
   drawField(doc, L + C,   y, "Data / Hora saída", saidaText || "—",                        C);
   y += 11;
 

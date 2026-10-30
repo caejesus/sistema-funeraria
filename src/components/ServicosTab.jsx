@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { formatDateBR, formatMoney, getCemiterioNome, getHospitalNome } from "../utils/format";
+import { formatDateBR, getCemiterioNome, getHospitalNome } from "../utils/format";
+import { SERVICE_TYPE_OPTIONS } from "../constants";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -44,6 +45,28 @@ function InfoCell({ label, value, valueStyle }) {
       </div>
     </div>
   );
+}
+
+// ─── Helpers do card ──────────────────────────────────────────────────────────
+
+function getTipoServicoLabel(value) {
+  if (!value) return "";
+  return SERVICE_TYPE_OPTIONS.find((o) => o.value === value)?.label || String(value).toUpperCase();
+}
+
+function getWhatsAppLink(phone) {
+  let digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.length === 10 || digits.length === 11) digits = `55${digits}`;
+  if (digits.length < 12) return "";
+  return `https://wa.me/${digits}`;
+}
+
+function getSaidaLabel(form) {
+  const data = formatDateBR(form?.dataSaida || "");
+  const hora = form?.horaSaida || "";
+  if (data && hora) return `${data} às ${hora}`;
+  return data || hora || "";
 }
 
 // ─── Tab list ─────────────────────────────────────────────────────────────────
@@ -224,6 +247,10 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map((item) => {
             const equipeAcionada = !!item.equipeAcionada;
+            const telefoneResponsavel = item.form?.responsavelCelular1 || item.form?.responsavelCelular2 || "";
+            const whatsLink = getWhatsAppLink(telefoneResponsavel);
+            const saidaLabel = getSaidaLabel(item.form);
+            const tipoServico = getTipoServicoLabel(item.form?.tipoPlano);
             const metaParts = [
               formatDateBR(item.dataAtendimento || ""),
               item.horaAtendimento || "",
@@ -270,15 +297,48 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                   padding: 14,
                   marginBottom: 16,
                 }}>
-                  <InfoCell label="Responsável" value={item.responsavelNome} />
-                  <InfoCell label="Cemitério"   value={getCemiterioNome(item.cemiterio)} />
-                  <InfoCell label="Atendente"   value={item.atendente} />
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 3 }}>
+                      Responsável
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-main)" }}>
+                        {item.responsavelNome || "—"}
+                      </span>
+                      {whatsLink && (
+                        <a
+                          href={whatsLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`WhatsApp: ${telefoneResponsavel}`}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 5,
+                            fontSize: 12, fontWeight: 600, color: "#15803d",
+                            background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)",
+                            borderRadius: 999, padding: "2px 10px", textDecoration: "none",
+                          }}
+                        >
+                          <i className="fa-brands fa-whatsapp" />WhatsApp
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 3 }}>
+                      Cemitério
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text-main)" }}>
+                      {getCemiterioNome(item.cemiterio) || "—"}
+                    </div>
+                    {saidaLabel && (
+                      <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                        <i className="fa-regular fa-clock" style={{ marginRight: 5 }} />Saída: {saidaLabel}
+                      </div>
+                    )}
+                  </div>
+                  <InfoCell label="Tipo de serviço" value={tipoServico} />
                   <InfoCell label="Local do óbito" value={getHospitalNome(item.localObito)} />
-                  <InfoCell
-                    label="Total"
-                    value={item.totalValue != null ? `R$ ${formatMoney(item.totalValue)}` : null}
-                    valueStyle={{ color: "var(--brand-accent)" }}
-                  />
+                  <InfoCell label="Atendente"   value={item.atendente} />
                   <InfoCell
                     label="Equipe"
                     value={equipeAcionada ? "Acionada" : "Não acionada"}

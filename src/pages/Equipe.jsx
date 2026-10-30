@@ -302,7 +302,7 @@ function getStageContent(key, form, item) {
   }
 
   if (key === "velorio") {
-    if (form.horarioVelorio)    infos.push({ label: "HORÁRIO",         value: form.horarioVelorio });
+    if (form.horarioVelorio || form.inicioAs) infos.push({ label: "INÍCIO DO VELÓRIO", value: form.horarioVelorio || form.inicioAs });
     if (form.tempoVelorioValor) infos.push({ label: "TEMPO DE VELÓRIO", value: `${form.tempoVelorioValor} ${form.tempoVelorioUnidade || ""}`.trim() });
   }
 

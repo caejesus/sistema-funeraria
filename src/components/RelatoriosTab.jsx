@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { styles } from "../styles/appStyles";
-import { formatMoney, getCemiterioNome } from "../utils/format";
+import { getCemiterioNome } from "../utils/format";
 import { SERVICE_TYPE_OPTIONS } from "../constants";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -83,29 +83,6 @@ function ProgressRow({ label, count, total, color = "var(--brand-accent)" }) {
   );
 }
 
-function StatBox({ label, value, sub }) {
-  return (
-    <div style={{
-      background: "var(--card-bg-alt)",
-      border: "1px solid var(--border-soft)",
-      borderRadius: 16,
-      padding: "16px 18px",
-    }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-main)", lineHeight: 1.1 }}>
-        {value}
-      </div>
-      {sub && (
-        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>{sub}</div>
-      )}
-    </div>
-  );
-}
-
-// ─── Main component ───────────────────────────────────────────────────────────
-
 export function RelatoriosTab({ atendimentos }) {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
@@ -149,18 +126,8 @@ export function RelatoriosTab({ atendimentos }) {
     [lista]
   );
 
-  // ── Relatório 3 — Financeiro ──────────────────────────────────────────────
-  const financeiro = useMemo(() => {
-    if (total === 0) return { totalGeral: 0, media: 0, maiorItem: null, top5: [] };
-
-    const totalGeral = lista.reduce((acc, item) => acc + Number(item.totalValue || 0), 0);
-    const media = totalGeral / total;
-
-    const maiorItem = lista.reduce(
-      (max, item) => Number(item.totalValue || 0) > Number(max.totalValue || 0) ? item : max,
-      lista[0]
-    );
-
+  // ── Relatório 3 — Serviços mais contratados ───────────────────────────────
+  const topServicos = useMemo(() => {
     const servicosContagem = {};
     lista.forEach((item) => {
       (item.services || []).forEach((s) => {
@@ -169,12 +136,10 @@ export function RelatoriosTab({ atendimentos }) {
         }
       });
     });
-    const top5 = Object.entries(servicosContagem)
+    return Object.entries(servicosContagem)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5);
-
-    return { totalGeral, media, maiorItem, top5 };
-  }, [lista, total]);
+  }, [lista]);
 
   // ── Relatório 4 — Por cemitério ───────────────────────────────────────────
   const porCemiterio = useMemo(
@@ -255,30 +220,13 @@ export function RelatoriosTab({ atendimentos }) {
             ))}
           </ReportCard>
 
-          {/* Relatório 3 — Financeiro */}
-          <ReportCard title="Resumo Financeiro" icon={<i className="fa-solid fa-circle-dollar-to-slot" />}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
-              <StatBox
-                label="Total arrecadado"
-                value={`R$ ${formatMoney(financeiro.totalGeral)}`}
-              />
-              <StatBox
-                label="Valor médio"
-                value={`R$ ${formatMoney(financeiro.media)}`}
-                sub={`por atendimento`}
-              />
-              <StatBox
-                label="Maior atendimento"
-                value={`R$ ${formatMoney(financeiro.maiorItem?.totalValue || 0)}`}
-                sub={financeiro.maiorItem?.falecido || financeiro.maiorItem?.form?.falecido || "—"}
-              />
-            </div>
-
-            {financeiro.top5.length > 0 && (
+          {/* Relatório 3 — Serviços mais contratados */}
+          {topServicos.length > 0 && (
+          <ReportCard title="Serviços mais contratados" icon={<i className="fa-solid fa-ranking-star" />}>
+            {(
               <>
-                <div style={{ ...styles.label, marginBottom: 12 }}>Top 5 serviços mais contratados</div>
-                {financeiro.top5.map(([nome, count], idx) => {
-                  const pctTop = financeiro.top5[0][1] > 0 ? Math.round((count / financeiro.top5[0][1]) * 100) : 0;
+                {topServicos.map(([nome, count], idx) => {
+                  const pctTop = topServicos[0][1] > 0 ? Math.round((count / topServicos[0][1]) * 100) : 0;
                   const medalColors = ["#f59e0b", "#94a3b8", "#b45309"];
                   const medalBg = medalColors[idx] || "var(--info-pill-bg)";
                   return (
@@ -307,6 +255,7 @@ export function RelatoriosTab({ atendimentos }) {
               </>
             )}
           </ReportCard>
+          )}
 
           {/* Relatório 4 — Por Cemitério */}
           <ReportCard title="Por Cemitério" icon={<i className="fa-solid fa-cross" />}>

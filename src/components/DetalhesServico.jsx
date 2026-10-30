@@ -284,7 +284,7 @@ export function DetalhesServico({ atendimento, onVoltar, openPdfPreview }) {
         <Grid cols={3}>
           <Field label="Local do velório"  value={localVelorio || undefined} />
           {enderecVelorio && <Field label="Endereço" value={enderecVelorio} span={2} />}
-          <Field label="Início do velório" value={form.horarioVelorio} />
+          <Field label="Início do velório" value={form.horarioVelorio || form.inicioAs} />
           <Field label="Tempo"
             value={form.tempoVelorioValor
               ? `${form.tempoVelorioValor} ${form.tempoVelorioUnidade || ""}`.trim()

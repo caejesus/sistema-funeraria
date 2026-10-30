@@ -902,8 +902,8 @@ export default function App() {
                     <input type="time" style={styles.input} value={form.chegouClinica} onChange={(e) => updateForm("chegouClinica", e.target.value)} />
                   </div>
                   <div style={styles.field}>
-                    <label style={styles.label}>Início às</label>
-                    <input type="time" style={styles.input} value={form.inicioAs} onChange={(e) => updateForm("inicioAs", e.target.value)} />
+                    <label style={styles.label}>Início do velório</label>
+                    <input type="time" style={styles.input} value={form.horarioVelorio || form.inicioAs || ""} onChange={(e) => updateForm("horarioVelorio", e.target.value)} />
                   </div>
                 </div>
 
@@ -1024,10 +1024,6 @@ export default function App() {
                         <option value="dias">Dias</option>
                       </select>
                     </div>
-                  </div>
-                  <div style={styles.field}>
-                    <label style={styles.label}>Horário</label>
-                    <input type="time" style={styles.input} value={form.horarioVelorio} onChange={(e) => updateForm("horarioVelorio", e.target.value)} />
                   </div>
                 </div>
 

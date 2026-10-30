@@ -16,7 +16,6 @@ export function getInitialForm() {
     horaAtendimento: currentTime(),
     dataAtendimento: todayDate(),
     chegouClinica: "",
-    inicioAs: "",
     tipoPlano: "particular",
     plano: "",
     codigo: "",
