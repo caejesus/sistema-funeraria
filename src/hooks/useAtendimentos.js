@@ -277,6 +277,7 @@ export function useAtendimentos({
       createdAt: existingRecord?.createdAt || now,
       updatedAt: now,
       falecido: preparedForm.falecido,
+      unidadeAtendimento: preparedForm.unidadeAtendimento || "",
       responsavelNome: preparedForm.responsavelNome,
       cemiterio: preparedForm.cemiterio,
       unidade: preparedForm.velorioUnidade,

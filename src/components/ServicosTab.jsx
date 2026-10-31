@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { formatDateBR, getCemiterioNome, getHospitalNome } from "../utils/format";
 import { SERVICE_TYPE_OPTIONS } from "../constants";
+import { getUnidadeAtendimento } from "../constants/unidadesAtendimento";
+import { UnidadeBadge } from "./UnidadeBadge";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -251,6 +253,8 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
             const whatsLink = getWhatsAppLink(telefoneResponsavel);
             const saidaLabel = getSaidaLabel(item.form);
             const tipoServico = getTipoServicoLabel(item.form?.tipoPlano);
+            const unidadeAtendimento = item.unidadeAtendimento || item.form?.unidadeAtendimento || "";
+            const atendente = item.atendente || item.form?.atendenteGeral || item.operationalStages?.atendimento?.attendant || "—";
             const metaParts = [
               formatDateBR(item.dataAtendimento || ""),
               item.horaAtendimento || "",
@@ -272,8 +276,11 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                 {/* Top row */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 11, color: "var(--brand-accent)", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 600, marginBottom: 4 }}>
-                      {item.numero || "—"}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, color: "var(--brand-accent)", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 600 }}>
+                        {item.numero || "—"}
+                      </span>
+                      <UnidadeBadge value={unidadeAtendimento} />
                     </div>
                     <div style={{ fontSize: 18, fontWeight: 500, color: "var(--text-main)", marginBottom: 4 }}>
                       {item.falecido || "Sem nome informado"}
@@ -338,7 +345,12 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                   </div>
                   <InfoCell label="Tipo de serviço" value={tipoServico} />
                   <InfoCell label="Local do óbito" value={getHospitalNome(item.localObito)} />
-                  <InfoCell label="Atendente"   value={item.atendente} />
+                  <InfoCell
+                    label="Unidade de atendimento"
+                    value={getUnidadeAtendimento(unidadeAtendimento)?.label || "Não informada"}
+                    valueStyle={{ color: getUnidadeAtendimento(unidadeAtendimento)?.textoFundo || "var(--text-muted)", fontWeight: 700 }}
+                  />
+                  <InfoCell label="Atendente"   value={atendente} />
                   <InfoCell
                     label="Equipe"
                     value={equipeAcionada ? "Acionada" : "Não acionada"}

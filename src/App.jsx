@@ -38,6 +38,8 @@ import { useSaidas } from "./hooks/useSaidas";
 import { SaidasTab } from "./components/SaidasTab";
 import { HorarioSaidaPicker } from "./components/HorarioSaidaPicker";
 import { getSalasOcupadas } from "./constants/horariosSaida";
+import { UNIDADES_ATENDIMENTO, getUnidadeAtendimento } from "./constants/unidadesAtendimento";
+import { UnidadeBadge } from "./components/UnidadeBadge";
 
 // ─── Login shared panel ───────────────────────────────────────────────────────
 
@@ -219,6 +221,9 @@ export default function App() {
       ),
     [atendimentos]
   );
+
+  const unidadeSelecionada = getUnidadeAtendimento(form.unidadeAtendimento);
+  const inicioAtendimentoOk = !!form.unidadeAtendimento && !!form.tipoPlano;
 
   const salasOcupadas = useMemo(
     () => getSalasOcupadas(atendimentos, editingAttendanceId),
@@ -763,6 +768,58 @@ export default function App() {
               ><i className="fa-solid fa-xmark" /></button>
             </div>
           )}
+          {/* Início: unidade de atendimento + tipo de serviço */}
+          <section style={styles.card}>
+            <h3 style={styles.cardTitle}>Novo atendimento</h3>
+            <div style={{ ...styles.grid3, marginTop: 4 }}>
+              <div style={styles.fieldWide}>
+                <label style={styles.label}>Unidade de atendimento</label>
+                <select
+                  style={{
+                    ...styles.input,
+                    ...(unidadeSelecionada ? { borderColor: unidadeSelecionada.cor, boxShadow: `0 0 0 3px ${unidadeSelecionada.fundo}` } : {}),
+                  }}
+                  value={form.unidadeAtendimento || ""}
+                  onChange={(e) => updateForm("unidadeAtendimento", e.target.value)}
+                >
+                  <option value="">Selecione a unidade</option>
+                  {UNIDADES_ATENDIMENTO.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
+                </select>
+                {unidadeSelecionada && <div><UnidadeBadge value={form.unidadeAtendimento} solido /></div>}
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Tipo de serviço</label>
+                <select style={styles.input} value={form.tipoPlano || ""} onChange={(e) => updateForm("tipoPlano", e.target.value)}>
+                  <option value="">Selecione o tipo</option>
+                  {SERVICE_TYPE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {["socio_especial", "socio_luxo", "socio_premium"].includes(form.tipoPlano) && (
+              <div style={styles.grid3}>
+                <div style={styles.field}>
+                  <label style={styles.label}>Código</label>
+                  <input style={styles.input} value={form.codigo} onChange={(e) => updateForm("codigo", e.target.value)} />
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>Dependente</label>
+                  <input style={styles.input} value={form.dependente} onChange={(e) => updateForm("dependente", e.target.value)} />
+                </div>
+              </div>
+            )}
+
+            {!inicioAtendimentoOk && (
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--text-muted)" }}>
+                Escolha a unidade de atendimento e o tipo de serviço para continuar.
+              </p>
+            )}
+          </section>
+
+          {inicioAtendimentoOk && (
+          <>
           <section style={styles.card}>
             <button type="button" style={styles.sectionToggle} onClick={() => toggleSection("atendimentoParte1")}>
               <span style={styles.cardTitle}>Parte 1 — Atendimento</span>
@@ -950,29 +1007,6 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={styles.separator} />
-
-                <div style={styles.field}>
-                  <label style={styles.label}>Tipo de serviço</label>
-                  <select style={styles.input} value={form.tipoPlano} onChange={(e) => updateForm("tipoPlano", e.target.value)}>
-                    {SERVICE_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {["socio_especial", "socio_luxo", "socio_premium"].includes(form.tipoPlano) && (
-                  <div style={styles.grid3}>
-                    <div style={styles.field}>
-                      <label style={styles.label}>Código</label>
-                      <input style={styles.input} value={form.codigo} onChange={(e) => updateForm("codigo", e.target.value)} />
-                    </div>
-                    <div style={styles.field}>
-                      <label style={styles.label}>Dependente</label>
-                      <input style={styles.input} value={form.dependente} onChange={(e) => updateForm("dependente", e.target.value)} />
-                    </div>
-                  </div>
-                )}
               </>
             )}
           </section>
@@ -1283,6 +1317,8 @@ export default function App() {
               </>
             )}
           </section>
+          </>
+          )}
         </>
       )}
 
