@@ -31,3 +31,30 @@ export function formatHorarioLabel(hora) {
   const [h, m] = hora.split(":");
   return m === "00" ? `${h}h` : `${h}:${m}`;
 }
+
+// ─── Salas de velório ─────────────────────────────────────────────────────────
+// Uma sala fica ocupada enquanto houver atendimento ativo nela: não concluído
+// e com a data de saída hoje ou no futuro (ou ainda sem data de saída).
+
+function hojeISO() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// Mapa "Unidade" → { "Sala": nome do falecido }
+export function getSalasOcupadas(atendimentos, ignorarId) {
+  const hoje = hojeISO();
+  const mapa = {};
+  (atendimentos || []).forEach((item) => {
+    if (!item || String(item.id) === String(ignorarId)) return;
+    if (item.status === "Concluído") return;
+    const f = item.form || {};
+    if (f.velorioTipo && f.velorioTipo !== "funeraria") return;
+    if (!f.velorioUnidade || !f.velorioSala) return;
+    if (f.dataSaida && f.dataSaida < hoje) return;
+    mapa[f.velorioUnidade] = mapa[f.velorioUnidade] || {};
+    mapa[f.velorioUnidade][f.velorioSala] = f.falecido || item.falecido || "Outro atendimento";
+  });
+  return mapa;
+}

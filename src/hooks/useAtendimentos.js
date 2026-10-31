@@ -185,6 +185,34 @@ export function useAtendimentos({
     const now = new Date().toISOString();
     const recordId = editingAttendanceId || String(Date.now());
 
+    // Sala de velório: confere no banco se está em uso por outro atendimento ativo
+    if (preparedForm.velorioTipo === "funeraria" && preparedForm.velorioUnidade && preparedForm.velorioSala) {
+      const hoje = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      const hojeISO = `${hoje.getFullYear()}-${pad(hoje.getMonth() + 1)}-${pad(hoje.getDate())}`;
+      const { data: salaConflitos, error: salaErro } = await supabase
+        .from("atendimentos")
+        .select("record_id, falecido, status, dataSaida:dados->form->>dataSaida")
+        .eq("dados->form->>velorioTipo", "funeraria")
+        .eq("dados->form->>velorioUnidade", preparedForm.velorioUnidade)
+        .eq("dados->form->>velorioSala", preparedForm.velorioSala)
+        .neq("record_id", String(recordId));
+      if (salaErro) {
+        console.error("Erro ao conferir sala:", salaErro);
+      } else {
+        const emUso = (salaConflitos || []).find(
+          (c) => c.status !== "Concluído" && (!c.dataSaida || c.dataSaida >= hojeISO)
+        );
+        if (emUso) {
+          alert(
+            `A ${preparedForm.velorioSala} da ${preparedForm.velorioUnidade} está em uso por ` +
+            `${emUso.falecido || "outro atendimento"}.\n\nEscolha outra sala.`
+          );
+          return;
+        }
+      }
+    }
+
     // Horário de saída padrão: confere no banco se outro atendente já marcou
     if (preparedForm.dataSaida && preparedForm.horaSaida && !preparedForm.horaSaidaManual && isHorarioPadrao(preparedForm.horaSaida)) {
       const { data: conflitos, error: conflitoErro } = await supabase

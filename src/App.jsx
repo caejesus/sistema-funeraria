@@ -37,6 +37,7 @@ import { useOrdemServico } from "./hooks/useOrdemServico";
 import { useSaidas } from "./hooks/useSaidas";
 import { SaidasTab } from "./components/SaidasTab";
 import { HorarioSaidaPicker } from "./components/HorarioSaidaPicker";
+import { getSalasOcupadas } from "./constants/horariosSaida";
 
 // ─── Login shared panel ───────────────────────────────────────────────────────
 
@@ -217,6 +218,11 @@ export default function App() {
           ["Aguardando início", "Em andamento", "Em progresso"].includes(item.status)
       ),
     [atendimentos]
+  );
+
+  const salasOcupadas = useMemo(
+    () => getSalasOcupadas(atendimentos, editingAttendanceId),
+    [atendimentos, editingAttendanceId]
   );
 
   const servicosDoDia = useMemo(() => {
@@ -835,15 +841,31 @@ export default function App() {
                         <label style={styles.label}>Unidade</label>
                         <select style={styles.input} value={form.velorioUnidade} onChange={(e) => { updateForm("velorioUnidade", e.target.value); updateForm("velorioSala", ""); }}>
                           <option value="">Selecione</option>
-                          {Object.keys(FUNERAL_UNITS).map((u) => <option key={u} value={u}>{u}</option>)}
+                          {Object.keys(FUNERAL_UNITS).map((u) => {
+                            const ocupadasUnidade = salasOcupadas[u] || {};
+                            const livres = FUNERAL_UNITS[u].filter((room) => !ocupadasUnidade[room]).length;
+                            const lotada = livres === 0 && form.velorioUnidade !== u;
+                            return (
+                              <option key={u} value={u} disabled={lotada}>
+                                {u}{lotada ? " — lotada" : ` (${livres} livre${livres === 1 ? "" : "s"})`}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                       <div style={styles.field}>
                         <label style={styles.label}>Sala</label>
                         <select style={styles.input} value={form.velorioSala} onChange={(e) => updateForm("velorioSala", e.target.value)}>
-                          <option value="">Selecione</option>
-                          {(FUNERAL_UNITS[form.velorioUnidade] || []).map((room) => <option key={room} value={room}>{room}</option>)}
+                          <option value="">{form.velorioUnidade ? "Selecione" : "Escolha a unidade"}</option>
+                          {(FUNERAL_UNITS[form.velorioUnidade] || [])
+                            .filter((room) => !(salasOcupadas[form.velorioUnidade] || {})[room] || room === form.velorioSala)
+                            .map((room) => <option key={room} value={room}>{room}</option>)}
                         </select>
+                        {form.velorioSala && (salasOcupadas[form.velorioUnidade] || {})[form.velorioSala] && (
+                          <span style={styles.errorText}>
+                            Sala em uso por {(salasOcupadas[form.velorioUnidade] || {})[form.velorioSala]}. Escolha outra.
+                          </span>
+                        )}
                       </div>
                     </>
                   )}
@@ -903,7 +925,7 @@ export default function App() {
                     <input type="date" style={styles.input} value={form.dataSaida} onChange={(e) => updateForm("dataSaida", e.target.value)} />
                   </div>
                   <HorarioSaidaPicker
-                    key={editingAttendanceId || "novo"}
+                    key={`${editingAttendanceId || "novo"}-${form.horaSaidaManual ? "m" : "p"}`}
                     form={form}
                     updateForm={updateForm}
                     atendimentos={atendimentos}

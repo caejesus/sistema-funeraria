@@ -7,106 +7,79 @@ import {
   formatHorarioLabel,
 } from "../constants/horariosSaida";
 
-// Escolha do horário de saída: botões com horários fixos (um por atendimento por dia)
-// e "Outro horário" para digitar livremente (não bloqueia, permite repetir horário).
+const OUTRO = "__outro__";
+
+// Hora de saída: lista suspensa só com os horários livres do dia
+// + "Outro horário" para digitar (não bloqueia, permite repetir horário).
 export function HorarioSaidaPicker({ form, updateForm, atendimentos, editingId, styles }) {
-  const manualAtivo = !!form.horaSaidaManual || (!!form.horaSaida && !isHorarioPadrao(form.horaSaida));
-  const [mostrarManual, setMostrarManual] = useState(manualAtivo);
+  const manualInicial = !!form.horaSaidaManual || (!!form.horaSaida && !isHorarioPadrao(form.horaSaida));
+  const [manual, setManual] = useState(manualInicial);
 
   const ocupados = useMemo(
     () => getHorariosOcupados(atendimentos, form.dataSaida, editingId),
     [atendimentos, form.dataSaida, editingId]
   );
 
-  function escolher(hora) {
-    updateForm("horaSaida", hora);
+  const livres = (lista) => lista.filter((h) => !ocupados[h] || h === form.horaSaida);
+  const manha = livres(HORARIOS_MANHA);
+  const tarde = livres(HORARIOS_TARDE);
+  const totalOcupados = Object.keys(ocupados).length;
+
+  // O horário atual ficou ocupado por outro atendimento (ex.: marcado ao mesmo tempo)
+  const conflito = !manual && form.horaSaida && ocupados[form.horaSaida];
+
+  function onSelect(e) {
+    const v = e.target.value;
+    if (v === OUTRO) {
+      setManual(true);
+      updateForm("horaSaidaManual", true);
+      updateForm("horaSaida", "");
+      return;
+    }
+    setManual(false);
     updateForm("horaSaidaManual", false);
-    setMostrarManual(false);
+    updateForm("horaSaida", v);
   }
-
-  function abrirManual() {
-    setMostrarManual(true);
-    updateForm("horaSaidaManual", true);
-    if (isHorarioPadrao(form.horaSaida) && !form.horaSaidaManual) updateForm("horaSaida", "");
-  }
-
-  const renderGrupo = (titulo, horarios) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.6 }}>
-        {titulo}
-      </span>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(78px, 1fr))", gap: 8 }}>
-        {horarios.map((hora) => {
-          const dono = ocupados[hora];
-          const selecionado = !form.horaSaidaManual && form.horaSaida === hora;
-          const bloqueado = !!dono && !selecionado;
-          return (
-            <button
-              key={hora}
-              type="button"
-              disabled={bloqueado}
-              onClick={() => escolher(hora)}
-              title={bloqueado ? `Ocupado: ${dono}` : `Saída às ${formatHorarioLabel(hora)}`}
-              style={{
-                minHeight: 52, borderRadius: 12, padding: "6px 4px", cursor: bloqueado ? "not-allowed" : "pointer",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-                border: selecionado ? "2px solid var(--brand-accent)" : "1px solid var(--input-border)",
-                background: selecionado ? "var(--brand-accent)" : bloqueado ? "var(--card-bg-alt)" : "var(--input-bg)",
-                color: selecionado ? "#fff" : bloqueado ? "var(--text-muted)" : "var(--text-main)",
-                opacity: bloqueado ? 0.75 : 1,
-              }}
-            >
-              <span style={{ fontSize: 15, fontWeight: 800, textDecoration: bloqueado ? "line-through" : "none" }}>
-                {formatHorarioLabel(hora)}
-              </span>
-              {bloqueado && (
-                <span style={{ fontSize: 9, fontWeight: 600, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "0 4px" }}>
-                  {dono}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
 
   return (
-    <div style={{ ...styles.fieldWide, gridColumn: "1 / -1" }}>
+    <div style={styles.field}>
       <label style={styles.label}>Hora/Saída</label>
-      {!form.dataSaida && (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Escolha a data de saída para ver os horários livres.</span>
+      <select style={styles.input} value={manual ? OUTRO : form.horaSaida || ""} onChange={onSelect}>
+        <option value="">Selecione</option>
+        {manha.length > 0 && (
+          <optgroup label="Manhã">
+            {manha.map((h) => <option key={h} value={h}>{formatHorarioLabel(h)}</option>)}
+          </optgroup>
+        )}
+        {tarde.length > 0 && (
+          <optgroup label="Tarde">
+            {tarde.map((h) => <option key={h} value={h}>{formatHorarioLabel(h)}</option>)}
+          </optgroup>
+        )}
+        <option value={OUTRO}>Outro horário (digitar)</option>
+      </select>
+
+      {manual && (
+        <input
+          type="time"
+          style={styles.input}
+          value={form.horaSaida || ""}
+          onChange={(e) => {
+            updateForm("horaSaidaManual", true);
+            updateForm("horaSaida", e.target.value);
+          }}
+        />
       )}
 
-      {renderGrupo("Manhã", HORARIOS_MANHA)}
-      {renderGrupo("Tarde", HORARIOS_TARDE)}
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 4 }}>
-        {!mostrarManual ? (
-          <button
-            type="button"
-            onClick={abrirManual}
-            style={{ background: "none", border: "1px dashed var(--input-border)", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "var(--brand-accent)", cursor: "pointer" }}
-          >
-            <i className="fa-regular fa-clock" style={{ marginRight: 6 }} />Outro horário
-          </button>
-        ) : (
-          <>
-            <input
-              type="time"
-              style={{ ...styles.input, maxWidth: 160, borderColor: form.horaSaidaManual ? "var(--brand-accent)" : undefined }}
-              value={form.horaSaidaManual ? form.horaSaida || "" : ""}
-              onChange={(e) => {
-                updateForm("horaSaidaManual", true);
-                updateForm("horaSaida", e.target.value);
-              }}
-            />
-            <span style={{ fontSize: 12, color: "var(--text-muted)", flex: "1 1 220px" }}>
-              Horário digitado não bloqueia a agenda — use quando mais de um veículo sai no mesmo horário.
-            </span>
-          </>
-        )}
-      </div>
+      {conflito ? (
+        <span style={styles.errorText}>Este horário já foi marcado para {ocupados[form.horaSaida]}. Escolha outro.</span>
+      ) : manual ? (
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Horário digitado não bloqueia a agenda.</span>
+      ) : form.dataSaida && totalOcupados > 0 ? (
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          {totalOcupados} horário(s) já ocupado(s) neste dia.
+        </span>
+      ) : null}
     </div>
   );
 }
