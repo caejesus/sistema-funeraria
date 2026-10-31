@@ -8,6 +8,7 @@ import {
 } from "../utils/attendance";
 import { getInitialForm } from "../utils/initialForm";
 import { initialServices, TRANSPORT_STAGE_KEYS } from "../constants";
+import { isHorarioPadrao } from "../constants/horariosSaida";
 
 const TRANSPORT_KEYS_SET = new Set(TRANSPORT_STAGE_KEYS);
 
@@ -183,6 +184,29 @@ export function useAtendimentos({
     const preparedForm = getPreparedFormData(form);
     const now = new Date().toISOString();
     const recordId = editingAttendanceId || String(Date.now());
+
+    // Horário de saída padrão: confere no banco se outro atendente já marcou
+    if (preparedForm.dataSaida && preparedForm.horaSaida && !preparedForm.horaSaidaManual && isHorarioPadrao(preparedForm.horaSaida)) {
+      const { data: conflitos, error: conflitoErro } = await supabase
+        .from("atendimentos")
+        .select("record_id, falecido, manual:dados->form->>horaSaidaManual")
+        .eq("dados->form->>dataSaida", preparedForm.dataSaida)
+        .eq("dados->form->>horaSaida", preparedForm.horaSaida)
+        .neq("record_id", String(recordId));
+      if (conflitoErro) {
+        console.error("Erro ao conferir horário de saída:", conflitoErro);
+      } else {
+        const ocupado = (conflitos || []).find((c) => c.manual !== "true");
+        if (ocupado) {
+          alert(
+            `O horário de saída ${preparedForm.horaSaida} do dia ${preparedForm.dataSaida.split("-").reverse().join("/")} ` +
+            `já foi marcado para ${ocupado.falecido || "outro atendimento"}.\n\n` +
+            `Escolha outro horário ou use "Outro horário" se for sair mais de um veículo no mesmo horário.`
+          );
+          return;
+        }
+      }
+    }
     const existingRecord = atendimentos.find((item) => item.id === recordId);
 
     const existingStages = JSON.parse(

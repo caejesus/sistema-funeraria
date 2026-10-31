@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import notificationSound from "../assets/notificacao.mp3";
 import { SaidasMotorista, SaidasAviso } from "../components/SaidasMotorista";
 import { useAgora } from "../hooks/useAgora";
+import { NotificacoesBotao } from "../components/NotificacoesBotao";
 import { formatDateBR, getCemiterioNome, getCemiterioEndereco, getHospitalNome, getHospitalMaps } from "../utils/format";
 import { getInitials, getRoleUiLabel } from "../utils/attendance";
 import { OPERATION_STAGES } from "../constants";
@@ -797,6 +798,9 @@ export default function Equipe({
           </div>
         </div>
       )}
+
+      {/* Ativar notificações push */}
+      {session && <NotificacoesBotao session={session} />}
 
       {/* Aviso de saídas agendadas próximas */}
       {saidasApi && (

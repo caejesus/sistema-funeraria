@@ -36,6 +36,7 @@ import { AlterarSenhaModal } from "./components/AlterarSenhaModal";
 import { useOrdemServico } from "./hooks/useOrdemServico";
 import { useSaidas } from "./hooks/useSaidas";
 import { SaidasTab } from "./components/SaidasTab";
+import { HorarioSaidaPicker } from "./components/HorarioSaidaPicker";
 
 // ─── Login shared panel ───────────────────────────────────────────────────────
 
@@ -901,10 +902,14 @@ export default function App() {
                     <label style={styles.label}>Data/Saída</label>
                     <input type="date" style={styles.input} value={form.dataSaida} onChange={(e) => updateForm("dataSaida", e.target.value)} />
                   </div>
-                  <div style={styles.field}>
-                    <label style={styles.label}>Hora/Saída</label>
-                    <input type="time" style={styles.input} value={form.horaSaida} onChange={(e) => updateForm("horaSaida", e.target.value)} />
-                  </div>
+                  <HorarioSaidaPicker
+                    key={editingAttendanceId || "novo"}
+                    form={form}
+                    updateForm={updateForm}
+                    atendimentos={atendimentos}
+                    editingId={editingAttendanceId}
+                    styles={styles}
+                  />
                   <div style={styles.field}>
                     <label style={styles.label}>Hora do Atendimento</label>
                     <input type="time" style={styles.input} value={form.horaAtendimento} onChange={(e) => updateForm("horaAtendimento", e.target.value)} />
