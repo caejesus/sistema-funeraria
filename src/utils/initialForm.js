@@ -84,6 +84,9 @@ export function getInitialForm() {
     tempoVelorioValor: "",
     tempoVelorioUnidade: "horas",
     horarioVelorio: "",
+    dataInicioVelorio: "",
+    mensagemFamilia: "",
+    conviteToken: "",
 
     religiao: "católico",
     tecnico: "",

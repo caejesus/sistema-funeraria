@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Equipe from "./pages/Equipe.jsx";
 import AcompanhamentoPublico from "./AcompanhamentoPublico.jsx";
+import ConvitePublico from "./ConvitePublico.jsx";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
 import { gerarFichaPdf } from "./pdf/gerarFichaPDF";
 import { drawCell } from "./pdf/pdfHelpers";
 import { gerarTermoPdf } from "./pdf/gerarTermoPDF";
 import { gerarFichaTecnicoPdf } from "./pdf/gerarFichaTecnicoPDF";
+import { gerarComunicadoPdf, getConviteUrl } from "./pdf/gerarComunicadoPDF";
 
 import { STORAGE_KEYS, FUNERAL_UNITS, SERVICE_TYPE_OPTIONS, initialServices } from "./constants";
 import { formatDateBR, formatMoney, moneyToNumber, formatPeso, formatAltura, getHospitalNome } from "./utils/format";
@@ -176,6 +178,7 @@ export default function App() {
 
   const {
     atendimentos,
+    updateAttendanceRecord,
     deleteAttendance,
     toggleEquipeAcionada,
     finalizarAtendimento,
@@ -388,6 +391,34 @@ export default function App() {
     gerarTermoPdf({ form, formatDateBR, openPdfPreview });
   }
 
+  async function gerarComunicadoPDF() {
+    const currentRecord = atendimentos.find((item) => item.id === editingAttendanceId);
+    let token = form.conviteToken || currentRecord?.form?.conviteToken || "";
+    if (!token) {
+      const ok = window.confirm(
+        "Gerar o comunicado cria um convite online (acessado pelo QR Code) com o nome do falecido, " +
+        "local e horários do velório e do sepultamento.\n\nA família autorizou a divulgação?"
+      );
+      if (!ok) return;
+      token = (crypto.randomUUID?.() || `${Date.now()}${Math.random()}`).replace(/[^a-zA-Z0-9]/g, "").slice(0, 12);
+      if (currentRecord) {
+        const salvo = await updateAttendanceRecord(currentRecord.id, (item) => ({
+          ...item,
+          form: { ...(item.form || {}), conviteToken: token },
+          updatedAt: new Date().toISOString(),
+        }));
+        if (!salvo) return;
+      }
+      setForm((prev) => ({ ...prev, conviteToken: token }));
+    }
+    try {
+      await gerarComunicadoPdf({ form: { ...form, conviteToken: token }, conviteUrl: getConviteUrl(token), openPdfPreview });
+    } catch (err) {
+      console.error("Erro ao gerar comunicado:", err);
+      alert("Não foi possível gerar o comunicado.");
+    }
+  }
+
   function gerarFichaTecnicaPDF() {
     const currentRecord = atendimentos.find((i) => i.id === editingAttendanceId);
     const numero = currentRecord?.numero || "";
@@ -402,6 +433,12 @@ export default function App() {
   const publicTrackingIdDirect = window.location.pathname.match(/^\/acompanhamento\/([^/]+)/)?.[1] || "";
   if (publicTrackingIdDirect) {
     return <AcompanhamentoPublico trackingId={publicTrackingIdDirect} />;
+  }
+
+  // Convite público (QR Code do comunicado)
+  const conviteTokenDirect = window.location.pathname.match(/^\/convite\/([^/]+)/)?.[1] || "";
+  if (conviteTokenDirect) {
+    return <ConvitePublico token={conviteTokenDirect} />;
   }
 
   function renderEquipeContainer() {
@@ -490,6 +527,9 @@ export default function App() {
             </button>
             <button style={styles.primaryBtn} onClick={gerarFichaTecnicaPDF}>
               <i className="fa-solid fa-file-medical" style={styles.buttonIcon} /> Ficha Técnica
+            </button>
+            <button style={styles.primaryBtn} onClick={gerarComunicadoPDF}>
+              <i className="fa-solid fa-qrcode" style={styles.buttonIcon} /> Comunicado (QR)
             </button>
           </div>
         </div>
@@ -1002,8 +1042,21 @@ export default function App() {
                     <input type="time" style={styles.input} value={form.chegouClinica} onChange={(e) => updateForm("chegouClinica", e.target.value)} />
                   </div>
                   <div style={styles.field}>
+                    <label style={styles.label}>Data do início do velório</label>
+                    <input type="date" style={styles.input} value={form.dataInicioVelorio || ""} onChange={(e) => updateForm("dataInicioVelorio", e.target.value)} />
+                  </div>
+                  <div style={styles.field}>
                     <label style={styles.label}>Início do velório</label>
                     <input type="time" style={styles.input} value={form.horarioVelorio || form.inicioAs || ""} onChange={(e) => updateForm("horarioVelorio", e.target.value)} />
+                  </div>
+                  <div style={{ ...styles.fieldWide, gridColumn: "1 / -1" }}>
+                    <label style={styles.label}>Mensagem da família para o convite (opcional)</label>
+                    <textarea
+                      style={{ ...styles.input, minHeight: 70, resize: "vertical" }}
+                      value={form.mensagemFamilia || ""}
+                      placeholder="Ex.: A família agradece o carinho e as orações neste momento."
+                      onChange={(e) => updateForm("mensagemFamilia", e.target.value)}
+                    />
                   </div>
                 </div>
 

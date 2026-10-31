@@ -3,6 +3,7 @@ import { formatDateBR, getCemiterioNome, getHospitalNome } from "../utils/format
 import { SERVICE_TYPE_OPTIONS } from "../constants";
 import { getUnidadeAtendimento } from "../constants/unidadesAtendimento";
 import { UnidadeBadge } from "./UnidadeBadge";
+import { MensagensConviteModal } from "./MensagensConviteModal";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -126,6 +127,7 @@ const primaryBtn = {
 export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEquipeAcionada, onVerDetalhes }) {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("todos");
+  const [mensagensDe, setMensagensDe] = useState(null);
 
   const filtered = useMemo(() => {
     let list = activeTab === "todos"
@@ -142,6 +144,7 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
 
   return (
     <section style={{ paddingBottom: 32 }}>
+      {mensagensDe && <MensagensConviteModal atendimento={mensagensDe} onClose={() => setMensagensDe(null)} />}
 
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
@@ -379,6 +382,11 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                     >
                       <i className="fa-solid fa-share-nodes" style={{ marginRight: 6 }} />Link da família
                     </button>
+                    {item.form?.conviteToken && (
+                      <button style={outlineBtn} onClick={() => setMensagensDe(item)}>
+                        <i className="fa-regular fa-comments" style={{ marginRight: 6 }} />Mensagens
+                      </button>
+                    )}
                     <button
                       style={equipeAcionada
                         ? { ...outlineBtn, border: "1px solid rgba(234,179,8,0.4)", color: "#b45309" }

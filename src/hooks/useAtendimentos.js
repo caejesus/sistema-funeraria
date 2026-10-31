@@ -429,6 +429,7 @@ export function useAtendimentos({
     atendimentos,
     setAtendimentos,
     persistAttendanceRecord,
+    updateAttendanceRecord,
     deleteAttendance,
     toggleEquipeAcionada,
     finalizarAtendimento,
