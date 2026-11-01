@@ -10,7 +10,7 @@ export function MensagensConviteModal({ atendimento, onClose }) {
     let vivo = true;
     supabase
       .from("convite_mensagens")
-      .select("id, nome, mensagem, created_at")
+      .select("id, nome, contato, relacao, mensagem, created_at")
       .eq("atendimento_id", String(atendimento.id))
       .order("created_at", { ascending: true })
       .then(({ data, error }) => {
@@ -46,7 +46,7 @@ export function MensagensConviteModal({ atendimento, onClose }) {
             <div key={m.id} style={{ background: "var(--card-bg-alt)", borderRadius: 12, padding: "12px 14px" }}>
               <div style={{ fontSize: 14, color: "var(--text-main)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{m.mensagem}</div>
               <div style={{ marginTop: 6, fontSize: 12, color: "var(--text-muted)" }}>
-                — {m.nome} · {new Date(m.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                — {m.nome}{m.relacao ? ` (${m.relacao})` : ""}{m.contato ? ` · ${m.contato}` : ""} · {new Date(m.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
               </div>
             </div>
           ))}

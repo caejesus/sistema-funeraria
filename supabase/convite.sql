@@ -8,10 +8,18 @@ create table if not exists public.convite_mensagens (
   atendimento_id  text not null,
   convite_token   text not null default '',
   nome            text not null default '',
+  contato         text not null default '',
+  relacao         text not null default '',
   mensagem        text not null default '',
-  created_at      timestamptz not null default now(),
-  constraint convite_mensagens_tamanho check (char_length(nome) <= 120 and char_length(mensagem) <= 2000)
+  created_at      timestamptz not null default now()
 );
+
+alter table public.convite_mensagens add column if not exists contato text not null default '';
+alter table public.convite_mensagens add column if not exists relacao text not null default '';
+
+alter table public.convite_mensagens drop constraint if exists convite_mensagens_tamanho;
+alter table public.convite_mensagens add constraint convite_mensagens_tamanho
+  check (char_length(nome) <= 120 and char_length(contato) <= 60 and char_length(relacao) <= 60 and char_length(mensagem) <= 2000);
 
 create index if not exists convite_mensagens_atendimento_idx on public.convite_mensagens (atendimento_id, created_at);
 
