@@ -33,19 +33,52 @@ export default async function handler(req, res) {
   }
 
   let falecido = "";
+  const diag = { envUrl: false, envKey: false, origemChave: "", status: null, linhas: null, erro: "" };
   try {
-    const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const key = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    let url = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "").trim().replace(/\/+$/, "");
+    let key = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "").trim();
+    diag.envUrl = !!url;
+    diag.envKey = !!key;
+    diag.origemChave = url && key ? "env" : "";
+
+    // Plano B: a URL e a chave pública (anon) já estão no JS do site; lê de lá.
+    if (!url || !key) {
+      const js = html.match(/src="(\/assets\/[^"]+\.js)"/)?.[1];
+      if (js) {
+        const codigo = await fetch(`${base}${js}`).then((r) => r.text());
+        url = url || codigo.match(/https:\/\/[a-z0-9]{10,}\.supabase\.co/)?.[0] || "";
+        key = key ||
+          codigo.match(/sb_publishable_[A-Za-z0-9_-]{10,}/)?.[0] ||
+          codigo.match(/eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/)?.[0] || "";
+        if (url && key) diag.origemChave = "bundle";
+      }
+    }
+
     if (url && key && /^[a-zA-Z0-9]{6,40}$/.test(token)) {
       const r = await fetch(
-        `${url}/rest/v1/atendimentos?select=falecido&dados->form->>conviteToken=eq.${token}&limit=1`,
-        { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+        `${url}/rest/v1/atendimentos?select=falecido,nomeForm:dados->form->>falecido,nomeDados:dados->>falecido&dados->form->>conviteToken=eq.${token}&limit=1`,
+        { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" } }
       );
+      diag.status = r.status;
       const rows = await r.json();
-      falecido = nomeBonito(rows?.[0]?.falecido || "");
+      if (Array.isArray(rows)) {
+        diag.linhas = rows.length;
+        const l = rows[0] || {};
+        falecido = nomeBonito(l.falecido || l.nomeForm || l.nomeDados || "");
+      } else {
+        diag.erro = String(rows?.message || rows?.hint || "resposta inesperada").slice(0, 200);
+      }
     }
-  } catch {
-    // sem nome: usa título genérico
+  } catch (e) {
+    diag.erro = String(e?.message || e).slice(0, 200);
+  }
+
+  // Diagnóstico: /api/og?tipo=convite&token=XXXX&debug=1 (não mostra chaves)
+  if (req.query.debug) {
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store");
+    res.status(200).send(JSON.stringify({ ...diag, tokenValido: /^[a-zA-Z0-9]{6,40}$/.test(token), nomeEncontrado: !!falecido }, null, 2));
+    return;
   }
 
   const titulo =
