@@ -1,8 +1,7 @@
 {
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/convite/:token", "destination": "/api/og?tipo=convite&token=:token" },
+    { "source": "/mensagens/:token", "destination": "/api/og?tipo=mensagens&token=:token" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

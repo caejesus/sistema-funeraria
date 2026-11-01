@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import Equipe from "./pages/Equipe.jsx";
 import AcompanhamentoPublico from "./AcompanhamentoPublico.jsx";
 import ConvitePublico from "./ConvitePublico.jsx";
+import MensagensPublico from "./MensagensPublico.jsx";
+import { gerarTokenConvite, gerarCodigoMensagens } from "./utils/convite";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
 import { gerarFichaPdf } from "./pdf/gerarFichaPDF";
@@ -391,28 +393,48 @@ export default function App() {
     gerarTermoPdf({ form, formatDateBR, openPdfPreview });
   }
 
-  async function gerarComunicadoPDF() {
-    const currentRecord = atendimentos.find((item) => item.id === editingAttendanceId);
-    let token = form.conviteToken || currentRecord?.form?.conviteToken || "";
+  // Garante que o atendimento tenha convite online (token) e código das mensagens.
+  // Pede autorização da família na primeira vez. Retorna { token, codigo } ou null.
+  async function garantirConvite(recordId) {
+    const registro = atendimentos.find((item) => String(item.id) === String(recordId));
+    const formAtual = String(editingAttendanceId) === String(recordId) ? form : registro?.form || {};
+    let token = formAtual.conviteToken || registro?.form?.conviteToken || "";
+    let codigo = formAtual.codigoMensagens || registro?.form?.codigoMensagens || "";
+    if (token && codigo) return { token, codigo };
+
     if (!token) {
       const ok = window.confirm(
-        "Gerar o comunicado cria um convite online (acessado pelo QR Code) com o nome do falecido, " +
+        "Isso cria o convite online (aberto pelo QR Code e pelo link do convite) com o nome do falecido, " +
         "local e horários do velório e do sepultamento.\n\nA família autorizou a divulgação?"
       );
-      if (!ok) return;
-      token = (crypto.randomUUID?.() || `${Date.now()}${Math.random()}`).replace(/[^a-zA-Z0-9]/g, "").slice(0, 12);
-      if (currentRecord) {
-        const salvo = await updateAttendanceRecord(currentRecord.id, (item) => ({
-          ...item,
-          form: { ...(item.form || {}), conviteToken: token },
-          updatedAt: new Date().toISOString(),
-        }));
-        if (!salvo) return;
-      }
-      setForm((prev) => ({ ...prev, conviteToken: token }));
+      if (!ok) return null;
+      token = gerarTokenConvite();
     }
+    if (!codigo) codigo = gerarCodigoMensagens();
+
+    if (registro) {
+      const salvo = await updateAttendanceRecord(registro.id, (item) => ({
+        ...item,
+        form: { ...(item.form || {}), conviteToken: token, codigoMensagens: codigo },
+        updatedAt: new Date().toISOString(),
+      }));
+      if (!salvo) return null;
+    }
+    if (String(editingAttendanceId) === String(recordId)) {
+      setForm((prev) => ({ ...prev, conviteToken: token, codigoMensagens: codigo }));
+    }
+    return { token, codigo };
+  }
+
+  async function gerarComunicadoPDF() {
+    const convite = await garantirConvite(editingAttendanceId);
+    if (!convite) return;
     try {
-      await gerarComunicadoPdf({ form: { ...form, conviteToken: token }, conviteUrl: getConviteUrl(token), openPdfPreview });
+      await gerarComunicadoPdf({
+        form: { ...form, conviteToken: convite.token, codigoMensagens: convite.codigo },
+        conviteUrl: getConviteUrl(convite.token),
+        openPdfPreview,
+      });
     } catch (err) {
       console.error("Erro ao gerar comunicado:", err);
       alert("Não foi possível gerar o comunicado.");
@@ -439,6 +461,12 @@ export default function App() {
   const conviteTokenDirect = window.location.pathname.match(/^\/convite\/([^/]+)/)?.[1] || "";
   if (conviteTokenDirect) {
     return <ConvitePublico token={conviteTokenDirect} />;
+  }
+
+  // Mensagens do convite para a família (com código de acesso)
+  const mensagensTokenDirect = window.location.pathname.match(/^\/mensagens\/([^/]+)/)?.[1] || "";
+  if (mensagensTokenDirect) {
+    return <MensagensPublico token={mensagensTokenDirect} />;
   }
 
   function renderEquipeContainer() {
@@ -742,6 +770,7 @@ export default function App() {
           onDelete={handleDeleteAttendance}
           toggleEquipeAcionada={toggleEquipeAcionada}
           onVerDetalhes={(item) => setDetalhesServico(item)}
+          garantirConvite={garantirConvite}
         />
       )}
 

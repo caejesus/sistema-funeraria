@@ -4,6 +4,7 @@ import { SERVICE_TYPE_OPTIONS } from "../constants";
 import { getUnidadeAtendimento } from "../constants/unidadesAtendimento";
 import { UnidadeBadge } from "./UnidadeBadge";
 import { MensagensConviteModal } from "./MensagensConviteModal";
+import { linkAcompanhamento, linkConvite } from "../utils/convite";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -124,7 +125,16 @@ const primaryBtn = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEquipeAcionada, onVerDetalhes }) {
+async function copiar(texto, aviso) {
+  try {
+    await navigator.clipboard.writeText(texto);
+    alert(aviso);
+  } catch {
+    window.prompt("Copie o link:", texto);
+  }
+}
+
+export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEquipeAcionada, onVerDetalhes, garantirConvite }) {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("todos");
   const [mensagensDe, setMensagensDe] = useState(null);
@@ -374,16 +384,35 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                     </button>
                     <button
                       style={outlineBtn}
-                      onClick={() => {
-                        const link = `${window.location.origin}/acompanhamento/${item.id}`;
-                        navigator.clipboard.writeText(link);
-                        alert("Link da família copiado!");
-                      }}
+                      onClick={() => copiar(linkAcompanhamento(item.id), "Link de acompanhamento copiado!")}
                     >
-                      <i className="fa-solid fa-share-nodes" style={{ marginRight: 6 }} />Link da família
+                      <i className="fa-solid fa-share-nodes" style={{ marginRight: 6 }} />Link de acompanhamento
                     </button>
+                    {garantirConvite && (
+                      <button
+                        style={outlineBtn}
+                        onClick={async () => {
+                          const convite = await garantirConvite(item.id);
+                          if (convite) copiar(linkConvite(convite.token), "Link do convite copiado!");
+                        }}
+                      >
+                        <i className="fa-solid fa-envelope-open-text" style={{ marginRight: 6 }} />Link do convite
+                      </button>
+                    )}
                     {item.form?.conviteToken && (
-                      <button style={outlineBtn} onClick={() => setMensagensDe(item)}>
+                      <button
+                        style={outlineBtn}
+                        onClick={async () => {
+                          // atendimentos antigos podem não ter código ainda
+                          if (!item.form?.codigoMensagens && garantirConvite) {
+                            const convite = await garantirConvite(item.id);
+                            if (!convite) return;
+                            setMensagensDe({ ...item, form: { ...item.form, conviteToken: convite.token, codigoMensagens: convite.codigo } });
+                            return;
+                          }
+                          setMensagensDe(item);
+                        }}
+                      >
                         <i className="fa-regular fa-comments" style={{ marginRight: 6 }} />Mensagens
                       </button>
                     )}

@@ -23,68 +23,6 @@ const MENSAGENS = {
   sepultamento:        { nao_iniciado: "Sepultamento será realizado.", em_andamento: "Sepultamento em andamento.", finalizado: "Sepultamento concluído." },
 };
 
-
-// ─── Mensagens do convite (visíveis só pela família, neste link) ─────────────
-
-function MensagensFamilia({ trackingId }) {
-  const [mensagens, setMensagens] = useState(null);
-
-  useEffect(() => {
-    let vivo = true;
-    supabase
-      .from("convite_mensagens")
-      .select("id, nome, contato, relacao, mensagem, created_at")
-      .eq("atendimento_id", String(trackingId))
-      .order("created_at", { ascending: true })
-      .then(({ data }) => { if (vivo) setMensagens(data || []); });
-    return () => { vivo = false; };
-  }, [trackingId]);
-
-  if (!mensagens) return null;
-
-  const linkContato = (c) => {
-    const dig = String(c || "").replace(/\D/g, "");
-    if (c && c.includes("@")) return `mailto:${c.trim()}`;
-    if (dig.length >= 10) return `https://wa.me/${dig.length <= 11 ? "55" + dig : dig}`;
-    return "";
-  };
-
-  return (
-    <div style={{ ...S.card, marginTop: 16 }}>
-      <div style={{ fontSize: 11, color: "#93c5fd", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>
-        Mensagens de carinho
-      </div>
-      <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 14 }}>
-        Deixadas por quem acessou o convite. Só a família vê esta lista.
-      </div>
-      {mensagens.length === 0 ? (
-        <div style={{ fontSize: 14, color: "#94a3b8" }}>Nenhuma mensagem até agora.</div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {mensagens.map((m) => {
-            const link = linkContato(m.contato);
-            return (
-              <div key={m.id} style={{ background: "rgba(148,163,184,0.08)", borderRadius: 12, padding: "12px 14px" }}>
-                <div style={{ fontSize: 15, color: "#f1f5f9", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{m.mensagem}</div>
-                <div style={{ marginTop: 8, fontSize: 13, color: "#cbd5e1", fontWeight: 600 }}>
-                  {m.nome}{m.relacao ? ` · ${m.relacao}` : ""}
-                </div>
-                {m.contato && (
-                  link ? (
-                    <a href={link} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#26b1c4" }}>{m.contato}</a>
-                  ) : (
-                    <div style={{ fontSize: 13, color: "#94a3b8" }}>{m.contato}</div>
-                  )
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Star rating ──────────────────────────────────────────────────────────────
 
 function Estrelas({ value, hover, onChange, onHover, onHoverLeave }) {
@@ -479,9 +417,6 @@ export default function AcompanhamentoPublico({ trackingId = "" }) {
             )}
           </>
         )}
-
-        {/* Mensagens do convite */}
-        {atendimento.form?.conviteToken && <MensagensFamilia trackingId={trackingId} />}
 
         {/* Footer */}
         <div style={{ textAlign: "center", fontSize: 12, color: "#1e3a4a", marginTop: 20 }}>

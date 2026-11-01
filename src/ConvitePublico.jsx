@@ -175,6 +175,7 @@ export default function ConvitePublico({ token }) {
 
   const f = registro.dados?.form || {};
   const falecido = registro.dados?.falecido || f.falecido || "";
+  if (typeof document !== "undefined" && falecido) document.title = `Convite - ${falecido}`;
 
   let localVelorio = "";
   let destinoVelorio = "";
