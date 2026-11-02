@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import { trocarMinhaSenha } from "../lib/auth";
 
-export function AlterarSenhaModal({ session, users, onClose, updateUser }) {
+export function AlterarSenhaModal({ onClose }) {
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha]   = useState("");
   const [confirmar, setConfirmar]   = useState("");
@@ -10,9 +11,8 @@ export function AlterarSenhaModal({ session, users, onClose, updateUser }) {
 
   async function handleSalvar() {
     setErro("");
-    const user = (users || []).find((u) => u.id === session?.id);
-    if (!user || user.password !== senhaAtual) {
-      setErro("Senha atual incorreta.");
+    if (!senhaAtual) {
+      setErro("Digite a senha atual.");
       return;
     }
     if (!novaSenha) {
@@ -28,10 +28,10 @@ export function AlterarSenhaModal({ session, users, onClose, updateUser }) {
       return;
     }
     setSalvando(true);
-    const ok = await updateUser(session.id, { password: novaSenha });
+    const r = await trocarMinhaSenha(senhaAtual, novaSenha);
     setSalvando(false);
-    if (!ok) {
-      setErro("Erro ao salvar. Tente novamente.");
+    if (!r.ok) {
+      setErro(r.erro || "Erro ao salvar. Tente novamente.");
       return;
     }
     setSucesso(true);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { DEFAULT_USERS, DEFAULT_SETTINGS, SETTINGS_FIELDS, STORAGE_KEYS } from "../constants";
+import { DEFAULT_SETTINGS, SETTINGS_FIELDS, STORAGE_KEYS } from "../constants";
+import { COLUNAS_USUARIO, chamarUsuarios } from "../lib/auth";
 import { normalizeRole } from "../utils/attendance";
 import { loadStorage } from "../utils/storage";
 
@@ -15,35 +16,17 @@ export function useSettings() {
 
   async function bootstrapAppData() {
     setBootLoading(true);
-    const localUsers = loadStorage(STORAGE_KEYS.users, DEFAULT_USERS);
     const localSettings = loadStorage(STORAGE_KEYS.settings, DEFAULT_SETTINGS);
 
     try {
       const { data: remoteUsers, error: usersError } = await supabase
         .from("app_users")
-        .select("*")
+        .select(COLUNAS_USUARIO)
         .order("name", { ascending: true });
 
       if (usersError) throw usersError;
 
-      let finalUsers = remoteUsers || [];
-
-      if (!finalUsers.length) {
-        const seedUsers = (localUsers && localUsers.length ? localUsers : DEFAULT_USERS).map(
-          (user) => ({
-            id: String(user.id || Date.now()),
-            name: user.name || "",
-            login: user.login || "",
-            password: user.password || "",
-            role: normalizeRole(user.role || "ATENDENTE"),
-          })
-        );
-        const { error: seedUsersError } = await supabase
-          .from("app_users")
-          .upsert(seedUsers, { onConflict: "login" });
-        if (seedUsersError) throw seedUsersError;
-        finalUsers = seedUsers;
-      }
+      const finalUsers = remoteUsers || [];
 
       const { data: remoteSettingsRows, error: settingsError } = await supabase
         .from("app_settings")
@@ -78,10 +61,9 @@ export function useSettings() {
       setSettings(finalSettings);
     } catch (error) {
       console.error("Erro ao carregar usuários/configurações:", error);
-      setUsers((localUsers || DEFAULT_USERS).map((u) => ({ ...u, role: normalizeRole(u.role) })));
       setSettings(localSettings || DEFAULT_SETTINGS);
       alert(
-        "Não foi possível sincronizar usuários e configurações com o banco. O sistema usará os dados locais deste navegador."
+        "Não foi possível carregar usuários e configurações do banco. Verifique a internet e recarregue a página."
       );
     } finally {
       setBootLoading(false);
@@ -122,33 +104,37 @@ export function useSettings() {
       alert("Preencha nome, login e senha.");
       return false;
     }
-    if (users.some((u) => u.login === userData.login)) {
-      alert("Esse login já existe.");
-      return false;
-    }
-    const userToSave = {
-      ...userData,
-      id: String(Date.now()),
+    const r = await chamarUsuarios({
+      acao: "criar",
+      name: userData.name,
+      login: userData.login,
+      senha: userData.password,
+      role: userData.role,
       funcoes: Array.isArray(userData.funcoes) ? userData.funcoes : [],
-    };
-    const { error } = await supabase.from("app_users").insert([userToSave]);
-    if (error) {
-      console.error("Erro ao salvar usuário:", error);
-      alert("Erro ao salvar usuário no banco.");
+    });
+    if (!r.ok) {
+      alert(r.erro || "Erro ao salvar usuário.");
       return false;
     }
-    setUsers((prev) => [...prev, userToSave]);
+    setUsers((prev) => [...prev, { ...r.usuario, role: normalizeRole(r.usuario.role) }]);
     return true;
   }
 
+  // dados: { name?, role?, funcoes?, password? } — password vazio mantém a senha atual
   async function updateUser(id, dados) {
-    const { error } = await supabase.from("app_users").update(dados).eq("id", id);
-    if (error) {
-      console.error("Erro ao atualizar usuário:", error);
-      alert("Erro ao atualizar colaborador no banco.");
+    const r = await chamarUsuarios({
+      acao: "alterar",
+      id,
+      name: dados.name,
+      role: dados.role,
+      funcoes: dados.funcoes,
+      senha: dados.password || "",
+    });
+    if (!r.ok) {
+      alert(r.erro || "Erro ao atualizar colaborador.");
       return false;
     }
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...dados } : u)));
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...r.usuario, role: normalizeRole(r.usuario.role) } : u)));
     return true;
   }
 
@@ -158,10 +144,10 @@ export function useSettings() {
       alert("O admin padrão não pode ser removido.");
       return;
     }
-    const { error } = await supabase.from("app_users").delete().eq("id", id);
-    if (error) {
-      console.error("Erro ao remover usuário:", error);
-      alert("Erro ao remover usuário do banco.");
+    if (!window.confirm(`Remover o acesso de ${user?.name || "este colaborador"}?`)) return;
+    const r = await chamarUsuarios({ acao: "excluir", id });
+    if (!r.ok) {
+      alert(r.erro || "Erro ao remover usuário.");
       return;
     }
     setUsers((prev) => prev.filter((u) => u.id !== id));

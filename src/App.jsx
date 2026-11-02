@@ -1,8 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Equipe from "./pages/Equipe.jsx";
-import AcompanhamentoPublico from "./AcompanhamentoPublico.jsx";
-import ConvitePublico from "./ConvitePublico.jsx";
-import MensagensPublico from "./MensagensPublico.jsx";
 import { gerarTokenConvite, gerarCodigoMensagens } from "./utils/convite";
 import { FotoFalecidoField } from "./components/FotoFalecidoField";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -37,6 +34,7 @@ import { AvaliacoesTab } from "./components/AvaliacoesTab";
 import { FrotaTab } from "./components/FrotaTab";
 import { DetalhesServico } from "./components/DetalhesServico";
 import { AlterarSenhaModal } from "./components/AlterarSenhaModal";
+import { sair } from "./lib/auth";
 
 import { useOrdemServico } from "./hooks/useOrdemServico";
 import { useSaidas } from "./hooks/useSaidas";
@@ -46,78 +44,11 @@ import { getSalasOcupadas } from "./constants/horariosSaida";
 import { UNIDADES_ATENDIMENTO, getUnidadeAtendimento } from "./constants/unidadesAtendimento";
 import { UnidadeBadge } from "./components/UnidadeBadge";
 
-// ─── Login shared panel ───────────────────────────────────────────────────────
-
-const LOGIN_FEATURES = [
-  {
-    icon: "fa-solid fa-user-tie",
-    title: "Atendimento mais prático e digital",
-    sub: "Registre e gerencie serviços com agilidade",
-  },
-  {
-    icon: "fa-solid fa-mobile-screen",
-    title: "Acompanhamento do serviço em tempo real",
-    sub: "Família e equipe sempre informados",
-  },
-  {
-    icon: "fa-solid fa-shield-halved",
-    title: "Gestão e controle com facilidade",
-    sub: "Relatórios, etapas e equipe em um só lugar",
-  },
-];
-
-function LoginLeftPanel() {
-  return (
-    <div className="login-left">
-      {/* Placeholder do grupo */}
-      <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "20px 32px", display: "inline-block", textAlign: "center", marginBottom: "1.5rem" }}>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-          GRUPO
-        </div>
-        <div style={{ fontSize: 32, fontWeight: 700, color: "#ffffff", lineHeight: 1 }}>
-          SÃO FRANCISCO
-        </div>
-      </div>
-
-      {/* Título */}
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: "0.12em", textAlign: "center", marginBottom: "2rem" }}>
-        Sistema de Atendimento Funeral
-      </div>
-
-      {/* Linha decorativa */}
-      <div style={{ width: 40, height: 2, background: "rgba(255,255,255,0.4)", margin: "0 auto 2.5rem", borderRadius: 2 }} />
-
-      {/* Features */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", width: "100%", maxWidth: 320 }}>
-        {LOGIN_FEATURES.map(({ icon, title, sub }) => (
-          <div key={title} style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 44, height: 44, background: "rgba(255,255,255,0.15)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <i className={icon} style={{ fontSize: 20, color: "#ffffff" }} />
-            </div>
-            <div>
-              <div style={{ fontSize: 14, color: "#ffffff", fontWeight: 500, lineHeight: 1.3 }}>{title}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", marginTop: 2 }}>{sub}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Frase rodapé */}
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "center", marginTop: "3rem", maxWidth: 280 }}>
-        Cuidando com respeito e dedicação em todos os momentos
-      </div>
-    </div>
-  );
-}
-
 // ─── App ──────────────────────────────────────────────────────────────────────
 
-export default function App() {
-  // --- Auth ---
-  const [session, setSession] = useState(null);
-  const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
+export default function App({ colaborador }) {
+  // --- Auth (o login é feito antes, em Raiz.jsx / LoginTela.jsx) ---
+  const [session] = useState(() => ({ ...colaborador, role: normalizeRole(colaborador?.role) }));
 
   // --- Navigation ---
   const [activeTab, setActiveTab] = useState(() => loadStorage(STORAGE_KEYS.activeTab, "home"));
@@ -255,12 +186,6 @@ export default function App() {
   // --- Effects ---
   useEffect(() => { saveStorage("sf_theme_v1", theme); }, [theme]);
   useEffect(() => { saveStorage(STORAGE_KEYS.activeTab, activeTab); }, [activeTab]);
-  useEffect(() => { saveStorage(STORAGE_KEYS.attendances, atendimentos); }, [atendimentos]);
-
-  useEffect(() => {
-    const savedSession = loadStorage(STORAGE_KEYS.session, null);
-    if (savedSession) setSession({ ...savedSession, role: normalizeRole(savedSession?.role) });
-  }, []);
 
   useEffect(() => {
     function syncTrackingRoute() {
@@ -300,28 +225,13 @@ export default function App() {
     setCollapsedSections((prev) => ({ ...prev, [sectionKey]: !prev[sectionKey] }));
   }
 
-  function handleLogin(e) {
-    e.preventDefault();
-    if (bootLoading) { setLoginError("Aguarde o carregamento dos usuários."); return; }
-    const user = users.find((u) => u.login === login && u.password === password);
-    if (!user) { setLoginError("Usuário ou senha inválidos."); return; }
-    const normalizedUser = { ...user, role: normalizeRole(user.role) };
-    setSession(normalizedUser);
-    saveStorage(STORAGE_KEYS.session, normalizedUser);
-    setLoginError("");
-  }
-
-  function handleLogout() {
-    setSession(null);
-    saveStorage(STORAGE_KEYS.session, null);
+  async function handleLogout() {
     saveStorage(STORAGE_KEYS.activeTab, "home");
-    setLogin("");
-    setPassword("");
-    setLoginError("");
     setFinalizado(false);
     setActiveTab("home");
     setEditingAttendanceId(null);
     setViewingAttendanceId(null);
+    await sair();
     if (typeof window !== "undefined" && window.location.pathname === "/equipe") {
       window.location.href = "/";
     }
@@ -452,24 +362,6 @@ export default function App() {
   const isEquipeRoute = window.location.pathname === "/equipe";
   const isPublicAcompanhamento = !!publicTrackingId;
 
-  // 1. Acompanhamento público — verificação PRIORITÁRIA, antes de qualquer check de sessão ou perfil
-  const publicTrackingIdDirect = window.location.pathname.match(/^\/acompanhamento\/([^/]+)/)?.[1] || "";
-  if (publicTrackingIdDirect) {
-    return <AcompanhamentoPublico trackingId={publicTrackingIdDirect} />;
-  }
-
-  // Convite público (QR Code do comunicado)
-  const conviteTokenDirect = window.location.pathname.match(/^\/convite\/([^/]+)/)?.[1] || "";
-  if (conviteTokenDirect) {
-    return <ConvitePublico token={conviteTokenDirect} />;
-  }
-
-  // Mensagens do convite para a família (com código de acesso)
-  const mensagensTokenDirect = window.location.pathname.match(/^\/mensagens\/([^/]+)/)?.[1] || "";
-  if (mensagensTokenDirect) {
-    return <MensagensPublico token={mensagensTokenDirect} />;
-  }
-
   function renderEquipeContainer() {
     return (
       <div style={{ ...styles.page, ...themeVars }}>
@@ -500,12 +392,7 @@ export default function App() {
           </div>
         </div>
         {showAlterarSenha && (
-          <AlterarSenhaModal
-            session={session}
-            users={users}
-            onClose={() => setShowAlterarSenha(false)}
-            updateUser={updateUser}
-          />
+          <AlterarSenhaModal onClose={() => setShowAlterarSenha(false)} />
         )}
         <Equipe
           atendimentos={atendimentosEquipe}
@@ -585,66 +472,6 @@ export default function App() {
   }
 
   // (acompanhamento público já tratado no guard prioritário acima)
-
-  if (!session) {
-    const fieldStyle = { width: "100%", background: "#f8fbfb", border: "1px solid #d9e4e2", borderRadius: 12, padding: "13px 16px", fontSize: 14, color: "#333333", outline: "none", boxSizing: "border-box", cursor: "pointer" };
-    const labelStyle = { display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 };
-    return (
-      <div className="login-screen">
-        <LoginLeftPanel />
-        <div className="login-right">
-          <div style={{ maxWidth: 340, width: "100%", background: "#ffffff", border: "1px solid #e5ecea", borderRadius: 20, padding: "2rem", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-            <div style={{ marginBottom: "2rem" }}>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#333333", margin: "0 0 6px" }}>Acesso interno</h1>
-              <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>Entre com suas credenciais</p>
-            </div>
-            <form onSubmit={handleLogin}>
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>USUÁRIO</label>
-                <select
-                  style={{ ...fieldStyle, color: login ? "#333333" : "#94a3b8" }}
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
-                  disabled={bootLoading}
-                >
-                  <option value="">Selecione seu usuário</option>
-                  {users.map((u) => (
-                    <option key={u.login} value={u.login}>
-                      {u.name} — {getRoleUiLabel(u.role)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div style={{ marginBottom: loginError ? 16 : 24 }}>
-                <label style={labelStyle}>SENHA</label>
-                <input
-                  type="password"
-                  style={fieldStyle}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                />
-              </div>
-              {loginError && (
-                <div style={{ marginBottom: 16, fontSize: 13, color: "#dc2626", background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.18)", borderRadius: 10, padding: "10px 14px" }}>
-                  {loginError}
-                </div>
-              )}
-              <button
-                type="submit"
-                style={{ width: "100%", background: "#26b1c4", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", marginTop: 8 }}
-              >
-                Entrar
-              </button>
-            </form>
-            <div style={{ marginTop: "1.5rem", fontSize: 11, color: "#94a3b8", textAlign: "center" }}>
-              © 2026 Caetano Digital Systems
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // --- Main shell ---
   return (
@@ -1456,12 +1283,7 @@ export default function App() {
       />
 
       {showAlterarSenha && (
-        <AlterarSenhaModal
-          session={session}
-          users={users}
-          onClose={() => setShowAlterarSenha(false)}
-          updateUser={updateUser}
-        />
+        <AlterarSenhaModal onClose={() => setShowAlterarSenha(false)} />
       )}
     </div>
   );

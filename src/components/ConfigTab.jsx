@@ -149,7 +149,7 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Senha</label>
-              <input style={styles.input} value={newUser.password} onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))} />
+              <input type="password" autoComplete="new-password" style={styles.input} value={newUser.password} onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))} />
             </div>
             <div style={styles.field}>
               <label style={styles.label}>Perfil de acesso</label>
@@ -185,8 +185,8 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
                     <input style={styles.input} value={editingUser.name} onChange={(e) => setEditingUser((p) => ({ ...p, name: e.target.value }))} />
                   </div>
                   <div style={styles.field}>
-                    <label style={styles.label}>Senha</label>
-                    <input style={styles.input} value={editingUser.password} onChange={(e) => setEditingUser((p) => ({ ...p, password: e.target.value }))} />
+                    <label style={styles.label}>Nova senha (em branco = não muda)</label>
+                    <input type="password" autoComplete="new-password" style={styles.input} value={editingUser.password || ""} onChange={(e) => setEditingUser((p) => ({ ...p, password: e.target.value }))} />
                   </div>
                   <div style={styles.field}>
                     <label style={styles.label}>Perfil de acesso</label>
@@ -223,7 +223,7 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  <button style={styles.outlineDarkBtn} onClick={() => setEditingUser({ ...u, funcoes: u.funcoes || [] })}>
+                  <button style={styles.outlineDarkBtn} onClick={() => setEditingUser({ ...u, password: "", funcoes: u.funcoes || [] })}>
                     <i className="fa-solid fa-pen" style={{ marginRight: 5 }} />Editar
                   </button>
                   {u.login !== "admin" && (

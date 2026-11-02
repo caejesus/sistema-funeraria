@@ -144,18 +144,14 @@ export default function ConvitePublico({ token }) {
   useEffect(() => {
     let vivo = true;
     (async () => {
-      const { data } = await supabase
-        .from("atendimentos")
-        .select("record_id, dados")
-        .eq("dados->form->>conviteToken", token)
-        .maybeSingle();
+      // Só os campos do convite (função convite_publico no banco)
+      const { data, error } = await supabase.rpc("convite_publico", { p_token: token });
       if (!vivo) return;
+      if (error) console.error("Erro ao carregar convite:", error);
       setRegistro(data || null);
       const cemiterio = data?.dados?.form?.cemiterio;
       if (cemiterio) {
-        const { data: cfg } = await supabase.from("app_settings").select("items").eq("key", "cemeteries").maybeSingle();
-        const item = (cfg?.items || []).find((c) => String(c).split("|")[0] === cemiterio);
-        const doCadastro = item ? String(item).split("|")[1] : "";
+        const doCadastro = data?.cemiterioEndereco || "";
         const conhecido = CEMITERIOS_MAPS[cemiterio];
         const destino = doCadastro
           ? `${doCadastro}, Manaus - AM`

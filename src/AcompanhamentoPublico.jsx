@@ -221,42 +221,27 @@ export default function AcompanhamentoPublico({ trackingId = "" }) {
 
   useEffect(() => {
     if (!trackingId) { setLoading(false); return; }
-    setLoading(true);
+    let vivo = true;
 
-    Promise.all([
-      supabase.from("atendimentos").select("*").eq("record_id", trackingId).single(),
-      supabase.from("avaliacoes").select("id, media_geral").eq("atendimento_id", trackingId).single(),
-    ]).then(([{ data }, { data: aval }]) => {
-      setAtendimento(data?.dados || null);
-      if (aval) { setJaAvaliou(true); setMediaExistente(aval.media_geral); }
-      setLoading(false);
-    });
-  }, [trackingId]);
+    // Só os campos que a família precisa ver (função acompanhamento_publico no banco)
+    async function carregar(primeira) {
+      if (primeira) setLoading(true);
+      const { data, error } = await supabase.rpc("acompanhamento_publico", { p_id: trackingId });
+      if (!vivo) return;
+      if (error) console.error("Erro ao carregar acompanhamento:", error);
+      if (data) {
+        setAtendimento(data);
+        if (data.avaliacao) { setJaAvaliou(true); setMediaExistente(data.avaliacao.media_geral); }
+      } else if (primeira) {
+        setAtendimento(null);
+      }
+      if (primeira) setLoading(false);
+    }
 
-  // ── Realtime ───────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (!trackingId) return;
-    const channel = supabase
-      .channel("public-tracking-" + trackingId)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "atendimentos",
-          filter: `record_id=eq.${trackingId}`,
-        },
-        (payload) => {
-          console.log("Realtime update recebido:", payload);
-          const novoDados = payload.new?.dados || null;
-          if (novoDados) setAtendimento(novoDados);
-        }
-      )
-      .subscribe((status) => {
-        console.log("Status realtime acompanhamento:", status);
-      });
-    return () => supabase.removeChannel(channel);
+    carregar(true);
+    // Atualiza as etapas sozinho a cada 20 segundos
+    const timer = setInterval(() => carregar(false), 20000);
+    return () => { vivo = false; clearInterval(timer); };
   }, [trackingId]);
 
   // ── Render ─────────────────────────────────────────────────────────────────

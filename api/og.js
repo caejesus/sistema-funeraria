@@ -56,19 +56,22 @@ export default async function handler(req, res) {
     }
 
     if (url && key && /^[a-zA-Z0-9]{6,40}$/.test(token)) {
-      const r = await fetch(
-        `${url}/rest/v1/atendimentos?select=falecido,nomeForm:dados->form->>falecido,nomeDados:dados->>falecido,foto:dados->form->>fotoUrl&dados->form->>conviteToken=eq.${token}&limit=1`,
-        { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" } }
-      );
+      // Função pública convite_publico (só os campos do convite)
+      const r = await fetch(`${url}/rest/v1/rpc/convite_publico`, {
+        method: "POST",
+        headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ p_token: token }),
+      });
       diag.status = r.status;
-      const rows = await r.json();
-      if (Array.isArray(rows)) {
-        diag.linhas = rows.length;
-        const l = rows[0] || {};
-        falecido = nomeBonito(l.falecido || l.nomeForm || l.nomeDados || "");
-        if (/^https:\/\/[^"'<>\s]+$/.test(l.foto || "")) foto = l.foto;
+      const dadosConvite = await r.json();
+      if (r.ok) {
+        diag.linhas = dadosConvite ? 1 : 0;
+        const d = dadosConvite?.dados || {};
+        falecido = nomeBonito(d.falecido || d.form?.falecido || "");
+        const fotoUrl = d.form?.fotoUrl || "";
+        if (/^https:\/\/[^"'<>\s]+$/.test(fotoUrl)) foto = fotoUrl;
       } else {
-        diag.erro = String(rows?.message || rows?.hint || "resposta inesperada").slice(0, 200);
+        diag.erro = String(dadosConvite?.message || dadosConvite?.hint || "resposta inesperada").slice(0, 200);
       }
     }
   } catch (e) {

@@ -41,7 +41,7 @@ export const DEFAULT_USERS = [
     id: "1",
     name: "Administrador",
     login: "admin",
-    password: "10121410",
+    password: "",
     role: "ADM",
     funcoes: [],
   },
