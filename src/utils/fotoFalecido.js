@@ -8,12 +8,14 @@ const LARGURA_MAX = 800;
 const ALTURA_MAX = 1000;
 const LIMITE_BYTES = 180 * 1024;
 
-function carregarImagem(file) {
+function carregarImagem(origem) {
   return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
+    const ehArquivo = typeof origem !== "string";
+    const url = ehArquivo ? URL.createObjectURL(origem) : origem;
     const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Não foi possível abrir essa imagem.")); };
+    const liberar = () => { if (ehArquivo) URL.revokeObjectURL(url); };
+    img.onload = () => { liberar(); resolve(img); };
+    img.onerror = () => { liberar(); reject(new Error("Não foi possível abrir essa imagem.")); };
     img.src = url;
   });
 }
@@ -22,13 +24,15 @@ function canvasParaBlob(canvas, qualidade) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", qualidade));
 }
 
-// Reduz para no máximo 800x1000 px e ~180 KB (JPEG)
-export async function comprimirFoto(file) {
-  if (!file || !file.type?.startsWith("image/")) throw new Error("Escolha um arquivo de imagem (foto).");
-  const img = await carregarImagem(file);
-  const escala = Math.min(1, LARGURA_MAX / img.width, ALTURA_MAX / img.height);
-  const largura = Math.max(1, Math.round(img.width * escala));
-  const altura = Math.max(1, Math.round(img.height * escala));
+// Recorta (se vier a área do recorte), reduz para no máximo 800x1000 px e ~180 KB (JPEG).
+// "origem" pode ser o arquivo escolhido ou o endereço temporário da imagem.
+export async function comprimirFoto(origem, area = null) {
+  if (!origem) throw new Error("Escolha uma foto.");
+  const img = await carregarImagem(origem);
+  const corte = area || { x: 0, y: 0, width: img.width, height: img.height };
+  const escala = Math.min(1, LARGURA_MAX / corte.width, ALTURA_MAX / corte.height);
+  const largura = Math.max(1, Math.round(corte.width * escala));
+  const altura = Math.max(1, Math.round(corte.height * escala));
 
   const canvas = document.createElement("canvas");
   canvas.width = largura;
@@ -36,7 +40,7 @@ export async function comprimirFoto(file) {
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, largura, altura);
-  ctx.drawImage(img, 0, 0, largura, altura);
+  ctx.drawImage(img, corte.x, corte.y, corte.width, corte.height, 0, 0, largura, altura);
 
   let qualidade = 0.82;
   let blob = await canvasParaBlob(canvas, qualidade);
@@ -54,8 +58,8 @@ function nomeArquivo() {
 }
 
 // Envia a foto nova e apaga a antiga (se houver). Retorna { fotoUrl, fotoPath }.
-export async function enviarFotoFalecido(file, caminhoAntigo = "") {
-  const blob = await comprimirFoto(file);
+export async function enviarFotoFalecido(origem, caminhoAntigo = "", area = null) {
+  const blob = await comprimirFoto(origem, area);
   const caminho = nomeArquivo();
   const { error } = await supabase.storage.from(BUCKET).upload(caminho, blob, {
     contentType: "image/jpeg",

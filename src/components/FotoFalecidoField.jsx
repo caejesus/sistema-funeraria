@@ -1,25 +1,43 @@
 import React, { useRef, useState } from "react";
 import { enviarFotoFalecido, removerFotoFalecido, iniciais } from "../utils/fotoFalecido";
+import { FotoRecorteModal } from "./FotoRecorteModal";
 
 // Campo "Foto para o convite" do cadastro do atendimento
 export function FotoFalecidoField({ fotoUrl, fotoPath, falecido, onChange }) {
   const inputRef = useRef(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
+  const [paraRecortar, setParaRecortar] = useState("");
 
-  async function escolher(e) {
+  function escolher(e) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    if (!file.type?.startsWith("image/")) {
+      setErro("Escolha um arquivo de imagem (foto).");
+      return;
+    }
     setErro("");
+    setParaRecortar(URL.createObjectURL(file));
+  }
+
+  function fecharRecorte() {
+    if (paraRecortar) URL.revokeObjectURL(paraRecortar);
+    setParaRecortar("");
+  }
+
+  async function confirmarRecorte(area) {
+    const imagem = paraRecortar;
+    setParaRecortar("");
     setEnviando(true);
     try {
-      const nova = await enviarFotoFalecido(file, fotoPath);
+      const nova = await enviarFotoFalecido(imagem, fotoPath, area);
       onChange(nova);
     } catch (err) {
       console.error(err);
       setErro(err.message || "Não foi possível enviar a foto.");
     } finally {
+      URL.revokeObjectURL(imagem);
       setEnviando(false);
     }
   }
@@ -85,9 +103,13 @@ export function FotoFalecidoField({ fotoUrl, fotoPath, falecido, onChange }) {
             Remover
           </button>
         )}
-        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>A foto é reduzida antes de enviar.</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Você recorta a foto antes de enviar.</div>
         {erro && <div style={{ fontSize: 12, color: "#b91c1c" }}>{erro}</div>}
       </div>
+
+      {paraRecortar && (
+        <FotoRecorteModal imagem={paraRecortar} onCancelar={fecharRecorte} onConfirmar={confirmarRecorte} />
+      )}
     </div>
   );
 }
