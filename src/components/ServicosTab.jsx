@@ -134,6 +134,18 @@ async function copiar(texto, aviso) {
   }
 }
 
+function FotoCard({ item }) {
+  const nome = item.falecido || item.form?.falecido || "";
+  if (item.form?.fotoUrl) {
+    return <img src={item.form.fotoUrl} alt={`Foto de ${nome || "falecido"}`} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />;
+  }
+  return (
+    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: 22, fontWeight: 700 }}>
+      {iniciais(nome)}
+    </div>
+  );
+}
+
 export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEquipeAcionada, onVerDetalhes, garantirConvite }) {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("todos");
@@ -155,6 +167,15 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
   return (
     <section style={{ paddingBottom: 32 }}>
       {mensagensDe && <MensagensConviteModal atendimento={mensagensDe} onClose={() => setMensagensDe(null)} />}
+      <style>{`
+        .st-foto { border-radius: 14px; overflow: hidden; flex-shrink: 0; background: var(--card-bg-alt); border: 1px solid var(--border-soft); }
+        .st-foto-lateral { width: 132px; min-height: 165px; display: block; }
+        .st-foto-mini { width: 56px; height: 70px; border-radius: 10px; display: none; }
+        @media (max-width: 720px) {
+          .st-foto-lateral { display: none; }
+          .st-foto-mini { display: block; }
+        }
+      `}</style>
 
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
@@ -286,22 +307,17 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                   boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 }}
               >
+                <div style={{ display: "flex", gap: 18, alignItems: "stretch", marginBottom: 16 }}>
+                {/* Foto (coluna da esquerda; no celular vira miniatura ao lado do nome) */}
+                <div className="st-foto st-foto-lateral">
+                  <FotoCard item={item} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                 {/* Top row */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
-                  <div style={{ display: "flex", gap: 14, alignItems: "center", minWidth: 0 }}>
-                  <div
-                    style={{
-                      width: 60, height: 60, borderRadius: 12, overflow: "hidden", flexShrink: 0,
-                      background: "var(--card-bg-alt)", border: "1px solid var(--border-soft)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: "var(--text-muted)", fontSize: 18, fontWeight: 700,
-                    }}
-                  >
-                    {item.form?.fotoUrl ? (
-                      <img src={item.form.fotoUrl} alt={`Foto de ${item.falecido || "falecido"}`} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : (
-                      iniciais(item.falecido)
-                    )}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
+                  <div className="st-foto st-foto-mini">
+                    <FotoCard item={item} />
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
@@ -331,7 +347,6 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                   background: "var(--card-bg-alt)",
                   borderRadius: 12,
                   padding: 14,
-                  marginBottom: 16,
                 }}>
                   <div>
                     <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 3 }}>
@@ -380,6 +395,8 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                     value={equipeAcionada ? "Acionada" : "Não acionada"}
                     valueStyle={{ color: equipeAcionada ? "#15803d" : "var(--text-muted)" }}
                   />
+                </div>
+                </div>
                 </div>
 
                 {/* Actions */}
