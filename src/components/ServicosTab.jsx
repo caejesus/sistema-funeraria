@@ -421,7 +421,7 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                         style={outlineBtn}
                         onClick={async () => {
                           const convite = await garantirConvite(item.id);
-                          if (convite) copiar(linkConvite(convite.token), "Link do convite copiado!");
+                          if (convite) copiar(linkConvite(convite.token, item.form?.fotoPath), "Link do convite copiado!");
                         }}
                       >
                         <i className="fa-solid fa-envelope-open-text" style={{ marginRight: 6 }} />Link do convite

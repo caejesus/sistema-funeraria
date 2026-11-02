@@ -18,9 +18,13 @@ export function gerarCodigoMensagens() {
 }
 
 export const linkAcompanhamento = (recordId) => `${origem()}/acompanhamento/${recordId}`;
-// O "?1" no final faz o WhatsApp buscar a prévia nova (com o nome do falecido)
-// em vez de reaproveitar a prévia antiga guardada de links já enviados.
-export const linkConvite = (token) => `${origem()}/convite/${token}?1`;
+// O final do link (?1, ou um código da foto) faz o WhatsApp buscar a prévia nova
+// em vez de reaproveitar a prévia antiga guardada. Quando a foto muda, o link muda junto.
+function versaoFoto(fotoPath) {
+  const numero = String(fotoPath || "").match(/^(\d+)-/)?.[1];
+  return numero ? `f${Number(numero).toString(36)}` : "1";
+}
+export const linkConvite = (token, fotoPath = "") => `${origem()}/convite/${token}?${versaoFoto(fotoPath)}`;
 export const linkMensagens = (token) => `${origem()}/mensagens/${token}?1`;
 
 // Texto pronto para mandar à família pelo WhatsApp
