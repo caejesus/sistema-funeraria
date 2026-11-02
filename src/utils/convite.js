@@ -18,8 +18,10 @@ export function gerarCodigoMensagens() {
 }
 
 export const linkAcompanhamento = (recordId) => `${origem()}/acompanhamento/${recordId}`;
-export const linkConvite = (token) => `${origem()}/convite/${token}`;
-export const linkMensagens = (token) => `${origem()}/mensagens/${token}`;
+// O "?1" no final faz o WhatsApp buscar a prévia nova (com o nome do falecido)
+// em vez de reaproveitar a prévia antiga guardada de links já enviados.
+export const linkConvite = (token) => `${origem()}/convite/${token}?1`;
+export const linkMensagens = (token) => `${origem()}/mensagens/${token}?1`;
 
 // Texto pronto para mandar à família pelo WhatsApp
 export function textoMensagensFamilia({ falecido, token, codigo }) {
