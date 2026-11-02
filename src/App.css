@@ -441,3 +441,231 @@
     font-size: 0.92rem;
   }
 }
+
+/* ─── Layout com menu lateral ───────────────────────────────────────────── */
+.app-shell--lateral {
+  display: flex;
+  align-items: flex-start;
+  padding: 0;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  padding: 24px 28px 40px;
+}
+
+.menu-lateral {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 252px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 10px 12px;
+  box-sizing: border-box;
+  background: var(--card-bg, #fff);
+  border-right: 1px solid var(--border-soft, #e5ecea);
+  transition: width 0.18s ease;
+  z-index: 50;
+}
+
+.menu-marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+}
+.menu-marca-logo { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
+.menu-marca-titulo { font-size: 14px; font-weight: 700; color: var(--text-main); line-height: 1.2; }
+.menu-marca-sub { font-size: 12px; color: var(--text-muted); }
+.menu-recolher {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.menu-recolher:hover { background: var(--card-bg-alt); }
+
+.menu-relogio {
+  margin: 0 4px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--card-bg-alt, #f3f6f5);
+  border: 1px solid var(--border-soft, #e5ecea);
+}
+.menu-relogio-hora { font-size: 20px; font-weight: 700; color: var(--text-main); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.menu-relogio-data { font-size: 12px; color: var(--text-muted); }
+
+.menu-itens { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
+.menu-grupo { display: flex; flex-direction: column; gap: 1px; }
+.menu-grupo-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 10px 4px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  width: 100%;
+}
+.menu-item:hover { background: var(--card-bg-alt, #f3f6f5); }
+.menu-item--ativo,
+.menu-item--ativo:hover {
+  background: rgba(38, 177, 196, 0.14);
+  color: var(--brand-accent, #26b1c4);
+  font-weight: 700;
+}
+.menu-item--bloqueado { color: var(--text-muted); }
+.menu-item-icone { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+.menu-item-cadeado { margin-left: auto; font-size: 12px; }
+.menu-contador {
+  margin-left: auto;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.menu-contador--saidas { background: rgba(234, 160, 20, 0.18); color: #a16207; }
+.menu-contador--interessados { background: rgba(38, 177, 196, 0.16); color: var(--brand-accent, #26b1c4); }
+
+.menu-usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px 0;
+  border-top: 1px solid var(--border-soft, #e5ecea);
+}
+.menu-usuario-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(38, 177, 196, 0.16);
+  color: var(--brand-accent, #26b1c4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.menu-usuario-nome { font-size: 13px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-usuario-perfil { font-size: 12px; color: var(--text-muted); }
+.menu-usuario-acoes { display: flex; gap: 2px; }
+.menu-usuario-acoes button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.menu-usuario-acoes button:hover { background: var(--card-bg-alt); color: var(--text-main); }
+
+/* Recolhido: só ícones */
+.menu-lateral--recolhido { width: 72px; }
+.menu-lateral--recolhido .menu-texto,
+.menu-lateral--recolhido .menu-item-cadeado,
+.menu-lateral--recolhido .menu-contador { display: none; }
+.menu-lateral--recolhido .menu-marca { flex-direction: column; }
+.menu-lateral--recolhido .menu-recolher { margin-left: 0; }
+.menu-lateral--recolhido .menu-relogio { padding: 6px 4px; text-align: center; }
+.menu-lateral--recolhido .menu-relogio-hora { font-size: 14px; }
+.menu-lateral--recolhido .menu-item { justify-content: center; padding: 0; }
+.menu-lateral--recolhido .menu-grupo + .menu-grupo { border-top: 1px solid var(--border-soft); padding-top: 6px; }
+.menu-lateral--recolhido .menu-usuario { flex-direction: column; }
+.menu-lateral--recolhido .menu-usuario-acoes { flex-direction: column; }
+
+/* Barra do topo e menu deslizante (celular / telas estreitas) */
+.menu-topo { display: none; }
+.menu-fundo { display: none; }
+
+@media (max-width: 900px) {
+  .app-shell--lateral { display: block; }
+  .app-main { padding: 16px 14px 32px; }
+
+  .menu-topo {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--card-bg, #fff);
+    border-bottom: 1px solid var(--border-soft, #e5ecea);
+  }
+  .menu-topo-botao {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 17px;
+    cursor: pointer;
+  }
+  .menu-topo-titulo { font-size: 16px; font-weight: 700; color: var(--text-main); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .menu-topo-hora { font-size: 14px; font-weight: 700; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  .menu-lateral,
+  .menu-lateral--recolhido {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px;
+    max-width: 85vw;
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    z-index: 60;
+  }
+  .menu-lateral--aberto { transform: translateX(0); }
+  .menu-recolher { display: none; }
+  /* no celular sempre mostra os nomes */
+  .menu-lateral--recolhido .menu-texto { display: block; }
+  .menu-lateral--recolhido .menu-item { justify-content: flex-start; padding: 0 10px; }
+  .menu-lateral--recolhido .menu-item-cadeado,
+  .menu-lateral--recolhido .menu-contador { display: inline-flex; }
+  .menu-lateral--recolhido .menu-marca,
+  .menu-lateral--recolhido .menu-usuario,
+  .menu-lateral--recolhido .menu-usuario-acoes { flex-direction: row; }
+
+  .menu-fundo {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 55;
+  }
+}

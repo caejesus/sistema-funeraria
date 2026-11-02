@@ -72,7 +72,7 @@ const EMPTY_USER = { name: "", login: "", password: "", role: "ATENDENTE", funco
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ConfigTab({ users, settings, addUser, removeUser, updateUser, addSettingItem, removeSettingItem }) {
+export function ConfigTab({ users, settings, addUser, removeUser, updateUser, addSettingItem, removeSettingItem, secao = "colaboradores" }) {
   const [newUser, setNewUser] = useState(EMPTY_USER);
   const [editingUser, setEditingUser] = useState(null);
   const [openAccordion, setOpenAccordion] = useState(null);
@@ -127,9 +127,10 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
+    <div style={{ maxWidth: 900 }}>
 
       {/* ── Colaboradores ─────────────────────────────────────────────────── */}
+      {secao === "colaboradores" && (
       <section style={styles.card}>
         <h2 style={styles.cardTitle}>Colaboradores</h2>
 
@@ -237,8 +238,10 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
           )}
         </div>
       </section>
+      )}
 
       {/* ── Cadastros dinâmicos ────────────────────────────────────────────── */}
+      {secao === "cadastros" && (
       <section style={styles.card}>
         <h2 style={styles.cardTitle}>Cadastros dinâmicos</h2>
 
@@ -354,6 +357,7 @@ export function ConfigTab({ users, settings, addUser, removeUser, updateUser, ad
           );
         })}
       </section>
+      )}
     </div>
   );
 }

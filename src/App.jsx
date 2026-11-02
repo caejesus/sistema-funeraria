@@ -41,6 +41,9 @@ import { useOrdemServico } from "./hooks/useOrdemServico";
 import { useSaidas } from "./hooks/useSaidas";
 import { SaidasTab } from "./components/SaidasTab";
 import { InteressadosTab } from "./components/InteressadosTab";
+import { MenuLateral, AcessoRestrito, podeAcessar } from "./components/MenuLateral";
+import { InicioPainel } from "./components/InicioPainel";
+import { NovoAvisoModal } from "./components/NovoAvisoModal";
 import { TabletsSalasConfig } from "./components/TabletsSalasConfig";
 import { HorarioSaidaPicker } from "./components/HorarioSaidaPicker";
 import { getSalasOcupadas } from "./constants/horariosSaida";
@@ -52,6 +55,8 @@ import { UnidadeBadge } from "./components/UnidadeBadge";
 export default function App({ colaborador }) {
   // --- Auth (o login é feito antes, em Raiz.jsx / LoginTela.jsx) ---
   const [session] = useState(() => ({ ...colaborador, role: normalizeRole(colaborador?.role) }));
+  const [abaConfig, setAbaConfig] = useState("colaboradores");
+  const [novoAvisoAberto, setNovoAvisoAberto] = useState(false);
 
   // --- Navigation ---
   const [activeTab, setActiveTab] = useState(() => loadStorage(STORAGE_KEYS.activeTab, "home"));
@@ -499,119 +504,65 @@ export default function App({ colaborador }) {
 
   // (acompanhamento público já tratado no guard prioritário acima)
 
+  // --- Navegação ---
+  function navegar(tab) {
+    if (tab === "atendimento" && editingAttendanceId) {
+      // "Novo atendimento" a partir de uma edição: começa um registro em branco
+      resetAtendimento();
+    }
+    if (tab === "atendimento") setFinalizado(false);
+    if (tab === "atendimentos") setDetalhesServico(null);
+    setActiveTab(tab);
+    if (typeof window !== "undefined") window.scrollTo(0, 0);
+  }
+
+  function abrirAtendimentoPorId(id) {
+    const item = atendimentos.find((a) => String(a.id) === String(id));
+    if (!item) { alert("Atendimento não encontrado."); return; }
+    setDetalhesServico(item);
+    setActiveTab("atendimentos");
+    if (typeof window !== "undefined") window.scrollTo(0, 0);
+  }
+
+  const telaLiberada = podeAcessar(activeTab, session?.role);
+
   // --- Main shell ---
   return (
-    <div className={`app-shell${activeTab === "home" ? " app-shell--home" : ""}`} style={themeVars}>
-      {activeTab === "home" && (
-        <header className="home-header">
-          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <img
-              src="/logosf.png"
-              alt="Logo Grupo São Francisco"
-              style={{ width: 96, height: "auto", display: "block", objectFit: "contain", background: "transparent", boxShadow: "none", border: "none", padding: 0, margin: 0 }}
-            />
-            <div className="home-brand-copy" style={{ background: "transparent", boxShadow: "none", border: "none", padding: 0 }}>
-              <div className="home-brand-title">Grupo São Francisco</div>
-              <div className="home-brand-subtitle">Assistência e cuidado em todos os momentos</div>
-            </div>
-          </div>
-          <div className="home-actions">
-            <div className="user-pill">
-              <div className="user-pill-avatar">{getInitials(session?.name || "U")}</div>
-              <div className="user-pill-copy">
-                <span className="user-pill-label">{session?.name}</span>
-                <span className="user-pill-sublabel">{getRoleUiLabel(session?.role)}</span>
-              </div>
-            </div>
-            {normalizeRole(session?.role) === "ADM" && (
-              <button className="home-utility-button" onClick={() => setActiveTab("config")} title="Configurações">
-                <i className="fa-solid fa-gear" />
-              </button>
-            )}
-            <button className="home-utility-button" onClick={() => setShowAlterarSenha(true)} title="Alterar senha">
-              <i className="fa-solid fa-key" />
-            </button>
-            <button className="home-utility-button" onClick={() => setTheme(isDark ? "light" : "dark")} title={isDark ? "Claro" : "Escuro"}>
-              <i className={`fa-solid ${isDark ? "fa-sun" : "fa-moon"}`} />
-            </button>
-            <button className="home-utility-button" onClick={handleLogout} title="Sair">
-              <i className="fa-solid fa-right-from-bracket" />
-            </button>
-          </div>
-        </header>
-      )}
+    <div className="app-shell app-shell--lateral" style={themeVars}>
+      <MenuLateral
+        activeTab={activeTab}
+        onNavegar={navegar}
+        onAcao={(acao) => { if (acao === "novo_aviso") setNovoAvisoAberto(true); }}
+        session={session}
+        saidasAbertas={saidasApi.abertas.length}
+        isDark={isDark}
+        onTema={() => setTheme(isDark ? "light" : "dark")}
+        onSenha={() => setShowAlterarSenha(true)}
+        onSair={handleLogout}
+      />
 
-      {activeTab !== "home" && (
-        <div style={styles.tabs}>
-          <button style={activeTab === "home" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("home")}>Início</button>
-          <button style={activeTab === "atendimento" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("atendimento")}>Novo Atendimento</button>
-          <button style={activeTab === "atendimentos" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("atendimentos")}>Serviços</button>
-          <button style={activeTab === "operacional" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("operacional")}>Gestão de Etapas</button>
-          <button style={activeTab === "equipe" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("equipe")}>Equipe</button>
-          <button style={activeTab === "frota" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("frota")}>Frota</button>
-          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
-            <button style={activeTab === "saidas" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("saidas")}>
-              Saídas{saidasApi.abertas.length ? ` (${saidasApi.abertas.length})` : ""}
-            </button>
-          )}
-          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
-            <button style={activeTab === "interessados" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("interessados")}>
-              Interessados
-            </button>
-          )}
-          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
-            <button style={activeTab === "os" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("os")}>OS</button>
-          )}
-          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
-            <button style={activeTab === "servicos_dia" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("servicos_dia")}>Serviços do Dia</button>
-          )}
-          {normalizeRole(session?.role) === "ADM" && (
-            <button style={activeTab === "relatorios" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("relatorios")}>Relatórios</button>
-          )}
-          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "SUPERVISOR") && (
-            <button style={activeTab === "avaliacoes" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("avaliacoes")}>Avaliações</button>
-          )}
-          {normalizeRole(session?.role) === "ADM" && (
-            <button style={activeTab === "config" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("config")}>Configurações</button>
-          )}
-        </div>
+      <main className="app-main">
+      {novoAvisoAberto && (
+        <NovoAvisoModal
+          session={session}
+          atendimentosAtivos={atendimentos
+            .filter((a) => a.status !== "Concluído" && (!a.createdAt || Date.now() - new Date(a.createdAt).getTime() < 10 * 24 * 60 * 60 * 1000))
+            .map((a) => ({ id: a.id, nome: String(a.falecido || a.form?.falecido || "Sem nome").toLowerCase().replace(/(^|\s)(\S)/g, (m, e, l) => e + l.toUpperCase()).replace(/\s(De|Da|Do|Dos|Das|E)(?=\s)/g, (m) => m.toLowerCase()) }))}
+          onClose={() => setNovoAvisoAberto(false)}
+        />
+      )}
+      {!telaLiberada && (
+        <AcessoRestrito tab={activeTab} role={session?.role} onVoltar={() => navegar("home")} />
       )}
 
       {activeTab === "home" && (
-        <section className="home-screen">
-          <div className="home-cards-grid">
-            <button
-              className="home-action-card"
-              onClick={() => { resetAtendimento(); setFinalizado(false); setActiveTab("atendimento"); }}
-            >
-              <div className="home-action-icon"><i className="fa-solid fa-circle-plus" /></div>
-              <div className="home-action-content">
-                <div className="home-action-title">Novo atendimento</div>
-                <div className="home-action-text">Iniciar novo registro</div>
-              </div>
-            </button>
-            <button className="home-action-card" onClick={() => setActiveTab("atendimentos")}>
-              <div className="home-action-icon"><i className="fa-solid fa-file-lines" /></div>
-              <div className="home-action-content">
-                <div className="home-action-title">Serviços</div>
-                <div className="home-action-text">Consultar e editar registros</div>
-              </div>
-            </button>
-            <button className="home-action-card" onClick={() => setActiveTab("operacional")}>
-              <div className="home-action-icon"><i className="fa-solid fa-diagram-project" /></div>
-              <div className="home-action-content">
-                <div className="home-action-title">Gestão de etapas</div>
-                <div className="home-action-text">Acompanhar atendimentos</div>
-              </div>
-            </button>
-          </div>
-        </section>
-      )}
-
-      {activeTab === "home" && (
-        <footer className="home-footer">
-          © 2026 Caetano Digital System · Todos os direitos reservados
-        </footer>
+        <InicioPainel
+          session={session}
+          atendimentos={atendimentos}
+          saidasApi={saidasApi}
+          onAbrirAtendimento={abrirAtendimentoPorId}
+          onIrPara={navegar}
+        />
       )}
 
       {activeTab === "atendimentos" && detalhesServico && (
@@ -1316,19 +1267,44 @@ export default function App({ colaborador }) {
       )}
 
       {activeTab === "config" && normalizeRole(session.role) === "ADM" && (
-        <TabletsSalasConfig />
-      )}
-
-      {activeTab === "config" && normalizeRole(session.role) === "ADM" && (
-        <ConfigTab
-          users={users}
-          settings={settings}
-          addUser={addUser}
-          updateUser={updateUser}
-          removeUser={removeUser}
-          addSettingItem={addSettingItem}
-          removeSettingItem={removeSettingItem}
-        />
+        <section>
+          <div style={{ fontSize: 24, fontWeight: 700, color: "var(--text-main)", marginBottom: 14 }}>Configurações</div>
+          <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--border-soft)", marginBottom: 18, flexWrap: "wrap" }}>
+            {[
+              ["colaboradores", "Colaboradores", "fa-solid fa-users"],
+              ["cadastros", "Cadastros", "fa-solid fa-list"],
+              ["tablets", "Tablets das salas", "fa-solid fa-tablet-screen-button"],
+            ].map(([id, rotulo, icone]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setAbaConfig(id)}
+                style={{
+                  minHeight: 42, padding: "0 16px", border: "none", background: "none", cursor: "pointer",
+                  fontSize: 14, fontWeight: 700, fontFamily: "inherit", marginBottom: -1,
+                  color: abaConfig === id ? "var(--brand-accent)" : "var(--text-muted)",
+                  borderBottom: `2px solid ${abaConfig === id ? "var(--brand-accent)" : "transparent"}`,
+                }}
+              >
+                <i className={icone} style={{ marginRight: 8 }} />{rotulo}
+              </button>
+            ))}
+          </div>
+          {abaConfig === "tablets" ? (
+            <TabletsSalasConfig />
+          ) : (
+            <ConfigTab
+              secao={abaConfig}
+              users={users}
+              settings={settings}
+              addUser={addUser}
+              updateUser={updateUser}
+              removeUser={removeUser}
+              addSettingItem={addSettingItem}
+              removeSettingItem={removeSettingItem}
+            />
+          )}
+        </section>
       )}
 
       {showServicesModal && (
@@ -1351,6 +1327,7 @@ export default function App({ colaborador }) {
       {showAlterarSenha && (
         <AlterarSenhaModal onClose={() => setShowAlterarSenha(false)} />
       )}
+      </main>
     </div>
   );
 }
