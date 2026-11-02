@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "./lib/supabaseClient.js";
+import { CodigoFamilia, lerCodigoSalvo, salvarCodigo, esquecerCodigo } from "./components/CodigoFamilia.jsx";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -50,7 +51,7 @@ function Estrelas({ value, hover, onChange, onHover, onHoverLeave }) {
 
 // ─── Evaluation form ──────────────────────────────────────────────────────────
 
-function AvaliacaoForm({ atendimento, trackingId, onEnviado }) {
+export function AvaliacaoForm({ atendimento, token, codigo, onEnviado }) {
   const [notas,       setNotasState]      = useState([0, 0, 0, 0]);
   const [hovers,      setHoversState]     = useState([0, 0, 0, 0]);
   const [comentarios, setComentariosState] = useState(["", "", "", ""]);
@@ -88,27 +89,26 @@ function AvaliacaoForm({ atendimento, trackingId, onEnviado }) {
       ? +(notasPreenchidas.reduce((a, b) => a + b, 0) / notasPreenchidas.length).toFixed(1)
       : 0;
 
-    const { error } = await supabase.from("avaliacoes").insert([{
-      atendimento_id:            trackingId,
-      falecido:                  atendimento?.falecido || "",
-      atendente,
-      motorista_remocao:         motorista,
-      nota_atendimento:          notas[0] || null,
-      nota_velorio:              temVelorio ? (notas[1] || null) : null,
-      nota_remocao:              notas[2] || null,
-      nota_encerramento:         notas[3] || null,
-      comentario_atendimento:    comentarios[0] || null,
-      comentario_velorio:        temVelorio ? (comentarios[1] || null) : null,
-      comentario_remocao:        comentarios[2] || null,
-      comentario_encerramento:   comentarios[3] || null,
-      media_geral:               media,
-      conhecia_grupo:            conheciaGrupo || null,
-      primeira_vez:              primeiraVez,
-      experiencia_primeira_vez:  experienciaPrimeiraVez || null,
-    }]);
+    const { data, error } = await supabase.rpc("enviar_avaliacao", {
+      p_token: token,
+      p_codigo: codigo,
+      p_dados: {
+        nota_atendimento:          notas[0] || null,
+        nota_velorio:              temVelorio ? (notas[1] || null) : null,
+        nota_remocao:              notas[2] || null,
+        nota_encerramento:         notas[3] || null,
+        comentario_atendimento:    comentarios[0] || null,
+        comentario_velorio:        temVelorio ? (comentarios[1] || null) : null,
+        comentario_remocao:        comentarios[2] || null,
+        comentario_encerramento:   comentarios[3] || null,
+        conhecia_grupo:            conheciaGrupo || null,
+        primeira_vez:              primeiraVez,
+        experiencia_primeira_vez:  experienciaPrimeiraVez || null,
+      },
+    });
 
     setSalvando(false);
-    if (error) { setErro("Erro ao enviar. Tente novamente."); return; }
+    if (error || !data?.ok) { setErro(data?.erro || "Erro ao enviar. Tente novamente."); return; }
     onEnviado(media);
   }
 
@@ -209,42 +209,59 @@ function AvaliacaoForm({ atendimento, trackingId, onEnviado }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function AcompanhamentoPublico({ trackingId = "" }) {
-  const [atendimento,    setAtendimento]    = useState(null);
-  const [loading,        setLoading]        = useState(true);
-  const [jaAvaliou,      setJaAvaliou]      = useState(false);
-  const [mediaExistente, setMediaExistente] = useState(null);
-  const [avaliacaoMedia, setAvaliacaoMedia] = useState(null);
-  const [enviado,        setEnviado]        = useState(false);
+export default function AcompanhamentoPublico({ token = "" }) {
+  const [codigo,      setCodigo]      = useState(() => lerCodigoSalvo(token));
+  const [atendimento, setAtendimento] = useState(null);
+  const [loading,     setLoading]     = useState(!!lerCodigoSalvo(token));
+  const [erroCodigo,  setErroCodigo]  = useState("");
+  const [verificando, setVerificando] = useState(false);
 
-  // ── Load data ──────────────────────────────────────────────────────────────
+  // ── Load data (só com o código certo) ─────────────────────────────────────
 
   useEffect(() => {
-    if (!trackingId) { setLoading(false); return; }
+    if (!token || !codigo) return undefined;
     let vivo = true;
 
-    // Só os campos que a família precisa ver (função acompanhamento_publico no banco)
     async function carregar(primeira) {
-      if (primeira) setLoading(true);
-      const { data, error } = await supabase.rpc("acompanhamento_publico", { p_id: trackingId });
+      const { data, error } = await supabase.rpc("acompanhamento_publico", { p_token: token, p_codigo: codigo });
       if (!vivo) return;
       if (error) console.error("Erro ao carregar acompanhamento:", error);
-      if (data) {
+      if (data?.ok) {
+        salvarCodigo(token, codigo);
         setAtendimento(data);
-        if (data.avaliacao) { setJaAvaliou(true); setMediaExistente(data.avaliacao.media_geral); }
+        setErroCodigo("");
       } else if (primeira) {
-        setAtendimento(null);
+        if (data && data.ok === false) {
+          esquecerCodigo(token);
+          setErroCodigo("Código de acesso incorreto.");
+          setCodigo("");
+        } else {
+          setErroCodigo("Não foi possível carregar agora. Tente novamente.");
+          setCodigo("");
+        }
       }
-      if (primeira) setLoading(false);
+      if (primeira) { setLoading(false); setVerificando(false); }
     }
 
     carregar(true);
     // Atualiza as etapas sozinho a cada 20 segundos
     const timer = setInterval(() => carregar(false), 20000);
     return () => { vivo = false; clearInterval(timer); };
-  }, [trackingId]);
+  }, [token, codigo]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
+
+  if (!codigo) {
+    return (
+      <CodigoFamilia
+        titulo="Acompanhamento do atendimento"
+        botao="Ver etapas"
+        erro={erroCodigo}
+        verificando={verificando}
+        onEnviar={(c) => { setVerificando(true); setLoading(true); setCodigo(c); }}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -381,25 +398,6 @@ export default function AcompanhamentoPublico({ trackingId = "" }) {
               </div>
             </div>
 
-            {/* Avaliação */}
-            {(jaAvaliou || enviado) ? (
-              <div style={{ ...S.card, textAlign: "center", marginBottom: 16 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "#f8fafc", marginBottom: 6 }}>
-                  Obrigado pela sua avaliação! ⭐
-                </div>
-                {(mediaExistente != null || avaliacaoMedia != null) && (
-                  <div style={{ fontSize: 13, color: "#94a3b8" }}>
-                    Sua avaliação média: {(mediaExistente ?? avaliacaoMedia).toFixed(1)} / 5
-                  </div>
-                )}
-              </div>
-            ) : (
-              <AvaliacaoForm
-                atendimento={atendimento}
-                trackingId={trackingId}
-                onEnviado={(media) => { setEnviado(true); setAvaliacaoMedia(media); }}
-              />
-            )}
           </>
         )}
 
@@ -414,7 +412,7 @@ export default function AcompanhamentoPublico({ trackingId = "" }) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const S = {
+export const S = {
   page: {
     minHeight: "100vh",
     background: "linear-gradient(180deg, #071226 0%, #0b1730 100%)",

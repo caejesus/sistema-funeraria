@@ -17,7 +17,9 @@ export function gerarCodigoMensagens() {
   return String(arr[0] % 1000000).padStart(6, "0");
 }
 
-export const linkAcompanhamento = (recordId) => `${origem()}/acompanhamento/${recordId}`;
+// Links da família (acompanhamento das etapas e avaliação): token aleatório + código de 6 números
+export const linkAcompanhamento = (familiaToken) => `${origem()}/acompanhamento/${familiaToken}`;
+export const linkAvaliacao = (familiaToken) => `${origem()}/avaliacao/${familiaToken}`;
 // O final do link (?1, ou um código da foto) faz o WhatsApp buscar a prévia nova
 // em vez de reaproveitar a prévia antiga guardada. Quando a foto muda, o link muda junto.
 function versaoFoto(fotoPath) {
@@ -32,6 +34,22 @@ export function textoMensagensFamilia({ falecido, token, codigo }) {
   return (
     `Mensagens de carinho deixadas no convite de ${falecido || "seu ente querido"}:\n` +
     `${linkMensagens(token)}\n\n` +
+    `Código de acesso: ${codigo}`
+  );
+}
+
+export function textoAcompanhamentoFamilia({ falecido, token, codigo }) {
+  return (
+    `Acompanhe as etapas do atendimento de ${falecido || "seu ente querido"}:\n` +
+    `${linkAcompanhamento(token)}\n\n` +
+    `Código de acesso: ${codigo}`
+  );
+}
+
+export function textoAvaliacaoFamilia({ falecido, token, codigo }) {
+  return (
+    `Sua opinião sobre o atendimento de ${falecido || "seu ente querido"} é muito importante para nós:\n` +
+    `${linkAvaliacao(token)}\n\n` +
     `Código de acesso: ${codigo}`
   );
 }

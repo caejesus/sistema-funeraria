@@ -5,8 +5,8 @@
 --
 -- Depois disto:
 --  - quem não está logado só consegue: ver a lista de nomes da tela de login,
---    o acompanhamento e o convite (só os campos necessários, pelas funções),
---    deixar mensagem no convite e enviar a avaliação;
+--    o convite (só os campos necessários), deixar mensagem no convite e, com o
+--    código da família, ver o acompanhamento, as mensagens e enviar a avaliação;
 --  - as senhas antigas em texto puro são apagadas.
 -- ============================================================================
 
@@ -37,15 +37,14 @@ grant select (id, name, login, role, funcoes, auth_id, created_at) on public.app
 -- Apaga as senhas antigas de quem já tem acesso novo
 update public.app_users set password = '' where auth_id is not null;
 
--- 3) Avaliações: a família só ENVIA; ler é só para logado ---------------------
+-- 3) Avaliações: a família envia pela função enviar_avaliacao (com o código);
+--    ler/mexer é só para logado ---------------------------------------------
 alter table public.avaliacoes enable row level security;
 drop policy if exists avaliacoes_rw on public.avaliacoes;
 drop policy if exists avaliacoes_enviar on public.avaliacoes;
 drop policy if exists avaliacoes_logado on public.avaliacoes;
-create policy avaliacoes_enviar on public.avaliacoes for insert to anon, authenticated with check (true);
 create policy avaliacoes_logado on public.avaliacoes for all to authenticated using (true) with check (true);
 revoke all on public.avaliacoes from anon;
-grant insert on public.avaliacoes to anon;
 
 -- 4) Mensagens do convite: continua igual (qualquer um envia; ler só pela função
 --    mensagens_do_convite com o código). Logado também pode ler direto.

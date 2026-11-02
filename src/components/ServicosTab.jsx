@@ -3,7 +3,7 @@ import { formatDateBR, getCemiterioNome, getHospitalNome } from "../utils/format
 import { SERVICE_TYPE_OPTIONS } from "../constants";
 import { UnidadeBadge } from "./UnidadeBadge";
 import { MensagensConviteModal } from "./MensagensConviteModal";
-import { linkAcompanhamento, linkConvite } from "../utils/convite";
+import { linkConvite, textoAcompanhamentoFamilia, textoAvaliacaoFamilia } from "../utils/convite";
 import { iniciais } from "../utils/fotoFalecido";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
@@ -146,7 +146,7 @@ function FotoCard({ item }) {
   );
 }
 
-export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEquipeAcionada, onVerDetalhes, garantirConvite }) {
+export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEquipeAcionada, onVerDetalhes, garantirConvite, garantirAcessoFamilia }) {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("todos");
   const [mensagensDe, setMensagensDe] = useState(null);
@@ -410,12 +410,17 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                     <button style={outlineBtn} onClick={() => openAttendance(item, "preview")}>
                       <i className="fa-solid fa-file-invoice" style={{ marginRight: 6 }} />Ver / PDF
                     </button>
-                    <button
-                      style={outlineBtn}
-                      onClick={() => copiar(linkAcompanhamento(item.id), "Link de acompanhamento copiado!")}
-                    >
-                      <i className="fa-solid fa-share-nodes" style={{ marginRight: 6 }} />Link de acompanhamento
-                    </button>
+                    {garantirAcessoFamilia && (
+                      <button
+                        style={outlineBtn}
+                        onClick={async () => {
+                          const acesso = await garantirAcessoFamilia(item.id);
+                          if (acesso) copiar(textoAcompanhamentoFamilia({ falecido: item.falecido, ...acesso }), "Link de acompanhamento e código copiados!");
+                        }}
+                      >
+                        <i className="fa-solid fa-share-nodes" style={{ marginRight: 6 }} />Link de acompanhamento
+                      </button>
+                    )}
                     {garantirConvite && (
                       <button
                         style={outlineBtn}
@@ -425,6 +430,17 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                         }}
                       >
                         <i className="fa-solid fa-envelope-open-text" style={{ marginRight: 6 }} />Link do convite
+                      </button>
+                    )}
+                    {garantirAcessoFamilia && (
+                      <button
+                        style={outlineBtn}
+                        onClick={async () => {
+                          const acesso = await garantirAcessoFamilia(item.id);
+                          if (acesso) copiar(textoAvaliacaoFamilia({ falecido: item.falecido, ...acesso }), "Link de avaliação e código copiados!");
+                        }}
+                      >
+                        <i className="fa-regular fa-star" style={{ marginRight: 6 }} />Link de avaliação
                       </button>
                     )}
                     {item.form?.conviteToken && (

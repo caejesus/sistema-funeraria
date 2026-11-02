@@ -35,10 +35,13 @@ import { FrotaTab } from "./components/FrotaTab";
 import { DetalhesServico } from "./components/DetalhesServico";
 import { AlterarSenhaModal } from "./components/AlterarSenhaModal";
 import { sair } from "./lib/auth";
+import { mascaraCpf, situacaoCpf } from "./utils/cpf";
 
 import { useOrdemServico } from "./hooks/useOrdemServico";
 import { useSaidas } from "./hooks/useSaidas";
 import { SaidasTab } from "./components/SaidasTab";
+import { InteressadosTab } from "./components/InteressadosTab";
+import { TabletsSalasConfig } from "./components/TabletsSalasConfig";
 import { HorarioSaidaPicker } from "./components/HorarioSaidaPicker";
 import { getSalasOcupadas } from "./constants/horariosSaida";
 import { UNIDADES_ATENDIMENTO, getUnidadeAtendimento } from "./constants/unidadesAtendimento";
@@ -337,6 +340,29 @@ export default function App({ colaborador }) {
     return { token, codigo };
   }
 
+  // Garante o acesso da família (acompanhamento e avaliação): token aleatório + código de 6 números.
+  // O código é o mesmo das mensagens do convite.
+  async function garantirAcessoFamilia(recordId) {
+    const registro = atendimentos.find((item) => String(item.id) === String(recordId));
+    const formAtual = String(editingAttendanceId) === String(recordId) ? form : registro?.form || {};
+    const token = formAtual.familiaToken || registro?.form?.familiaToken || gerarTokenConvite();
+    const codigo = formAtual.codigoMensagens || registro?.form?.codigoMensagens || gerarCodigoMensagens();
+    if (registro?.form?.familiaToken === token && registro?.form?.codigoMensagens === codigo) return { token, codigo };
+
+    if (registro) {
+      const salvo = await updateAttendanceRecord(registro.id, (item) => ({
+        ...item,
+        form: { ...(item.form || {}), familiaToken: token, codigoMensagens: codigo },
+        updatedAt: new Date().toISOString(),
+      }));
+      if (!salvo) return null;
+    }
+    if (String(editingAttendanceId) === String(recordId)) {
+      setForm((prev) => ({ ...prev, familiaToken: token, codigoMensagens: codigo }));
+    }
+    return { token, codigo };
+  }
+
   async function gerarComunicadoPDF() {
     const convite = await garantirConvite(editingAttendanceId);
     if (!convite) return;
@@ -529,6 +555,11 @@ export default function App({ colaborador }) {
             </button>
           )}
           {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
+            <button style={activeTab === "interessados" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("interessados")}>
+              Interessados
+            </button>
+          )}
+          {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
             <button style={activeTab === "os" ? styles.tabActive : styles.tab} onClick={() => setActiveTab("os")}>OS</button>
           )}
           {(normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
@@ -599,6 +630,7 @@ export default function App({ colaborador }) {
           toggleEquipeAcionada={toggleEquipeAcionada}
           onVerDetalhes={(item) => setDetalhesServico(item)}
           garantirConvite={garantirConvite}
+          garantirAcessoFamilia={garantirAcessoFamilia}
         />
       )}
 
@@ -632,6 +664,10 @@ export default function App({ colaborador }) {
 
       {activeTab === "saidas" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
         <SaidasTab saidasApi={saidasApi} />
+      )}
+
+      {activeTab === "interessados" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
+        <InteressadosTab session={session} />
       )}
 
       {activeTab === "servicos_dia" && (normalizeRole(session?.role) === "ADM" || normalizeRole(session?.role) === "ATENDENTE" || normalizeRole(session?.role) === "SUPERVISOR") && (
@@ -967,7 +1003,23 @@ export default function App({ colaborador }) {
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>CPF</label>
-                  <input style={styles.input} value={form.responsavelCpf} onChange={(e) => updateForm("responsavelCpf", e.target.value)} />
+                  <input
+                    style={{
+                      ...styles.input,
+                      ...(situacaoCpf(form.responsavelCpf) === "invalido" ? { borderColor: "#dc2626", boxShadow: "0 0 0 1px #dc2626" } : {}),
+                      ...(situacaoCpf(form.responsavelCpf) === "ok" ? { borderColor: "#16a34a" } : {}),
+                    }}
+                    inputMode="numeric"
+                    placeholder="000.000.000-00"
+                    value={form.responsavelCpf || ""}
+                    onChange={(e) => updateForm("responsavelCpf", mascaraCpf(e.target.value))}
+                  />
+                  {situacaoCpf(form.responsavelCpf) === "invalido" && (
+                    <span style={{ ...styles.errorText, color: "#dc2626" }}>CPF inválido. Confira os números.</span>
+                  )}
+                  {situacaoCpf(form.responsavelCpf) === "incompleto" && (
+                    <span style={styles.helpText}>CPF incompleto.</span>
+                  )}
                 </div>
                 <div style={styles.field}>
                   <label style={styles.label}>CEP</label>
@@ -1229,7 +1281,17 @@ export default function App({ colaborador }) {
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
-                  <button style={styles.primaryBtn} onClick={() => finalizarAtendimento(form, services, totalValue)}>
+                  <button
+                    style={styles.primaryBtn}
+                    onClick={() => {
+                      const cpf = situacaoCpf(form.responsavelCpf);
+                      if (cpf === "invalido" || cpf === "incompleto") {
+                        alert("O CPF do responsável está " + (cpf === "invalido" ? "inválido" : "incompleto") + ". Corrija antes de salvar.");
+                        return;
+                      }
+                      finalizarAtendimento(form, services, totalValue);
+                    }}
+                  >
                     Finalizar Atendimento
                   </button>
                 </div>
@@ -1251,6 +1313,10 @@ export default function App({ colaborador }) {
 
       {activeTab === "frota" && (
         <FrotaTab settings={settings} session={session} />
+      )}
+
+      {activeTab === "config" && normalizeRole(session.role) === "ADM" && (
+        <TabletsSalasConfig />
       )}
 
       {activeTab === "config" && normalizeRole(session.role) === "ADM" && (

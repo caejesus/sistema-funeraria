@@ -89,6 +89,7 @@ export function getInitialForm() {
     fotoUrl: "",
     fotoPath: "",
     conviteToken: "",
+    familiaToken: "",
 
     religiao: "católico",
     tecnico: "",
