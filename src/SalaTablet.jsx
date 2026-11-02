@@ -77,6 +77,12 @@ function botao(primario) {
 export default function SalaTablet({ caminho }) {
   const sala = acharSalaTablet(caminho);
   const [chave] = useState(lerChave);
+
+  // Lembra qual sala é este tablet: o ícone da tela de início abre direto aqui
+  useEffect(() => {
+    if (!sala) return;
+    try { localStorage.setItem("tablet_sala", sala.caminho); } catch { /* ignora */ }
+  }, [sala]);
   const [estado, setEstado] = useState({ carregando: true });
   const [tela, setTela] = useState("inicio"); // inicio | mensagem | interesse | obrigado
   const [assunto, setAssunto] = useState(null);

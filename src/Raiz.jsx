@@ -13,8 +13,24 @@ import { colaboradorLogado, limparDadosLocais, sair } from "./lib/auth";
 //  - páginas públicas (família / convidados) abrem sem login;
 //  - o resto só abre depois do login pelo Supabase Auth.
 
+// Tablet de sala aberto pelo ícone da tela de início: volta direto para a sala dele
+function salaDoTabletInstalado() {
+  try {
+    const instalado = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone;
+    if (!instalado || window.location.pathname !== "/") return "";
+    return localStorage.getItem("tablet_sala") || "";
+  } catch {
+    return "";
+  }
+}
+
 function rotaPublica() {
   const caminho = typeof window !== "undefined" ? window.location.pathname : "";
+  const salaInstalada = typeof window !== "undefined" ? salaDoTabletInstalado() : "";
+  if (salaInstalada) {
+    window.history.replaceState(null, "", `/sala/${salaInstalada}`);
+    return <SalaTablet caminho={salaInstalada} />;
+  }
   const acompanhamento = caminho.match(/^\/acompanhamento\/([^/]+)/)?.[1];
   if (acompanhamento) return <AcompanhamentoPublico token={acompanhamento} />;
   const avaliacao = caminho.match(/^\/avaliacao\/([^/]+)/)?.[1];
