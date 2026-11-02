@@ -211,6 +211,13 @@ export default function ConvitePublico({ token }) {
 
         <header style={{ textAlign: "center", padding: "8px 8px 6px" }}>
           <div style={{ fontSize: 13, letterSpacing: 2, color: C.suave, textTransform: "uppercase", marginBottom: 8 }}>Em memória de</div>
+          {f.fotoUrl && (
+            <img
+              src={f.fotoUrl}
+              alt={`Foto de ${falecido}`}
+              style={{ display: "block", width: 200, maxWidth: "70%", aspectRatio: "4 / 5", objectFit: "cover", borderRadius: 18, margin: "6px auto 16px", border: `1px solid ${C.linha}`, background: "#e9e5dd" }}
+            />
+          )}
           <h1 style={{ margin: 0, fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 30, fontWeight: 700, lineHeight: 1.2 }}>{falecido}</h1>
           {(f.dataNascimento || f.dataFalecimento) && (
             <div style={{ marginTop: 10, fontSize: 15, color: C.suave }}>

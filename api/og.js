@@ -33,6 +33,7 @@ export default async function handler(req, res) {
   }
 
   let falecido = "";
+  let foto = "";
   const diag = { envUrl: false, envKey: false, origemChave: "", status: null, linhas: null, erro: "" };
   try {
     let url = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "").trim().replace(/\/+$/, "");
@@ -56,7 +57,7 @@ export default async function handler(req, res) {
 
     if (url && key && /^[a-zA-Z0-9]{6,40}$/.test(token)) {
       const r = await fetch(
-        `${url}/rest/v1/atendimentos?select=falecido,nomeForm:dados->form->>falecido,nomeDados:dados->>falecido&dados->form->>conviteToken=eq.${token}&limit=1`,
+        `${url}/rest/v1/atendimentos?select=falecido,nomeForm:dados->form->>falecido,nomeDados:dados->>falecido,foto:dados->form->>fotoUrl&dados->form->>conviteToken=eq.${token}&limit=1`,
         { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" } }
       );
       diag.status = r.status;
@@ -65,6 +66,7 @@ export default async function handler(req, res) {
         diag.linhas = rows.length;
         const l = rows[0] || {};
         falecido = nomeBonito(l.falecido || l.nomeForm || l.nomeDados || "");
+        if (/^https:\/\/[^"'<>\s]+$/.test(l.foto || "")) foto = l.foto;
       } else {
         diag.erro = String(rows?.message || rows?.hint || "resposta inesperada").slice(0, 200);
       }
@@ -77,7 +79,7 @@ export default async function handler(req, res) {
   if (req.query.debug) {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     res.setHeader("Cache-Control", "no-store");
-    res.status(200).send(JSON.stringify({ ...diag, tokenValido: /^[a-zA-Z0-9]{6,40}$/.test(token), nomeEncontrado: !!falecido }, null, 2));
+    res.status(200).send(JSON.stringify({ ...diag, tokenValido: /^[a-zA-Z0-9]{6,40}$/.test(token), nomeEncontrado: !!falecido, fotoEncontrada: !!foto }, null, 2));
     return;
   }
 
@@ -89,7 +91,8 @@ export default async function handler(req, res) {
     tipo === "mensagens"
       ? "Mensagens de carinho deixadas para a família. Acesso com código."
       : "Velório e sepultamento: locais, horários e espaço para deixar uma mensagem à família.";
-  const imagem = `${base}/logogrupo.png`;
+  // Prévia do WhatsApp: foto do falecido; sem foto, a logo do grupo
+  const imagem = foto || `${base}/logogrupo.png`;
   const pagina = `${base}/${tipo}/${token}`;
 
   const meta = `

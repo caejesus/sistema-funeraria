@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { formatDateBR, getCemiterioNome, getHospitalNome } from "../utils/format";
 import { SERVICE_TYPE_OPTIONS } from "../constants";
-import { getUnidadeAtendimento } from "../constants/unidadesAtendimento";
 import { UnidadeBadge } from "./UnidadeBadge";
 import { MensagensConviteModal } from "./MensagensConviteModal";
 import { linkAcompanhamento, linkConvite } from "../utils/convite";
+import { iniciais } from "../utils/fotoFalecido";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
@@ -288,6 +288,21 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
               >
                 {/* Top row */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
+                  <div style={{ display: "flex", gap: 14, alignItems: "center", minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: 60, height: 60, borderRadius: 12, overflow: "hidden", flexShrink: 0,
+                      background: "var(--card-bg-alt)", border: "1px solid var(--border-soft)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: "var(--text-muted)", fontSize: 18, fontWeight: 700,
+                    }}
+                  >
+                    {item.form?.fotoUrl ? (
+                      <img src={item.form.fotoUrl} alt={`Foto de ${item.falecido || "falecido"}`} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      iniciais(item.falecido)
+                    )}
+                  </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
                       <span style={{ fontSize: 11, color: "var(--brand-accent)", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 600 }}>
@@ -303,6 +318,7 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                         {metaParts.join(" • ")}
                       </div>
                     )}
+                  </div>
                   </div>
                   <StatusBadge status={item.status} />
                 </div>
@@ -358,11 +374,6 @@ export function ServicosTab({ atendimentos, openAttendance, onDelete, toggleEqui
                   </div>
                   <InfoCell label="Tipo de serviço" value={tipoServico} />
                   <InfoCell label="Local do óbito" value={getHospitalNome(item.localObito)} />
-                  <InfoCell
-                    label="Unidade de atendimento"
-                    value={getUnidadeAtendimento(unidadeAtendimento)?.label || "Não informada"}
-                    valueStyle={{ color: getUnidadeAtendimento(unidadeAtendimento)?.textoFundo || "var(--text-muted)", fontWeight: 700 }}
-                  />
                   <InfoCell label="Atendente"   value={atendente} />
                   <InfoCell
                     label="Equipe"

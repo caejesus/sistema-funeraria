@@ -86,6 +86,8 @@ export function getInitialForm() {
     horarioVelorio: "",
     dataInicioVelorio: "",
     mensagemFamilia: "",
+    fotoUrl: "",
+    fotoPath: "",
     conviteToken: "",
 
     religiao: "católico",

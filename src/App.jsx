@@ -4,6 +4,7 @@ import AcompanhamentoPublico from "./AcompanhamentoPublico.jsx";
 import ConvitePublico from "./ConvitePublico.jsx";
 import MensagensPublico from "./MensagensPublico.jsx";
 import { gerarTokenConvite, gerarCodigoMensagens } from "./utils/convite";
+import { FotoFalecidoField } from "./components/FotoFalecidoField";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./App.css";
 import { gerarFichaPdf } from "./pdf/gerarFichaPDF";
@@ -1085,6 +1086,15 @@ export default function App() {
                       value={form.mensagemFamilia || ""}
                       placeholder="Ex.: A família agradece o carinho e as orações neste momento."
                       onChange={(e) => updateForm("mensagemFamilia", e.target.value)}
+                    />
+                  </div>
+                  <div style={{ ...styles.fieldWide, gridColumn: "1 / -1" }}>
+                    <label style={styles.label}>Foto para o convite (opcional)</label>
+                    <FotoFalecidoField
+                      fotoUrl={form.fotoUrl || ""}
+                      fotoPath={form.fotoPath || ""}
+                      falecido={form.falecido || ""}
+                      onChange={({ fotoUrl, fotoPath }) => setForm((prev) => ({ ...prev, fotoUrl, fotoPath }))}
                     />
                   </div>
                 </div>
