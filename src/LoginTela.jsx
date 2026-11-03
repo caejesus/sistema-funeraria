@@ -4,69 +4,13 @@ import "./App.css";
 import { supabase } from "./lib/supabaseClient";
 import { entrar } from "./lib/auth";
 import { getRoleUiLabel } from "./utils/attendance";
+import { getThemeVars } from "./styles/appStyles";
+import { useAgora } from "./hooks/useAgora";
 
-// ─── Login shared panel ───────────────────────────────────────────────────────
+const FUSO = "America/Manaus";
 
-const LOGIN_FEATURES = [
-  {
-    icon: "fa-solid fa-user-tie",
-    title: "Atendimento mais prático e digital",
-    sub: "Registre e gerencie serviços com agilidade",
-  },
-  {
-    icon: "fa-solid fa-mobile-screen",
-    title: "Acompanhamento do serviço em tempo real",
-    sub: "Família e equipe sempre informados",
-  },
-  {
-    icon: "fa-solid fa-shield-halved",
-    title: "Gestão e controle com facilidade",
-    sub: "Relatórios, etapas e equipe em um só lugar",
-  },
-];
-
-function LoginLeftPanel() {
-  return (
-    <div className="login-left">
-      {/* Placeholder do grupo */}
-      <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "20px 32px", display: "inline-block", textAlign: "center", marginBottom: "1.5rem" }}>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-          GRUPO
-        </div>
-        <div style={{ fontSize: 32, fontWeight: 700, color: "#ffffff", lineHeight: 1 }}>
-          SÃO FRANCISCO
-        </div>
-      </div>
-
-      {/* Título */}
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: "0.12em", textAlign: "center", marginBottom: "2rem" }}>
-        Sistema de Atendimento Funeral
-      </div>
-
-      {/* Linha decorativa */}
-      <div style={{ width: 40, height: 2, background: "rgba(255,255,255,0.4)", margin: "0 auto 2.5rem", borderRadius: 2 }} />
-
-      {/* Features */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", width: "100%", maxWidth: 320 }}>
-        {LOGIN_FEATURES.map(({ icon, title, sub }) => (
-          <div key={title} style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 44, height: 44, background: "rgba(255,255,255,0.15)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <i className={icon} style={{ fontSize: 20, color: "#ffffff" }} />
-            </div>
-            <div>
-              <div style={{ fontSize: 14, color: "#ffffff", fontWeight: 500, lineHeight: 1.3 }}>{title}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", marginTop: 2 }}>{sub}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Frase rodapé */}
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "center", marginTop: "3rem", maxWidth: 280 }}>
-        Cuidando com respeito e dedicação em todos os momentos
-      </div>
-    </div>
-  );
+function lerTema() {
+  try { return JSON.parse(localStorage.getItem("sf_theme_v1") || '"dark"') === "light" ? "light" : "dark"; } catch { return "dark"; }
 }
 
 // ─── Tela de login ────────────────────────────────────────────────────────────
@@ -109,63 +53,111 @@ export default function LoginTela({ onEntrou }) {
     setEntrando(false);
   }
 
-  const fieldStyle = { width: "100%", background: "#f8fbfb", border: "1px solid #d9e4e2", borderRadius: 12, padding: "13px 16px", fontSize: 14, color: "#333333", outline: "none", boxSizing: "border-box", cursor: "pointer" };
-  const labelStyle = { display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 };
+  const [tema, setTema] = useState(lerTema);
+  const [verSenha, setVerSenha] = useState(false);
+  const agora = useAgora(15000);
+  const escuro = tema === "dark";
+
+  function trocarTema() {
+    const novo = escuro ? "light" : "dark";
+    setTema(novo);
+    try { localStorage.setItem("sf_theme_v1", JSON.stringify(novo)); } catch { /* ignora */ }
+  }
+
+  const hora = Number(new Intl.DateTimeFormat("en-GB", { timeZone: FUSO, hour: "2-digit", hour12: false }).format(new Date(agora)));
+  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+  const relogio = new Date(agora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: FUSO });
+  const diaSemana = new Date(agora).toLocaleDateString("pt-BR", { weekday: "long", timeZone: FUSO });
+  const dataDia = new Date(agora).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric", timeZone: FUSO });
+
+  const campo = {
+    width: "100%",
+    minHeight: 50,
+    boxSizing: "border-box",
+    background: "var(--input-bg)",
+    border: "1px solid var(--input-border)",
+    borderRadius: 12,
+    padding: "0 14px",
+    fontSize: 15,
+    color: "var(--input-text)",
+    outline: "none",
+    fontFamily: "inherit",
+  };
+  const rotulo = { display: "block", fontSize: 12, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6 };
 
   return (
-    <div className="login-screen">
-      <LoginLeftPanel />
-      <div className="login-right">
-        <div style={{ maxWidth: 340, width: "100%", background: "#ffffff", border: "1px solid #e5ecea", borderRadius: 20, padding: "2rem", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-          <div style={{ marginBottom: "2rem" }}>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#333333", margin: "0 0 6px" }}>Acesso interno</h1>
-            <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>Entre com suas credenciais</p>
+    <div className="login3" style={{ ...getThemeVars(escuro), colorScheme: escuro ? "dark" : "light" }}>
+      <button type="button" className="login3-tema" onClick={trocarTema} aria-label={escuro ? "Usar tema claro" : "Usar tema escuro"} title={escuro ? "Tema claro" : "Tema escuro"}>
+        <i className={`fa-solid ${escuro ? "fa-sun" : "fa-moon"}`} />
+      </button>
+
+      <main className="login3-form-lado">
+        <form onSubmit={handleLogin} className="login3-form">
+          <div className="login3-marca">
+            <img src="/logosf.png" alt="" />
+            <span>Grupo São Francisco</span>
           </div>
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>USUÁRIO</label>
-              <select
-                style={{ ...fieldStyle, color: login ? "#333333" : "#94a3b8" }}
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-                disabled={carregandoLista}
-              >
-                <option value="">{carregandoLista ? "Carregando..." : "Selecione seu usuário"}</option>
-                {usuarios.map((u) => (
-                  <option key={u.login} value={u.login}>
-                    {u.name} — {getRoleUiLabel(u.role)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div style={{ marginBottom: loginError ? 16 : 24 }}>
-              <label style={labelStyle}>SENHA</label>
+
+          <div>
+            <h1 className="login3-saudacao">{saudacao}</h1>
+            <p className="login3-sub">Entre para começar o plantão</p>
+          </div>
+
+          <div>
+            <label style={rotulo} htmlFor="login3-usuario">Usuário</label>
+            <select
+              id="login3-usuario"
+              style={{ ...campo, cursor: "pointer", color: login ? "var(--input-text)" : "var(--text-muted)" }}
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
+              disabled={carregandoLista}
+            >
+              <option value="">{carregandoLista ? "Carregando..." : "Selecione seu usuário"}</option>
+              {usuarios.map((u) => (
+                <option key={u.login} value={u.login}>
+                  {u.name} — {getRoleUiLabel(u.role)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={rotulo} htmlFor="login3-senha">Senha</label>
+            <div style={{ position: "relative" }}>
               <input
-                type="password"
-                style={fieldStyle}
+                id="login3-senha"
+                type={verSenha ? "text" : "password"}
+                style={{ ...campo, paddingRight: 50 }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
               />
+              <button
+                type="button"
+                onClick={() => setVerSenha((v) => !v)}
+                aria-label={verSenha ? "Esconder senha" : "Mostrar senha"}
+                title={verSenha ? "Esconder senha" : "Mostrar senha"}
+                className="login3-olho"
+              >
+                <i className={`fa-solid ${verSenha ? "fa-eye-slash" : "fa-eye"}`} />
+              </button>
             </div>
-            {loginError && (
-              <div style={{ marginBottom: 16, fontSize: 13, color: "#dc2626", background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.18)", borderRadius: 10, padding: "10px 14px" }}>
-                {loginError}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={entrando}
-              style={{ width: "100%", background: "#26b1c4", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", marginTop: 8, opacity: entrando ? 0.7 : 1 }}
-            >
-              {entrando ? "Entrando..." : "Entrar"}
-            </button>
-          </form>
-          <div style={{ marginTop: "1.5rem", fontSize: 11, color: "#94a3b8", textAlign: "center" }}>
-            © 2026 Caetano Digital Systems
           </div>
-        </div>
-      </div>
+
+          {loginError && <div className="login3-erro" role="alert">{loginError}</div>}
+
+          <button type="submit" disabled={entrando} className="login3-entrar">
+            {entrando ? "Entrando..." : "Entrar"}
+          </button>
+
+          <div className="login3-rodape">© 2026 Caetano Digital Systems</div>
+        </form>
+      </main>
+
+      <aside className="login3-relogio" aria-hidden="true">
+        <div className="login3-hora">{relogio}</div>
+        <div className="login3-data">{diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}<br />{dataDia}</div>
+      </aside>
     </div>
   );
 }

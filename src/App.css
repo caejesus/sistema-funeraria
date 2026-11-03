@@ -669,3 +669,104 @@
     z-index: 55;
   }
 }
+
+/* ─── Login (modelo minimalista com relógio) ────────────────────────────── */
+.login3 {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  background: var(--page-bg);
+  color: var(--text-main);
+  font-family: inherit;
+}
+.login3-form-lado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+}
+.login3-form {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.login3-marca { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+.login3-marca img { width: 40px; height: 40px; object-fit: contain; }
+.login3-saudacao { font-size: 32px; font-weight: 800; margin: 0; color: var(--text-main); }
+.login3-sub { font-size: 15px; color: var(--text-muted); margin: 4px 0 0; }
+.login3-olho {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 10px;
+  font-size: 15px;
+}
+.login3-olho:hover { color: var(--text-main); }
+.login3-erro {
+  font-size: 13px;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.login3-entrar {
+  min-height: 52px;
+  border: none;
+  border-radius: 12px;
+  background: var(--brand-accent, #26b1c4);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+}
+.login3-entrar:disabled { opacity: 0.7; cursor: default; }
+.login3-rodape { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 6px; }
+.login3-relogio {
+  background: var(--card-bg-alt);
+  border-left: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  padding: 32px;
+}
+.login3-hora { font-size: clamp(56px, 8vw, 112px); font-weight: 700; line-height: 1; color: var(--text-main); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.login3-data { font-size: 17px; color: var(--text-muted); line-height: 1.5; }
+.login3-tema {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+}
+.login3-tema:hover { color: var(--text-main); }
+
+@media (max-width: 800px) {
+  .login3 { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .login3-relogio { order: -1; border-left: none; border-bottom: 1px solid var(--border-soft); flex-direction: row; gap: 14px; padding: 18px 70px 18px 20px; justify-content: flex-start; text-align: left; }
+  .login3-hora { font-size: 40px; }
+  .login3-data { font-size: 13px; line-height: 1.35; }
+  .login3-form-lado { align-items: flex-start; padding: 28px 20px 32px; }
+  .login3-saudacao { font-size: 26px; }
+}
